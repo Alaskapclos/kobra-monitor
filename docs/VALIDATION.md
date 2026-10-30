@@ -14,7 +14,10 @@
 | Docker / Compose, linux/amd64 | GitHub-CI: Build und Container-Starttest bestanden; Abbild auf UGOS importiert und gestartet |
 | UGREEN DXP4800GT / UGOS, amd64 | Zwei Kobra S1 live: Status, Temperaturen und ACE; Containerneustart erhält Einrichtung, Zugangscode und beide aktiven Auftrags-IDs |
 | Andere NAS / arm64 / Image-Update | Noch nicht praktisch geprüft |
-| Tailscale Serve / anderes VPN | Anleitungen nach Primärdokumentation; kein echter Fernzugriffstest |
+| Bestehendes Tailscale, Mobilfunkzugriff | Nutzer bestätigte erfolgreiche Anmeldung und Zugriff; keine Änderung der VPN-Konfiguration |
+| Tailscale Serve / HTTPS / VPN-Zugriffsregeln | Noch nicht praktisch geprüft |
+| Historienumzug Mac → UGOS | Einmalig betreut geprüft: vier geschlossene Aufträge importiert, zwei überlappende Aufträge um frühere Beobachtung ergänzt, aktuelle NAS-Zustände erhalten |
+| Historienbackup / Wiederherstellung | SQLite-Backup vor/nach Import; tatsächliche NAS-Sicherung in separater Kopie geöffnet, alle sechs Berichte und Zeitverläufe lesbar; vollständiges Installationsbackup noch offen |
 | Brokerzertifikatsprüfung | Deaktiviert; bekannte Sicherheitsgrenze der Alpha |
 | Physischer WLAN-Ausfall während eines Drucks | Noch kein gezielt ausgelöster Hardwaretest |
 
@@ -45,3 +48,21 @@ nicht getestet.
 5. Read-only-Grenze, Broker-TLS-Grenze und tatsächliche Plattformabdeckung nennen.
 
 Keine Pause/Stop/Temperatur-/Bewegungs-/Upload-/Filamentbefehle für diese Tests.
+
+## Nachfolgender Betriebsumzug
+
+Die Mac-Historie wurde am selben Tag nach konsistenten Sicherungen mit der
+NAS-Historie zusammengeführt. Überlappende Aufträge wurden anhand von
+Druckeradresse, identischem Dateinamen und überlappender Beobachtungszeit
+zugeordnet. Nur Beobachtungen vor der ursprünglichen NAS-Erkennung wurden
+ergänzt; NAS-Auftrags-IDs, aktueller Fortschritt und Endzustände blieben erhalten.
+Herkunft und Quellprüfsumme stehen als Importereignisse in der Datenbank.
+Ein Test auf einer Kopie prüfte Wiederholbarkeit ohne zusätzliche Einträge und
+Zurückrollen bei mehrdeutiger Zuordnung. Die tatsächliche NAS-Sicherung nach
+dem Import wurde anschließend separat geöffnet. Der Mac-Monitor wurde erst
+nach dieser Kontrolle beendet; das NAS zeichnete ohne Neustart weiter auf.
+
+Das war ein betreuter Einzelumzug, keine im Einrichtungsassistenten verfügbare
+Importfunktion. Ursprüngliche Beobachtungslücken bleiben bestehen. Regelmäßige
+automatische Sicherungen und die Wiederherstellung einer vollständigen
+Installation einschließlich Zugangsdaten sind noch nicht eingerichtet/geprüft.

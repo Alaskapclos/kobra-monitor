@@ -5,7 +5,8 @@ Docker-fähigen DXP-Modellen mit x86-64/AMD64. Die Menübezeichnungen können je
 UGOS-Version leicht abweichen. Auf einem echten DXP4800GT wurden Import des CI-Abbilds, Compose-Start,
 Browser-Einrichtung, zwei laufende Kobra S1 und ein Containerneustart geprüft.
 Die genaue UGOS-Version wurde nicht erfasst. Image-Update, NAS-Neustart und
-Fernzugriff sind noch nicht praktisch geprüft.
+HTTPS/Serve sind noch nicht praktisch geprüft; ein späterer Zugriffstest
+über vorhandenes Tailscale wurde vom Nutzer bestätigt.
 
 ## Ziel
 
@@ -130,3 +131,13 @@ Beobachtungslücke; daraus wird kein Druckende abgeleitet.
 
 Die NAS-Instanz begann mit eigener Historie und erkannte bereits laufende Drucke.
 Bestehende Rechner-Historie wurde nicht automatisch kopiert oder zusammengeführt.
+
+## Nachfolgend geprüfter Umzug
+
+Ein betreuter Einzelumzug ergänzte vier ältere abgeschlossene Aufträge und die
+frühere Rechner-Beobachtung zweier bereits auf dem NAS vorhandener Aufträge.
+Beide Datenbanken wurden vorher gesichert; der zusammengeführte NAS-Stand wurde
+zusätzlich außerhalb des NAS gesichert und testweise separat wieder geöffnet.
+Der Rechner-Monitor wurde danach beendet. Ein automatischer Import ist derzeit
+kein Bestandteil des Assistenten. Diese Verlaufssicherungen ersetzen noch kein
+vollständiges Backup von Einrichtung, Zugangscode und TLS-Dateien.

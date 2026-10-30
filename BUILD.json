@@ -17,8 +17,10 @@
     "browser_setup": "passed with printer I/O disabled",
     "authenticated_live_monitor": "passed, two devices online and history retained",
     "container": "passed in GitHub CI and real UGOS deployment",
-    "vpn_and_nas": "NAS passed with two devices; external VPN access not tested",
-    "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap"
+    "vpn_and_nas": "NAS passed; user confirmed phone access over existing Tailscale/mobile connection; Serve/HTTPS/ACL tests pending",
+    "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap",
+    "history_migration": "passed: four closed jobs imported, two existing jobs extended with earlier samples; live NAS state preserved",
+    "history_backup_restore": "passed: consistent SQLite backups, actual merged NAS backup restored in isolated copy; six reports and timelines readable; full installation backup pending"
   },
   "source_sha256": {
     ".dockerignore": "569651da3fb28d5ca6aadf14e4e8dacc41f816c4174d1f0b42264dc33d36fbbc",
@@ -47,10 +49,10 @@
     "deploy/ugos/.env.example": "190924c1d05c5b0d8dcbf791f0957d19d1230e394cfddb84838a4ab4cc1be0ef",
     "deploy/ugos/compose.yaml": "40c53ed0ee9722ac705bc80ea23455ee8eb4462862ec577bf73ec9c50aee17e3",
     "docs/INSTALLATION.md": "10a460e844b3ef40dd4bcdcc5ff76f9776c84cca2e28ea8dddcf6cb909951224",
-    "docs/REMOTE_ACCESS.md": "03af248bd5735b79b4a22f29651e81f3d07138437acbdcac2ff619a0bf8314e2",
-    "docs/UGREEN_UGOS.md": "41407b83783d2b1258f8b65500af89ca14d3300645c675280b48fcaa436ce70f",
+    "docs/REMOTE_ACCESS.md": "de238b1e5c731151583c733ce8f620f64d6e173ff31433f305876b43c3f318f1",
+    "docs/UGREEN_UGOS.md": "3248259dcadb2df101df11571fcf2823ff3b4f15d880e511aa509938cbbd5b6f",
     "docs/UPSTREAM.md": "fee791942c472d431701dd6ad8faf631fe3160b34d15bbc86dcb10d1061c7f80",
-    "docs/VALIDATION.md": "93189cac285fd996168d939dcc3264edfcfceb0201e30e74235495a03322bd8e",
+    "docs/VALIDATION.md": "5445a4f9b88fc568398f55be3429207edd5e0048af33c8e8a8515dd230512c5e",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "788a1fb17acf20fa15dab8db7e84ae950dbc79a1aacb4adab5efcb56cb0de95a",

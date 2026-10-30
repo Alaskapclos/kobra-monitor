@@ -80,3 +80,11 @@ sind ebenfalls eigene spätere Funktionen.
 - https://tailscale.com/docs/reference/tailscale-cli/serve
 - https://tailscale.com/docs/features/tailscale-serve
 - https://docs.docker.com/engine/network/port-publishing/
+
+## Stand des Praxistests
+
+Am 30.10.2026 bestätigte der Nutzer nach dem vorgesehenen Test über Mobilfunk
+und seine bestehende Tailscale-Verbindung die erfolgreiche Anmeldung und Nutzung
+der NAS-Oberfläche. Dabei wurde die vorhandene VPN-Konfiguration nicht verändert.
+Dieser Test bestätigt nicht zusätzlich Tailscale Serve, HTTPS oder eine
+Überprüfung der Tailnet-Zugriffsregeln; diese Punkte bleiben gesondert zu prüfen.
