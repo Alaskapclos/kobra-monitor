@@ -3,7 +3,7 @@
 | Bereich | Status |
 | --- | --- |
 | Frische Python-Installation, macOS / Python 3.14.6 | Bestanden; eigener neuer venv aus Lockdatei |
-| Eigene Python-Tests | 55 bestanden |
+| Eigene Python-Tests | 65 bestanden |
 | Zusätzliche Leseschutztests der Bridge | 14 bestanden |
 | JavaScript-Darstellung | 6 Prüffälle bestanden; Syntax geprüft |
 | Browser-Ersteinrichtung | Anmeldung, ungültige Adresse, zwei Adressen und Abschluss geprüft; Drucker-I/O in der Testansicht abgeschaltet |
@@ -72,6 +72,23 @@ Installation einschließlich Zugangsdaten sind noch nicht eingerichtet/geprüft.
 65 Python-Tests (darunter zehn neue Sicherungs-/Wiederherstellungstests) und
 14 Leseschutztests bestanden lokal. Der zusätzliche Container-CI-Test prüft
 Sicherung und Wiederherstellung bei nur lesend eingebundenem Monitor-Volume
-und abgeschaltetem Netzwerk des Sicherungscontainers. Ergebnis dieses neuen
-CI-Laufs und NAS-Praxisprüfung stehen zum Zeitpunkt dieser Quellcodeänderung
-noch aus. Der produktive NAS-Monitor bleibt vorerst auf Version 0.7.0-alpha.1.
+und abgeschaltetem Netzwerk des Sicherungscontainers. Der [GitHub-Lauf 41120149518](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41120149518)
+für Code-Commit `1eaef09deec750fe03938dcbbbecd1255e130102` bestand mit allen
+sieben Jobs. Der produktive NAS-Monitor bleibt auf Version 0.7.0-alpha.1;
+der getrennte Sicherungscontainer verwendet das geprüfte Image 0.8.0-alpha.1.
+
+Auf UGOS wurde eine echte vollständige Sicherung mit sieben Aufträgen,
+Druckerzuordnung, Zugangscode und aktiver Monitor-Compose-Datei erzeugt.
+Sie wurde im netzlosen Sicherungscontainer in einen getrennten Ordner
+wiederhergestellt und zusätzlich auf dem Mac zurückgelesen. Einrichtung und
+Zugangscode stimmen überein; alle sieben Berichte und Zeitverläufe sind lesbar.
+Die Prüfsumme der externen Kopie stimmt mit dem NAS-Original überein.
+
+Das Quellvolume ist nur lesend eingebunden; der Sicherungscontainer hat nur
+eine Loopback-Netzwerkschnittstelle. Für das Lesen des UGOS-Projektordners
+war dessen vorhandene Gruppen-ID 10 erforderlich; die zusätzliche Gruppe ist
+nur dem Sicherungscontainer zugewiesen. NAS-Dateirechte wurden nicht erweitert.
+Eine erneute Prüfung der Fälligkeit mit dem echten Archiv erzeugte keinen
+zusätzlichen Stand. Tagesrhythmus und Aufbewahrung über mehrere Tage wurden
+mit kontrollierter Testzeit geprüft; der erste reale 24-Stunden-Termin ist
+noch nicht verstrichen. Ein echter NAS-Ausfall/Ersatzgeräte-Test steht aus.

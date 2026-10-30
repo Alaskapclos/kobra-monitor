@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     init: true
     network_mode: none
+    group_add:
+      - "${KOBRA_MONITOR_PROJECT_GID:?Gruppen-ID des NAS-Projektordners angeben}"
     healthcheck:
       disable: true
     command:

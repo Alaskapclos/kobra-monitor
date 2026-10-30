@@ -23,11 +23,16 @@ und Projektordner ausschließlich lesend. Seine ZIP-Dateien liegen in einem
 eigenen Volume des Sicherungsprojekts. Dieses Volume beim Löschen eines Projekts
 nicht mit entfernen.
 
-Für die Vorlage müssen vier Werte aus der bestehenden Installation eingesetzt
-werden: Image-Tag, tatsächlicher Datenvolume-Name, absoluter Projektordner sowie
+Für die Vorlage müssen fünf Werte aus der bestehenden Installation eingesetzt
+werden: Image-Tag, tatsächlicher Datenvolume-Name, absoluter Projektordner,
+Gruppen-ID des Projektordners (UGOS zeigt beim Projektformular PGID an) sowie
 das importierte Sicherungsimage `kobra-monitor:0.8.0-alpha.1`. Beispielwerte sind
 keine voreingestellten persönlichen Ziele. Das vorhandene Monitor-Volume muss
 als **external** referenziert werden; andernfalls würde ein leeres Volume gesichert.
+Die zusätzliche Gruppe erlaubt das Lesen der bereits vorhandenen Compose-Datei
+im ausschließlich lesend eingebundenen Projektordner. Die NAS-Verzeichnisrechte
+werden dafür nicht erweitert. Die Gruppen-ID muss zum tatsächlichen Besitzer
+dieses Ordners passen; auf dem geprüften UGOS-System war sie 10.
 
 Nach dem Start entsteht sofort eine Sicherung. Anschließend wird nach jeweils
 24 Stunden ein neuer Stand erstellt; sieben erfolgreiche Stände bleiben erhalten.
@@ -81,3 +86,13 @@ bleibt erhalten; alte Browser-Sitzungen werden nicht wiederhergestellt.
 Der zusätzliche Test auf einer getrennten Kopie bestätigt Daten und Einrichtung.
 Ein kompletter NAS-Ausfall oder eine Wiederherstellung auf Ersatzhardware ist
 damit noch nicht getestet.
+
+## Bestätigter Praxistest
+
+Am 30.10.2026 wurde der getrennte Sicherungsdienst auf UGREEN DXP4800GT / UGOS
+in Betrieb genommen. Die erste Sicherung einschließlich Zugangscode und
+Compose-Datei wurde auf NAS und Mac in getrennten Kopien wiederhergestellt;
+sieben Aufträge samt Berichten und Zeitverläufen waren lesbar. Die Übertragung
+auf den Mac war einmalig, der tägliche Dienst sichert im eigenen NAS-Volume.
+Beide für die Wiederherstellung benötigten Container-Abbilder wurden ebenfalls
+außerhalb des NAS aufbewahrt. Sie sind nicht im kleinen Daten-ZIP enthalten.

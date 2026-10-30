@@ -16,12 +16,13 @@
     "fresh_install": "passed on macOS",
     "browser_setup": "passed with printer I/O disabled",
     "authenticated_live_monitor": "passed, two devices online and history retained",
-    "container": "passed in GitHub CI and real UGOS deployment",
+    "container": "all 7 jobs passed in GitHub run 41120149518; backup image 0.8 deployed separately from monitor 0.7",
     "vpn_and_nas": "NAS passed; user confirmed phone access over existing Tailscale/mobile connection; Serve/HTTPS/ACL tests pending",
     "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap",
     "history_migration": "passed: four closed jobs imported, two existing jobs extended with earlier samples; live NAS state preserved",
     "history_backup_restore": "passed: consistent SQLite backups, actual merged NAS backup restored in isolated copy; six reports and timelines readable; full installation backup pending",
-    "backup": "10 new backup/restore tests passed locally; real NAS deployment pending"
+    "backup": "passed: 10 unit tests, container CI with read-only source, real UGOS full backup and isolated restore on NAS and Mac",
+    "backup_schedule": "daily/keep7 verified with controlled clock; actual NAS due recheck skips duplicate; first real 24h interval pending"
   },
   "source_sha256": {
     ".dockerignore": "b7dba69dd1f6befc359143973b38b38da0159b3101f8f7bf593b47e11b1c6109",
@@ -49,14 +50,14 @@
     "compose.yaml": "4cbba7ff7d8e0e4e00b3c5ad4cb4792bd943f28bff1d57af21aebd7d1112c1b2",
     "configuration.py": "e5e9177354dc2a7d6f3abc4e0a591f9e0f3ee7d818abdbec4bbff488011f2c63",
     "deploy/ugos/.env.example": "190924c1d05c5b0d8dcbf791f0957d19d1230e394cfddb84838a4ab4cc1be0ef",
-    "deploy/ugos/backups.compose.yaml": "ba7c261bf13ab32b6efd73a9bd4b73ed34567279be897d5e7462cdce3d0d133b",
+    "deploy/ugos/backups.compose.yaml": "e3269b43e37282c334c97ce498e7197d9c78a2c8710f07dfc5ac4ef448d62af8",
     "deploy/ugos/compose.yaml": "f4bb056f732119e5adad6510c4f456eaf844e5a176d09892c5cc510e4870f2a4",
-    "docs/BACKUPS.md": "2ab9f3a57337b11abafcb0fd51443854f8935ed41c35442acfbb52e3d7f57679",
+    "docs/BACKUPS.md": "aa8f656e93d67decadc8fa7e4e27949b13502be458e3050f04e403e08b97f345",
     "docs/INSTALLATION.md": "10a460e844b3ef40dd4bcdcc5ff76f9776c84cca2e28ea8dddcf6cb909951224",
     "docs/REMOTE_ACCESS.md": "de238b1e5c731151583c733ce8f620f64d6e173ff31433f305876b43c3f318f1",
     "docs/UGREEN_UGOS.md": "efee6251c5bab03c941bde08e59e66f4cd756d91ada2a5f285bf9be141bd0d75",
     "docs/UPSTREAM.md": "fee791942c472d431701dd6ad8faf631fe3160b34d15bbc86dcb10d1061c7f80",
-    "docs/VALIDATION.md": "3028fd7573a11366a8e0eec46fe3888acd3f30bdff5a908152097bb863dd6b69",
+    "docs/VALIDATION.md": "0795ded38154be18f95b36978630dc2060e5b7fe7feb499d11769585149aeae9",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "788a1fb17acf20fa15dab8db7e84ae950dbc79a1aacb4adab5efcb56cb0de95a",
@@ -150,10 +151,10 @@
     "vendor/kobra-connect/kobra_connect/handshake.py": "63c7c140640725b3c7dd54eab13bef92fdbd2fbc062388fc675e6e0495bdf0b4",
     "vendor/kobra-connect/kobra_connect/models.py": "b2345ae06907278a050cc75f145f5c2d049a2e09bca3f1d0f0b803a04f0a6ed8"
   },
-  "deployment_target": "UGREEN DXP4800GT / UGOS, linux/amd64; deployed and container restart verified",
+  "deployment_target": "UGREEN DXP4800GT / UGOS: monitor 0.7.0-alpha.1; separate network-disabled backup service 0.8.0-alpha.1",
   "ci_evidence": {
-    "code_commit": "5223629616b33fe822e6bc9b47e6ae785164d601",
-    "run_url": "https://github.com/Alaskapclos/kobra-monitor/actions/runs/41109579545",
+    "code_commit": "1eaef09deec750fe03938dcbbbecd1255e130102",
+    "run_url": "https://github.com/Alaskapclos/kobra-monitor/actions/runs/41120149518",
     "successful_jobs": 7
   }
 }
