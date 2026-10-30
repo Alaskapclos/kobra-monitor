@@ -16,13 +16,14 @@
     "fresh_install": "passed on macOS",
     "browser_setup": "passed with printer I/O disabled",
     "authenticated_live_monitor": "passed, two devices online and history retained",
-    "container": "all 7 jobs passed in GitHub run 41120149518; backup image 0.8 deployed separately from monitor 0.7",
+    "container": "all 7 jobs passed in GitHub run 41120149518; monitor and separate backup service 0.8 deployed on UGOS",
     "vpn_and_nas": "NAS passed; user confirmed phone access over existing Tailscale/mobile connection; Serve/HTTPS/ACL tests pending",
     "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap",
     "history_migration": "passed: four closed jobs imported, two existing jobs extended with earlier samples; live NAS state preserved",
-    "history_backup_restore": "passed: consistent SQLite backups, actual merged NAS backup restored in isolated copy; six reports and timelines readable; full installation backup pending",
+    "history_backup_restore": "passed: merged history and full installation snapshots restored in isolated copies; seven jobs after update",
     "backup": "passed: 10 unit tests, container CI with read-only source, real UGOS full backup and isolated restore on NAS and Mac",
-    "backup_schedule": "daily/keep7 verified with controlled clock; actual NAS due recheck skips duplicate; first real 24h interval pending"
+    "backup_schedule": "daily/keep7 verified with controlled clock; actual NAS due recheck skips duplicate; first real 24h interval pending",
+    "nas_version_update": "passed 0.7 to 0.8: seven job IDs, both active sessions, configuration and access code retained; recorded 6–7 second connection gap"
   },
   "source_sha256": {
     ".dockerignore": "b7dba69dd1f6befc359143973b38b38da0159b3101f8f7bf593b47e11b1c6109",
@@ -57,7 +58,7 @@
     "docs/REMOTE_ACCESS.md": "de238b1e5c731151583c733ce8f620f64d6e173ff31433f305876b43c3f318f1",
     "docs/UGREEN_UGOS.md": "efee6251c5bab03c941bde08e59e66f4cd756d91ada2a5f285bf9be141bd0d75",
     "docs/UPSTREAM.md": "fee791942c472d431701dd6ad8faf631fe3160b34d15bbc86dcb10d1061c7f80",
-    "docs/VALIDATION.md": "0795ded38154be18f95b36978630dc2060e5b7fe7feb499d11769585149aeae9",
+    "docs/VALIDATION.md": "70464a54508d6a0557bca72233067d3643a7e2f4fe73d7ae4ff8c255f9da8d2b",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "788a1fb17acf20fa15dab8db7e84ae950dbc79a1aacb4adab5efcb56cb0de95a",

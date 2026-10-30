@@ -63,9 +63,7 @@ dem Import wurde anschließend separat geöffnet. Der Mac-Monitor wurde erst
 nach dieser Kontrolle beendet; das NAS zeichnete ohne Neustart weiter auf.
 
 Das war ein betreuter Einzelumzug, keine im Einrichtungsassistenten verfügbare
-Importfunktion. Ursprüngliche Beobachtungslücken bleiben bestehen. Regelmäßige
-automatische Sicherungen und die Wiederherstellung einer vollständigen
-Installation einschließlich Zugangsdaten sind noch nicht eingerichtet/geprüft.
+Importfunktion. Ursprüngliche Beobachtungslücken bleiben bestehen. Die danach eingerichtete vollständige Sicherung ist im folgenden Abschnitt dokumentiert.
 
 ## Sicherungsdienst 0.8.0-alpha.1
 
@@ -74,8 +72,8 @@ Installation einschließlich Zugangsdaten sind noch nicht eingerichtet/geprüft.
 Sicherung und Wiederherstellung bei nur lesend eingebundenem Monitor-Volume
 und abgeschaltetem Netzwerk des Sicherungscontainers. Der [GitHub-Lauf 41120149518](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41120149518)
 für Code-Commit `1eaef09deec750fe03938dcbbbecd1255e130102` bestand mit allen
-sieben Jobs. Der produktive NAS-Monitor bleibt auf Version 0.7.0-alpha.1;
-der getrennte Sicherungscontainer verwendet das geprüfte Image 0.8.0-alpha.1.
+sieben Jobs. Zunächst wurde der getrennte Sicherungscontainer auf 0.8.0-alpha.1 eingerichtet;
+der anschließende Monitorwechsel ist unten dokumentiert.
 
 Auf UGOS wurde eine echte vollständige Sicherung mit sieben Aufträgen,
 Druckerzuordnung, Zugangscode und aktiver Monitor-Compose-Datei erzeugt.
@@ -92,3 +90,31 @@ Eine erneute Prüfung der Fälligkeit mit dem echten Archiv erzeugte keinen
 zusätzlichen Stand. Tagesrhythmus und Aufbewahrung über mehrere Tage wurden
 mit kontrollierter Testzeit geprüft; der erste reale 24-Stunden-Termin ist
 noch nicht verstrichen. Ein echter NAS-Ausfall/Ersatzgeräte-Test steht aus.
+
+## Tatsächlicher NAS-Versionswechsel 0.7 → 0.8
+
+Am 30.10.2026 wurde das bestehende UGOS-Monitorprojekt mit dem geprüften
+Image 0.8.0-alpha.1 neu bereitgestellt. Das benannte Datenvolume, die
+Portbindung und die bestehenden Schutzmaßnahmen blieben erhalten.
+Vorher und nachher wurden vollständige Sicherungen erstellt und geprüft.
+
+Alle sieben Auftragskennungen sind unverändert vorhanden. Beide laufenden
+Aufträge wurden unter derselben Kennung fortgeführt, ohne fälschlichen
+Abschluss oder zusätzlich erzeugten Auftrag. Einrichtung und Zugangscode
+stimmen per SHA-256 mit dem Stand vor dem Update überein; die Anmeldung
+mit dem bisherigen Code und Live-Daten beider Drucker wurden geprüft.
+
+Das Verbindungsprotokoll zeigt eine Unterbrechung am 30.10.2026 von etwa
+21:38:41 bis 21:38:48 MEZ, je Drucker rund 6–7 Sekunden. In dieser Zeit
+fehlen Live-Daten. Der größte Abstand gespeicherter Messpunkte im
+geprüften Zeitfenster betrug unter 24 Sekunden. Laufende Drucke wurden
+nicht gesteuert. Der Mac-Monitor blieb ausgeschaltet.
+
+Der Sicherungsdienst dokumentiert nun ebenfalls Monitor-Image 0.8.
+Der neue vollständige Stand wurde isoliert wiederhergestellt (sieben
+Aufträge) und zusätzlich mit identischer Prüfsumme außerhalb des NAS
+gespeichert. Die Fälligkeitsprüfung erzeugte keinen zusätzlichen
+Tagesstand; die Prüfung eines realen 24-Stunden-Zyklus steht weiterhin aus.
+Ein tatsächliches Downgrade oder Austausch des produktiven Datenvolumes
+wurde nicht ausgeführt. Tailscale und NAS-Sicherheitseinstellungen wurden
+nicht verändert.
