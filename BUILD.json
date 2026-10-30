@@ -25,7 +25,7 @@
     "backup_schedule": "daily/keep7 verified with controlled clock; actual NAS due recheck skips duplicate; first real 24h interval pending",
     "nas_version_update": "0.8 to 0.9 passed: seven job IDs/states/end times preserved; both printers reconnected; recorded ~6 second gap",
     "accounts": "passed local + CI + browser fixture; user created real NAS account; full account backup restored on NAS and Mac",
-    "printer_order": "passed local/CI/fixture drag+keyboard/persistence; NAS config and backup order .145 before .221 verified; live browser login pending"
+    "printer_order": "passed local/CI/fixture drag+keyboard/persistence; live NAS drag both directions, selection preserved, reload persistence and both connected verified; backup order verified"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -62,7 +62,7 @@
     "docs/REMOTE_ACCESS.md": "3f1a38f3c766c73880c4cd4a14cb46bdd87d8e8cde3670bcf4caf9d70bfe7acd",
     "docs/UGREEN_UGOS.md": "4fa33ec84f41ce1d2529b6710300c74de765b63ddf70c9a3db31ab62eace3489",
     "docs/UPSTREAM.md": "fee791942c472d431701dd6ad8faf631fe3160b34d15bbc86dcb10d1061c7f80",
-    "docs/VALIDATION.md": "aa07483b0e6ddd5cd24cdd3190fefec9ecb03a4b8aa6e90b0fdddbad588dac50",
+    "docs/VALIDATION.md": "d03d216793161870773a5406facd347f21008e3229514ff6869c00519c7b5c3e",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "0579f954ec63090e92e35a86acb0cfa8d59e7f177c8f576ad394d7de8c778537",

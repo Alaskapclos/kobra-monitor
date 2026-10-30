@@ -167,8 +167,10 @@ unverändert. Die gespeicherte Reihenfolge ist erster Drucker vor zweitem
 Drucker; eine vollständige Sicherung wurde mit dieser Reihenfolge isoliert
 wiederhergestellt. Fälligkeitsprüfung erzeugt keinen doppelten Tagesstand.
 Die Verbindung war beim Versionswechsel rund fünf Sekunden unterbrochen.
-Die Browser-Sichtprüfung am echten NAS wartet noch auf erneute Anmeldung;
-Drag-and-drop und Tastatur wurden bisher auf der isolierten Fixture geprüft.
+Nach erneuter Nutzeranmeldung am echten NAS geprüft: Karten per Ziehen in
+beide Richtungen verschoben, jeweils gespeichert und gewünschte Reihenfolge
+nach Neuladen bestätigt. Die ausgewählte Druckeransicht blieb beim Ziehen
+erhalten; beide Geräte waren verbunden. Tastatur zusätzlich auf Fixture geprüft.
 Eine Prüfung auf einem physischen Touchgerät steht noch aus.
 
 [GitHub-Prüflauf 41135356856](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41135356856) für Code-Commit `0e8d9552525edbf848ebe079e9a2e4414f0f9f10`: alle sieben Jobs erfolgreich.
