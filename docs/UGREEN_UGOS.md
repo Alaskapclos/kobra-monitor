@@ -1,0 +1,117 @@
+# UGREEN DXP4800GT mit UGOS
+
+Vorgesehener erster NAS-Praxistest. Der DXP4800GT gehört laut UGREEN zu den
+Docker-fähigen DXP-Modellen mit x86-64/AMD64. Die Menübezeichnungen können je nach
+UGOS-Version leicht abweichen. Diese Anleitung ist vorbereitet, noch kein
+bestätigter Test auf einem echten DXP4800GT.
+
+## Ziel
+
+Der Monitor läuft dauerhaft als eigener Container auf dem NAS. Seine Historie,
+Einrichtung und der Zugangscode bleiben im Volume `monitor-data`. Rechner,
+Handy und Tablet öffnen nur die Weboberfläche. Die Drucker bleiben im LAN-Modus.
+
+Wir beginnen mit Heimnetzzugriff auf die private NAS-Adresse. Der spätere
+Fernzugriff erfolgt über das vorhandene VPN. Für Tailscale Serve kann die
+Portbindung stattdessen auf Loopback beschränkt bleiben.
+
+## 1. Docker bereitstellen
+
+In UGOS das App Center öffnen und prüfen, ob Docker installiert ist. Die
+Docker-Anwendung öffnen. Der Bereich **Project / Projekt** verwaltet Compose-
+Projekte; **Image / Image-Abbilder** importiert Container-Abbilder.
+
+Keine anderen Container oder UGOS-Dienste verändern. Vorher prüfen, dass Port
+7125 auf dem NAS frei ist. Die NAS-Adresse und die installierte UGOS-Version
+für den Test notieren.
+
+## 2. Geprüftes Abbild beschaffen
+
+Für die einfache GUI-Installation soll die GitHub-CI nach einem erfolgreichen
+Container-Test das Artefakt **kobra-monitor-linux-amd64** bereitstellen:
+
+1. Im privaten Repository **Actions → Checks** den erfolgreichen Lauf öffnen.
+2. Unter **Artifacts** das Paket `kobra-monitor-linux-amd64` herunterladen.
+3. Das ZIP entpacken. Es enthält `kobra-monitor-linux-amd64.tar`.
+4. Diese TAR-Datei in UGOS unter **Docker → Image → Import** importieren.
+
+Erwarteter Image-Name: `kobra-monitor:0.7.0-alpha.1`. Das Abbild enthält den
+Quellcode und seine Bibliotheken; persönliche Datenvolumes und Zugangscodes
+werden nicht in das Abbild exportiert. Das Artefakt ist privat und wird sieben
+Tage aufbewahrt. Ein neuer erfolgreicher Workflow kann es erneut erzeugen.
+Solange kein erfolgreicher CI-Lauf vorliegt, ist dieses Artefakt noch nicht verfügbar.
+
+## 3. Eigenes Projekt anlegen
+
+UGOS **Docker → Project → Create** öffnen. Projektname: `kobra-monitor`.
+Die Konfiguration aus `deploy/ugos/compose.yaml` verwenden. Dort die Variable
+`KOBRA_BIND_ADDRESS` auf die tatsächliche private LAN-IP des NAS setzen. Wenn
+die UGOS-GUI keine Projektvariablen anbietet, den Ausdruck vor `:7125:7125`
+direkt durch die private NAS-IP ersetzen, zum Beispiel:
+
+```yaml
+ports:
+  - "192.168.1.20:7125:7125"
+```
+
+Die Beispieladresse ist kein voreingestelltes Ziel. Immer die eigene NAS-IP
+verwenden. Für Tailscale Serve auf dem NAS stattdessen `127.0.0.1` verwenden.
+Der Container selbst lauscht intern auf 7125; keine Host-Netzwerkfreigabe nötig.
+
+Das benannte Volume `monitor-data` und die Schutzoptionen beibehalten. Die
+Anwendung läuft als Benutzer 10001. Bei einem frischen benannten Volume wird
+kein persönlicher NAS-Ordner mit erweiterten Rechten benötigt. Bei Importen
+eines bestehenden Datenordners müssen seine Zugriffsrechte gesondert geprüft werden.
+
+Das Projekt starten. Den Zustand des Containers und seine Logs prüfen. Ein
+Neustart durch `restart: unless-stopped` startet nur die lokale Überwachung.
+
+## 4. Im Browser einrichten
+
+1. Im Heimnetz `http://NAS-IP:7125` öffnen.
+2. In UGOS den Monitor-Container öffnen und dessen **Terminal** verwenden.
+3. Dort eingeben:
+
+```sh
+python monitor.py --show-access-code
+```
+
+4. Den angezeigten Code in die Browser-Anmeldung übernehmen. Den Code nicht
+   in öffentliche Bilder oder Fehlermeldungen kopieren.
+5. Im Assistenten die Druckeradressen aus den Drucker-/Routereinstellungen eintragen.
+6. **Speichern und verbinden**, anschließend **Zur Druckerübersicht** wählen.
+
+Der Monitor veranlasst keine Pause, keinen Start, keinen Upload und keine
+Heizung oder Bewegung. Eine nicht erreichbare Druckeradresse erscheint offline.
+
+## 5. Prüfliste für diesen NAS-Test
+
+- Beide eingerichteten Drucker liefern Modell, Status und Temperaturen.
+- ACE-Slots gehören jeweils zum richtigen Drucker.
+- Bestehende Aufträge bleiben nach einem Containerneustart in der Historie.
+- Ein Update mit demselben Volume erhält Einrichtung und Aufzeichnung.
+- Der Browser lehnt Statuszugriff ohne Anmeldung ab.
+- Ein zweites Gerät im Heimnetz erreicht den Monitor an der vorgesehenen Adresse.
+- Ein anschließender VPN-/HTTPS-Test prüft die Erreichbarkeit von unterwegs.
+
+Beim Löschen eines UGOS-Projekts darauf achten, dass sein Datenvolume nicht
+mitgelöscht wird. Vor einem Update die persistenten Daten sichern. Für eine
+konsistente Sicherung den Monitor stoppen oder die SQLite-Backup-API verwenden.
+
+Der Mac-Monitor kann bis zum erfolgreichen NAS-Test weiterlaufen. Gleichzeitige
+Instanzen haben getrennte Historien; ein Umzug bestehender Daten wird deshalb
+als eigener Schritt geplant. Kein automatischer Wechsel des Aufzeichnungsgeräts.
+
+## Alternative: selbst auf dem NAS bauen
+
+Die vollständigen Projektdateien in einen eigenen NAS-Projektordner kopieren.
+Die normale `compose.yaml` baut das Image aus diesem Ordner. Falls die UGOS-GUI
+lokale Builds nicht unterstützt, kann ein bereits eingerichteter SSH-/Terminal-
+Zugang dort `docker compose up -d --build` ausführen. SSH wird hierfür nicht
+automatisch aktiviert. Der Import des CI-Abbilds vermeidet diesen Bau-Schritt auf dem NAS.
+
+## Offizielle Quellen
+
+- https://ai.ugreen.com/pages/solution-software
+- https://ai.ugreen.com/blogs/knowledge/docker-docker-compose-ugreen-nas
+- https://support.ugnas.com/detail/article/en-US/236

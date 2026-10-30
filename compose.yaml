@@ -1,0 +1,19 @@
+services:
+  monitor:
+    build: .
+    image: kobra-monitor:0.7.0-alpha.1
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${KOBRA_BIND_ADDRESS:-127.0.0.1}:7125:7125"
+    volumes:
+      - monitor-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  monitor-data:

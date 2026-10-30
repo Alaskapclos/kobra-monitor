@@ -1,0 +1,17 @@
+{
+  "base_commit": "25c36815f5e2cab394fc83c73fca447367253fca",
+  "feature": "explicit read-only mode",
+  "license": "GPL-3.0 per upstream LICENSE",
+  "patch_sha256": "49363a1d35d19c6e355c75b995ce12a957edad683c066f94dee3d565cd9f09cc",
+  "files_changed": [
+    "README.md",
+    "config/config.ini.example",
+    "config_loader.py",
+    "kobrax_client.py",
+    "kobrax_moonraker_bridge.py",
+    "test.sh",
+    "docs/READ_ONLY.md",
+    "read_only_policy.py",
+    "test_read_only.py"
+  ]
+}

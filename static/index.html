@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Kobra Monitor · Lokaler Druckerstatus</title>
+  <link rel="stylesheet" href="/assets/monitor.css">
+  <link rel="stylesheet" href="/assets/setup.css">
+  <script defer src="/assets/setup.js"></script>
+  <script defer src="/assets/monitor.js"></script>
+</head>
+<body>
+  <div id="setup-panel" class="setup-overlay" hidden><section class="setup-box" role="dialog" aria-modal="true" aria-labelledby="setup-heading">
+    <div class="eyebrow">DEIN LOKALER DRUCKERBEGLEITER</div><h2 id="setup-heading">Willkommen bei Kobra Monitor.</h2>
+    <p class="setup-steps">1 · Browser verbinden &nbsp; 2 · Drucker hinzufügen &nbsp; 3 · Loslegen</p>
+    <div id="setup-login"><p>Verbinde diesen Browser mit deinem Monitor. Der Zugangscode gehört zu deiner Installation und schützt auch den Zugriff über dein VPN.</p><form id="setup-login-form"><label for="setup-code">Dein Zugangscode</label><input id="setup-code" type="password" autocomplete="current-password" required><button id="setup-login-button" class="setup-primary" type="submit">Verbinden</button></form><p>Auf dem Rechner öffnet der Starter die Anmeldung automatisch. Auf Server/NAS zeigst du den Code mit <code>python monitor.py --show-access-code</code> bzw. dem entsprechenden Docker-Befehl aus der Anleitung an.</p></div>
+    <div id="setup-printers" hidden><p>Aktiviere den LAN-Modus am Drucker. Die IP-Adresse findest du in seinen Netzwerkeinstellungen oder im Router. Rechner oder Server müssen den Drucker erreichen können.</p><form id="setup-printer-form"><label for="setup-ips">Druckeradressen · eine pro Zeile</label><textarea id="setup-ips" placeholder="192.168.1.100" required spellcheck="false"></textarea><p>Du kannst bis zu 16 Adressen eintragen. Der Monitor liest ausschließlich den Status; er steuert keinen Druck.</p><div class="setup-actions"><button id="setup-save" class="setup-primary" type="submit">Speichern und verbinden</button><button id="setup-cancel" class="timeline-button" type="button">Zur Übersicht</button></div></form></div>
+    <div id="setup-done" hidden><h3>Deine Drucker sind eingerichtet.</h3><p>Die Statuswerte erscheinen nach dem Verbindungsaufbau. Falls ein Gerät offline bleibt, prüfe LAN-Modus und IP-Adresse. Über „Einrichten“ kannst du die Adressen jederzeit ändern.</p><p>Von unterwegs nutzt du diese Installation über Tailscale oder dein VPN. Der Rechner bzw. Server muss dafür eingeschaltet bleiben.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
+    <p id="setup-error" class="setup-error" role="alert"></p>
+  </section></div>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
+    <div class="sidebar-label">DEINE WERKSTATT</div>
+    <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.7 ALPHA</div></div>
+  </aside>
+  <main>
+    <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
+    <section class="page-heading"><div><div class="eyebrow">LOKAL VERBUNDEN. GUT IM BLICK.</div><h1>Deine Druckerübersicht.</h1><p>Live-Status, Temperaturen und Filament an einem Ort.</p></div><div class="heading-actions"><button id="setup-open" class="timeline-button" type="button">Einrichten</button><button id="refresh" class="refresh-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .2 5M16 3v4h-4"/></svg>Aktualisieren</button></div></section>
+    <div id="connection-banner" class="connection-banner" role="status" aria-live="polite" hidden></div>
+    <section id="printer-switcher" class="printer-switcher" aria-label="Drucker auswählen"></section>
+    <section class="overview-grid" aria-label="Drucker und Temperaturen">
+      <article class="card printer-card">
+        <div class="card-heading"><div class="printer-title"><span class="printer-mini" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 4v6h8V4M8 16h8M8 20v-7h8v7"/></svg></span><div><h2 id="printer-name">Anycubic Kobra S1</h2><p id="printer-ip">Verbindung wird aufgebaut</p></div></div><span id="connection-pill" class="connection-pill connecting"><i></i><span>Verbinden</span></span></div>
+        <div class="printer-body"><div class="printer-state"><div class="eyebrow muted">AKTUELLER STATUS</div><h3 id="print-state">Wird verbunden<span class="loading-dots">…</span></h3><p id="print-subtitle">Messwerte werden vom Drucker abgerufen.</p><div class="job-metrics"><div><span>Verbleibend</span><strong id="remaining">—</strong></div><div><span>Schicht</span><strong id="layer">—</strong></div></div></div><div class="progress-ring"><svg viewBox="0 0 160 160" aria-hidden="true"><circle class="ring-track" cx="80" cy="80" r="66"/><circle id="progress-circle" class="ring-fill" stroke-dashoffset="414.69" cx="80" cy="80" r="66"/></svg><div><strong id="progress-value">—</strong><span id="progress-caption">Kein Messwert</span></div></div></div>
+        <div class="file-row"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2h7l4 4v12H5zM12 2v5h4M8 11h5M8 14h5"/></svg><div><span id="file-label">DRUCKDATEI</span><p id="filename">Noch keine Druckdaten empfangen.</p></div></div>
+        <div class="card-foot"><span id="print-freshness">Warte auf Druckerstatus</span><span class="thin-label">KOBRA S1</span></div>
+      </article>
+      <article class="card temperatures-card"><div class="section-head"><h2>Temperaturen</h2><span class="section-icon">°C</span></div><div class="temperature-block"><div class="temperature-label"><span class="temp-icon nozzle-icon">♧</span>Düse<span id="nozzle-mode" class="heater-state">—</span></div><div class="temp-reading"><strong id="nozzle-temp">—</strong><span>°C</span><div>Soll <b id="nozzle-target">—</b> °C</div></div><div class="temp-track"><div id="nozzle-bar"></div></div></div><div class="temperature-block bed"><div class="temperature-label"><span class="temp-icon">▱</span>Druckbett<span id="bed-mode" class="heater-state">—</span></div><div class="temp-reading"><strong id="bed-temp">—</strong><span>°C</span><div>Soll <b id="bed-target">—</b> °C</div></div><div class="temp-track"><div id="bed-bar"></div></div></div><div class="card-foot"><span id="temp-freshness">Warte auf Temperaturen</span><span class="thin-label">IST / SOLL</span></div></article>
+    </section>
+    <section class="card filament-card" aria-labelledby="filament-title"><div class="section-head"><div><div class="eyebrow muted">DEIN MATERIAL</div><h2 id="filament-title">Filament & ACE</h2></div><div class="ace-header"><span id="ace-present" class="subtle-pill">Warte auf ACE</span><span id="ace-freshness" class="freshness-text">—</span></div></div><div id="slots" class="slots-grid"><div class="empty-state">Die Filamentdaten werden geladen.</div></div><div class="filament-note"><span class="note-mark">i</span>Restmengen sind Angaben des Druckers und können vom tatsächlichen Spulengewicht abweichen.</div></section>
+    <section class="bottom-grid"><article class="card drying-card"><div class="section-head"><h2>ACE-Klima</h2><span id="drying-status" class="subtle-pill">—</span></div><div class="climate-metrics"><div><span>Temperatur</span><strong id="ace-temp">—</strong></div><div><span>Luftfeuchte</span><strong id="ace-humidity">—</strong></div><div><span>Trocknung übrig</span><strong id="drying-remaining">—</strong></div></div></article><article class="card connection-card"><div class="section-head"><h2>Verbindung</h2><span class="tiny-lock">LOKAL · NUR LESEN</span></div><dl><div><dt>Zuletzt empfangen</dt><dd id="last-update">Noch keine Daten</dd></div><div><dt>Firmware</dt><dd id="firmware">—</dd></div><div><dt>Automatische Aktualisierung</dt><dd>Alle 2 Sekunden</dd></div></dl></article></section>
+    <section class="card history-card" aria-labelledby="history-title"><div class="section-head"><div><div class="eyebrow muted">LOKAL AUFGEZEICHNET</div><h2 id="history-title">Druckverlauf</h2></div><span class="subtle-pill">Aufzeichnung aktiv</span></div><div class="history-totals" aria-label="Aufträge des ausgewählten Druckers"><div><strong id="archive-total">—</strong><span>Erfasst</span></div><div><strong id="archive-completed">—</strong><span>Abgeschlossen</span></div><div><strong id="archive-active">—</strong><span>Aktiv</span></div><div><strong id="archive-cancelled">—</strong><span>Abgebrochen</span></div></div>
+      <div class="history-filters"><label class="history-search">Dateiname suchen<input id="history-search" type="search" maxlength="200" placeholder="z. B. Halterung oder PETG" autocomplete="off"></label><label>Status<select id="history-filter"><option value="all">Alle Aufträge</option><option value="active">Aktiv / pausiert</option><option value="completed">Abgeschlossen</option><option value="cancelled">Abgebrochen</option><option value="unknown_end">Ende nicht beobachtet</option></select></label></div>
+      <p id="history-message" class="history-message" role="status">Historie wird geladen…</p>
+      <div id="history-content" class="history-content"><p class="empty-state">Neue Drucke werden automatisch erkannt.</p></div>
+      <nav class="history-pages" aria-label="Seiten der Druckhistorie"><button id="history-prev" class="timeline-button" type="button" disabled>← Neuere</button><span id="history-page">Seite 1 von 1</span><button id="history-next" class="timeline-button" type="button" disabled>Ältere →</button></nav>
+    </section>
+    <section id="timeline-card" class="card history-card timeline-card" aria-labelledby="timeline-title" hidden>
+      <div class="section-head"><div><div class="eyebrow muted">DEIN DRUCK IM VERLAUF</div><h2 id="timeline-title">Temperaturverlauf</h2></div><button id="timeline-close" class="timeline-button" type="button" aria-label="Temperaturverlauf schließen">Schließen</button></div>
+      <p id="timeline-file" class="timeline-file"></p>
+      <div id="timeline-content" aria-live="polite"></div>
+    </section>
+    <footer class="footer"><span><i class="footer-dot"></i>Deine Daten bleiben in deinem lokalen Netzwerk.</span><span><a href="/about">Info &amp; Lizenzen</a> <span class="footer-separator">/</span> Status ohne Eingriff</span></footer>
+  </main>
+</body>
+</html>

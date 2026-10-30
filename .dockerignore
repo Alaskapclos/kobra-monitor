@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.state
+data
+__pycache__
+**/__pycache__
+*.log
+*.sqlite3*
+.env
+.env.*
+*.key
+*.pem
+*.crt
