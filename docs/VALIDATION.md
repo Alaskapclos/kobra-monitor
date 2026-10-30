@@ -66,3 +66,12 @@ Das war ein betreuter Einzelumzug, keine im Einrichtungsassistenten verfügbare
 Importfunktion. Ursprüngliche Beobachtungslücken bleiben bestehen. Regelmäßige
 automatische Sicherungen und die Wiederherstellung einer vollständigen
 Installation einschließlich Zugangsdaten sind noch nicht eingerichtet/geprüft.
+
+## Sicherungsdienst 0.8.0-alpha.1
+
+65 Python-Tests (darunter zehn neue Sicherungs-/Wiederherstellungstests) und
+14 Leseschutztests bestanden lokal. Der zusätzliche Container-CI-Test prüft
+Sicherung und Wiederherstellung bei nur lesend eingebundenem Monitor-Volume
+und abgeschaltetem Netzwerk des Sicherungscontainers. Ergebnis dieses neuen
+CI-Laufs und NAS-Praxisprüfung stehen zum Zeitpunkt dieser Quellcodeänderung
+noch aus. Der produktive NAS-Monitor bleibt vorerst auf Version 0.7.0-alpha.1.

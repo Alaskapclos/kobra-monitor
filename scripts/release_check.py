@@ -14,7 +14,7 @@ except (OSError,subprocess.CalledProcessError):
 errors=[]
 for file in paths:
     name=str(file.relative_to(root));parts=file.relative_to(root).parts
-    if any(v in ('.state','.venv','data','__pycache__') for v in parts) or file.name in ('.env','access-token','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
+    if any(v in ('.state','.venv','data','backups','.backups','__pycache__') for v in parts) or file.name.startswith('kobra-backup-') or file.name in ('.env','access-token','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
         errors.append('Runtime/private file: '+name)
     body=file.read_bytes()
     for key_type in ('','RSA ','EC '):

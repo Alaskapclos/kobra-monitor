@@ -16,3 +16,8 @@ access-token
 .DS_Store
 Thumbs.db
 dist/
+backups/
+.backups/
+kobra-backup-*.zip
+.kobra-backup-*/
+.kobra-restore-*/

@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.7.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.8.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung, Kamera und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -65,6 +65,12 @@ Der Code ist geheim und gehört nicht in Screenshots, öffentliche Issues oder G
 Der amd64-Container wurde in der CI gebaut und auf einem UGREEN DXP4800GT
 mit UGOS praktisch geprüft. Andere NAS-Modelle, arm64 und ein Austausch des
 Images mit bestehendem Volume sind noch nicht praktisch geprüft.
+
+## Daten sichern
+
+Ein separater Sicherungsdienst kann auf dem NAS täglich sieben vollständige
+Datenstände aufbewahren. Die laufende Überwachung bleibt dabei unverändert.
+[Sicherung, Zugangsdaten und Wiederherstellung](docs/BACKUPS.md).
 
 ## Von unterwegs zugreifen
 

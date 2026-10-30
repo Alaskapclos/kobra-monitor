@@ -12,3 +12,8 @@ __pycache__
 *.key
 *.pem
 *.crt
+.backups
+backups
+kobra-backup-*.zip
+.kobra-backup-*
+.kobra-restore-*

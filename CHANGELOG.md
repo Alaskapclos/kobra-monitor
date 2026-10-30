@@ -1,6 +1,13 @@
 # Änderungen
 
-## 0.7.0-alpha.1 – vorbereitet
+## 0.8.0-alpha.1
+
+- Vollständige Datenarchive mit SQLite-Snapshot, Einrichtung, Zugangscode und Prüfsummen.
+- Separater NAS-Sicherungsdienst ohne Netzwerk und mit lesendem Zugriff auf Monitor-Daten.
+- Täglicher Rhythmus, sieben erfolgreiche Stände, Wiederholversuche bei Fehlern.
+- Wiederherstellung in neue Ordner mit Archivprüfung; bestehende Daten werden nicht überschrieben.
+
+## 0.7.0-alpha.1
 
 - Eigenständiger Projektstand mit Startanleitung, Lizenz-/Sicherheitsdokumentation und CI.
 - Keine persönlichen Druckeradressen als Standard; browsergestützte Einrichtung.

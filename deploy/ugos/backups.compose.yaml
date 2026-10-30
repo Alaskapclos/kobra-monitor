@@ -1,0 +1,42 @@
+# Separate project: kobra-monitor-backup. Do not replace the monitor project.
+services:
+  backups:
+    image: kobra-monitor:0.8.0-alpha.1
+    platform: linux/amd64
+    restart: unless-stopped
+    init: true
+    network_mode: none
+    healthcheck:
+      disable: true
+    command:
+      - python
+      - backup.py
+      - watch
+      - --data-dir
+      - /source
+      - --destination
+      - /data
+      - --image
+      - ${KOBRA_MONITOR_IMAGE:?Image der laufenden Monitor-Installation angeben}
+      - --deployment
+      - /deployment/docker-compose.yaml
+      - --interval
+      - "86400"
+      - --keep
+      - "7"
+    volumes:
+      - monitor-data:/source:ro
+      - backup-data:/data
+      - "${KOBRA_MONITOR_PROJECT_DIR:?Absoluten NAS-Projektordner angeben}:/deployment:ro"
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  monitor-data:
+    external: true
+    name: ${KOBRA_MONITOR_DATA_VOLUME:?Vorhandenes Monitor-Volume exakt angeben}
+  backup-data:
