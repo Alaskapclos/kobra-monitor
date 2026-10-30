@@ -1,9 +1,11 @@
 # UGREEN DXP4800GT mit UGOS
 
-Vorgesehener erster NAS-Praxistest. Der DXP4800GT gehört laut UGREEN zu den
+Erster NAS-Praxistest am 30.10.2026 bestanden. Der DXP4800GT gehört laut UGREEN zu den
 Docker-fähigen DXP-Modellen mit x86-64/AMD64. Die Menübezeichnungen können je nach
-UGOS-Version leicht abweichen. Diese Anleitung ist vorbereitet, noch kein
-bestätigter Test auf einem echten DXP4800GT.
+UGOS-Version leicht abweichen. Auf einem echten DXP4800GT wurden Import des CI-Abbilds, Compose-Start,
+Browser-Einrichtung, zwei laufende Kobra S1 und ein Containerneustart geprüft.
+Die genaue UGOS-Version wurde nicht erfasst. Image-Update, NAS-Neustart und
+Fernzugriff sind noch nicht praktisch geprüft.
 
 ## Ziel
 
@@ -39,7 +41,7 @@ Erwarteter Image-Name: `kobra-monitor:0.7.0-alpha.1`. Das Abbild enthält den
 Quellcode und seine Bibliotheken; persönliche Datenvolumes und Zugangscodes
 werden nicht in das Abbild exportiert. Das Artefakt ist privat und wird sieben
 Tage aufbewahrt. Ein neuer erfolgreicher Workflow kann es erneut erzeugen.
-Solange kein erfolgreicher CI-Lauf vorliegt, ist dieses Artefakt noch nicht verfügbar.
+Der erste erfolgreiche Lauf ist in der [Testmatrix](VALIDATION.md) verlinkt.
 
 ## 3. Eigenes Projekt anlegen
 
@@ -84,7 +86,7 @@ python monitor.py --show-access-code
 Der Monitor veranlasst keine Pause, keinen Start, keinen Upload und keine
 Heizung oder Bewegung. Eine nicht erreichbare Druckeradresse erscheint offline.
 
-## 5. Prüfliste für diesen NAS-Test
+## 5. Prüfliste für weitere Installationen
 
 - Beide eingerichteten Drucker liefern Modell, Status und Temperaturen.
 - ACE-Slots gehören jeweils zum richtigen Drucker.
@@ -115,3 +117,16 @@ automatisch aktiviert. Der Import des CI-Abbilds vermeidet diesen Bau-Schritt au
 - https://ai.ugreen.com/pages/solution-software
 - https://ai.ugreen.com/blogs/knowledge/docker-docker-compose-ugreen-nas
 - https://support.ugnas.com/detail/article/en-US/236
+
+## Ergebnis des ersten Praxistests
+
+Beide Geräte lieferten Status, Firmware, Temperaturen und jeweils ihre ACE-Slots.
+Einrichtung und Zugangscode blieben beim Neustart des Monitor-Containers erhalten;
+beide aktiven Aufträge wurden mit denselben Auftrags-IDs fortgeführt.
+Ohne Anmeldung antwortete `/api/status` mit HTTP 401. Der Neustart erforderte
+erwartungsgemäß eine erneute Browser-Anmeldung. Ein vorhandener anderer
+Container blieb unverändert. Während des Monitorneustarts entsteht eine kurze
+Beobachtungslücke; daraus wird kein Druckende abgeleitet.
+
+Die NAS-Instanz begann mit eigener Historie und erkannte bereits laufende Drucke.
+Bestehende Rechner-Historie wurde nicht automatisch kopiert oder zusammengeführt.

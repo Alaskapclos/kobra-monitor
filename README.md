@@ -7,7 +7,9 @@ Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 **Stand: 0.7.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung, Kamera und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
-zwei parallele Druckerverbindungen wurden auf macOS beobachtet.
+zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
+UGREEN DXP4800GT mit UGOS läuft der amd64-Container mit zwei Druckern;
+Einrichtung und aktive Verlaufseinträge blieben beim Containerneustart erhalten.
 
 ![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
 
@@ -60,8 +62,9 @@ docker compose exec monitor python monitor.py --show-access-code
 ```
 
 Der Code ist geheim und gehört nicht in Screenshots, öffentliche Issues oder Git.
-Container-Betrieb, konkrete NAS-Modelle und Mehrarchitektur-Builds müssen noch
-praktisch geprüft werden; die CI enthält bereits einen Container-Starttest.
+Der amd64-Container wurde in der CI gebaut und auf einem UGREEN DXP4800GT
+mit UGOS praktisch geprüft. Andere NAS-Modelle, arm64 und ein Austausch des
+Images mit bestehendem Volume sind noch nicht praktisch geprüft.
 
 ## Von unterwegs zugreifen
 
@@ -122,9 +125,10 @@ python scripts/release_check.py
 ```
 
 Unter Windows liegt Python unter `.venv\Scripts\python.exe`. Die CI prüft
-Python 3.11 und 3.14 auf macOS, Linux und Windows; ein konfigurierter Workflow
-ist noch kein bestandener Lauf auf diesen Systemen. Vor einem öffentlichen
-Release den grünen CI-Lauf abwarten. [Testmatrix](docs/VALIDATION.md).
+Python 3.11 und 3.14 auf macOS, Linux und Windows. Alle sechs Plattformläufe
+und der Container-Test bestanden am 30.10.2026. Die CI arbeitet ohne reale
+Drucker; Hardware- und Fernzugriffstests sind gesondert ausgewiesen.
+[Testmatrix und belegter CI-Lauf](docs/VALIDATION.md).
 
 ## Herkunft und Lizenz
 

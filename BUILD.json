@@ -5,7 +5,9 @@
     "Anycubic Kobra S1 stock firmware 2.7.2.7, two devices"
   ],
   "platform_verified": [
-    "macOS, Python 3.14.6"
+    "macOS, Python 3.14.6",
+    "GitHub CI: macOS/Linux/Windows, Python 3.11 and 3.14",
+    "UGREEN DXP4800GT / UGOS, linux/amd64 container"
   ],
   "tests": {
     "python": 55,
@@ -14,8 +16,9 @@
     "fresh_install": "passed on macOS",
     "browser_setup": "passed with printer I/O disabled",
     "authenticated_live_monitor": "passed, two devices online and history retained",
-    "container": "not run; Docker unavailable locally",
-    "vpn_and_nas": "not tested on real infrastructure"
+    "container": "passed in GitHub CI and real UGOS deployment",
+    "vpn_and_nas": "NAS passed with two devices; external VPN access not tested",
+    "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap"
   },
   "source_sha256": {
     ".dockerignore": "569651da3fb28d5ca6aadf14e4e8dacc41f816c4174d1f0b42264dc33d36fbbc",
@@ -30,7 +33,7 @@
     "Dockerfile": "d873aea83ce1abd9704fc5fd4fbab08b2626348731f75b1c2723efcaf9fc19bf",
     "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
     "NOTICE.md": "40e6a85a923b9039193c6804afa2338bead8844145e3f42bedf9a038733db703",
-    "README.md": "ad49701b87c657578621db99209cdfa5f165475d8ae15be5dd33c00df2eb06c4",
+    "README.md": "0239285186f1a8ce81278a859d6efdffce8b8f5ed6e682d4be600138ce12c0e9",
     "SECURITY.md": "915159ce1447403a0859b42ac2bbbf94d319bbe7a7fb909e48094bae69988b5c",
     "SOURCES.json": "926373ec8fe641ef4a2009b8ff6b57846efe38e9e009a6a11724cc42090e5313",
     "Start-Kobra-Monitor.cmd": "9d1fb163fad265920a846b8e333a88925a4f169580c28dddb8a17e6f2d358e99",
@@ -45,9 +48,9 @@
     "deploy/ugos/compose.yaml": "40c53ed0ee9722ac705bc80ea23455ee8eb4462862ec577bf73ec9c50aee17e3",
     "docs/INSTALLATION.md": "10a460e844b3ef40dd4bcdcc5ff76f9776c84cca2e28ea8dddcf6cb909951224",
     "docs/REMOTE_ACCESS.md": "03af248bd5735b79b4a22f29651e81f3d07138437acbdcac2ff619a0bf8314e2",
-    "docs/UGREEN_UGOS.md": "9c6f36c0f031164090d932974a924080f94285aecd6c40986ff7cff7a1666629",
+    "docs/UGREEN_UGOS.md": "41407b83783d2b1258f8b65500af89ca14d3300645c675280b48fcaa436ce70f",
     "docs/UPSTREAM.md": "fee791942c472d431701dd6ad8faf631fe3160b34d15bbc86dcb10d1061c7f80",
-    "docs/VALIDATION.md": "b9f5a1f5c376a43de33dca712abfe16f24d918efac8274af8d4dfb4b96439444",
+    "docs/VALIDATION.md": "93189cac285fd996168d939dcc3264edfcfceb0201e30e74235495a03322bd8e",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "788a1fb17acf20fa15dab8db7e84ae950dbc79a1aacb4adab5efcb56cb0de95a",
@@ -140,5 +143,10 @@
     "vendor/kobra-connect/kobra_connect/handshake.py": "63c7c140640725b3c7dd54eab13bef92fdbd2fbc062388fc675e6e0495bdf0b4",
     "vendor/kobra-connect/kobra_connect/models.py": "b2345ae06907278a050cc75f145f5c2d049a2e09bca3f1d0f0b803a04f0a6ed8"
   },
-  "deployment_target": "UGREEN DXP4800GT / UGOS, linux/amd64; real NAS test pending"
+  "deployment_target": "UGREEN DXP4800GT / UGOS, linux/amd64; deployed and container restart verified",
+  "ci_evidence": {
+    "code_commit": "5223629616b33fe822e6bc9b47e6ae785164d601",
+    "run_url": "https://github.com/Alaskapclos/kobra-monitor/actions/runs/41109579545",
+    "successful_jobs": 7
+  }
 }
