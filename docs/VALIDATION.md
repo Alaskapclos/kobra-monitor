@@ -132,6 +132,22 @@ Die Browserprüfung erfolgte auf einem getrennten lokalen Testdienst mit
 ausgeschalteter Druckerkommunikation: Konto anlegen, falsche Bestätigung,
 Druckereinrichtung, Abmelden und erneutes Anmelden mit selbst gewählten
 Testdaten erfolgreich. Keine echten Benutzerpasswörter durch den Agenten gesetzt.
-Die NAS-Hauptinstanz bleibt bis zum geprüften Imagewechsel auf 0.8.
+Die NAS-Hauptinstanz und der getrennte Sicherungsdienst wurden danach auf
+0.9 aktualisiert. Alle sieben Aufträge und die Druckerzuordnung sind erhalten.
 Die Installation hat zunächst ein Besitzerkonto, keine Benutzerverwaltung mit
 mehreren Rollen. Die Rücksetzung erfolgt lokal, nicht per E-Mail.
+
+Der [CI-Lauf 41133000053](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41133000053)
+für Code-Commit `639a270353924ee51232174889d4519e199abbef` bestand mit
+allen sieben Jobs (Windows, macOS, Linux und Container). Das getestete amd64-
+Abbild wurde per Artefakt-Prüfsumme kontrolliert und auf UGOS eingesetzt.
+Der Nutzer hat das echte Konto selbst angelegt; die angemeldete Browseransicht
+zeigt beide Drucker mit Live-Daten. Die echte vollständige Sicherung enthält
+den Kontoprüfwert und wurde isoliert auf NAS und Mac wiederhergestellt.
+Die zusätzliche Mac-Kopie hat dieselbe Prüfsumme wie das NAS-Original.
+
+Verbindungsereignisse beim Update: 30.10.2026 ca. 22:48:14–22:48:21 MEZ,
+rund sechs Sekunden Unterbrechung je Drucker. Beide Drucke waren bereits vor
+dem Update abgeschlossen. Ihre gespeicherten Zustände/Endzeiten blieben
+unverändert. Keine Druckersteuerung und kein Neustart des Mac-Monitors.
+Der echte 24-Stunden-Sicherungszyklus bleibt bis zum Folgetag ungeprüft.
