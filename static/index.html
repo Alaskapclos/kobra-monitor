@@ -41,13 +41,14 @@
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
     <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.9 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.10 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
     <section class="page-heading"><div><div class="eyebrow">LOKAL VERBUNDEN. GUT IM BLICK.</div><h1>Deine Druckerübersicht.</h1><p>Live-Status, Temperaturen und Filament an einem Ort.</p></div><div class="heading-actions"><button id="account-open" class="timeline-button" type="button" hidden>Konto</button><button id="logout" class="timeline-button" type="button" hidden>Abmelden</button><button id="setup-open" class="timeline-button" type="button">Einrichten</button><button id="refresh" class="refresh-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .2 5M16 3v4h-4"/></svg>Aktualisieren</button></div></section>
     <div id="connection-banner" class="connection-banner" role="status" aria-live="polite" hidden></div>
     <section id="printer-switcher" class="printer-switcher" aria-label="Drucker auswählen"></section>
+    <p class="printer-order-help" id="printer-order-status" role="status" aria-live="polite">Drucker zum Sortieren ziehen · mit Tastatur: Alt + Pfeiltasten</p>
     <section class="overview-grid" aria-label="Drucker und Temperaturen">
       <article class="card printer-card">
         <div class="card-heading"><div class="printer-title"><span class="printer-mini" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 4v6h8V4M8 16h8M8 20v-7h8v7"/></svg></span><div><h2 id="printer-name">Anycubic Kobra S1</h2><p id="printer-ip">Verbindung wird aufgebaut</p></div></div><span id="connection-pill" class="connection-pill connecting"><i></i><span>Verbinden</span></span></div>

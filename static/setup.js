@@ -84,6 +84,12 @@ window.kobraAuth=(()=>{
   $('setup-open').addEventListener('click',configure);
   $('setup-done-button').addEventListener('click',()=>{showPanel(false);});
   $('setup-cancel').addEventListener('click',()=>{if(printers.length)showPanel(false);});
-  return {ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
+  async function reorder(ips){
+    const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json','X-Kobra-CSRF':csrf},body:JSON.stringify({printer_ips:ips}),signal:AbortSignal.timeout(10000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Reihenfolge konnte nicht gespeichert werden.');
+    printers=result.ips;return result.ips;
+  }
+  return {reorder,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
     setPrinters(ips){printers=ips||[];if(authenticated&&accountConfigured&&!printers.length&&panel.hidden)configure();}};
 })();

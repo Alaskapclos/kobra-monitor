@@ -151,3 +151,14 @@ rund sechs Sekunden Unterbrechung je Drucker. Beide Drucke waren bereits vor
 dem Update abgeschlossen. Ihre gespeicherten Zustände/Endzeiten blieben
 unverändert. Keine Druckersteuerung und kein Neustart des Mac-Monitors.
 Der echte 24-Stunden-Sicherungszyklus bleibt bis zum Folgetag ungeprüft.
+
+## Druckerreihenfolge 0.10
+
+81 Python-Tests, 14 Leseschutztests und elf JavaScript-Prüffälle lokal erfolgreich.
+Neue Prüfungen: ausschließlich exakte Permutationen der eingerichteten Drucker
+zulassen; Reihenfolge in config.json, Snapshot und nach Neustart identisch;
+keine Druckerverbindung neu starten; Anmeldung, CSRF und Origin für Sortieren
+erforderlich. Browser-Fixture ohne Druckerkommunikation: Ziehen und Tastatur
+verschieben die Karten; die Reihenfolge bleibt nach Neuladen erhalten und die
+ausgewählte Druckeransicht wird während des Sortierens beibehalten.
+Der NAS-Einsatz des neuen Images wird gesondert geprüft.

@@ -1,3 +1,10 @@
+## 0.10.0-alpha.1
+
+- Druckerkarten per Drag-and-drop dauerhaft anordnen; auf Touchgeräten am Punktgriff.
+- Alternative mit Alt + Pfeiltasten, Bestätigung und verständliche Speicherfehler.
+- Reihenfolge über alle Browser hinweg; Auswahl und Druckerverbindungen bleiben erhalten.
+- Sortierroute akzeptiert nur vorhandene Drucker und erfordert Anmeldung/CSRF.
+
 ## 0.9.0-alpha.1
 
 - Lokales Besitzerkonto mit frei gewähltem Benutzernamen und Passwort.

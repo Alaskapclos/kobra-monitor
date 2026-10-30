@@ -238,8 +238,17 @@ class Fleet:
         self.telemetry = self
 
     def snapshot(self):
-        printers = [item.telemetry.snapshot() for item in self.monitors.values()]
+        printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
         return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs()}
+
+    async def reorder(self,ips):
+        async with self.config_lock:
+            if (not isinstance(ips,list) or len(ips)!=len(self.ips)
+                    or any(not isinstance(ip,str) for ip in ips)
+                    or set(ips)!=set(self.ips)):
+                raise ValueError('Die Druckerliste hat sich geändert. Bitte aktualisieren und erneut sortieren.')
+            save_config(self.data_dir,ips)
+            self.ips=list(ips);self.ip=self.ips[0] if self.ips else None
 
     async def configure(self,ips):
         ips=printer_ips(ips)
@@ -271,7 +280,7 @@ def build_app(monitor,access=None):
     async def boundary(request, handler):
         public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path=='/api/setup'
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
@@ -308,6 +317,16 @@ def build_app(monitor,access=None):
         except (ValueError,TypeError,AttributeError) as exc:
             return web.json_response({'error':str(exc)},status=400)
         return web.json_response({'ok':True,'read_only':True,'ips':ips})
+
+    async def order(request):
+        if request.content_type!='application/json':
+            return web.json_response({'error':'Ungültiges Datenformat.'},status=400)
+        try:
+            body=await request.json()
+            await monitor.reorder(body.get('printer_ips'))
+        except (ValueError,TypeError,AttributeError) as exc:
+            return web.json_response({'error':str(exc) if isinstance(exc,ValueError) else 'Ungültige Druckerliste.'},status=400)
+        return web.json_response({'ok':True,'read_only':True,'ips':monitor.ips})
 
     async def css(request): return web.FileResponse(BASE/'static/monitor.css')
     async def js(request): return web.FileResponse(BASE/'static/monitor.js')
@@ -358,6 +377,7 @@ def build_app(monitor,access=None):
         app.router.add_post('/api/account',access.save_account)
         app.router.add_post('/api/logout',access.logout)
     app.router.add_post('/api/setup',setup)
+    app.router.add_post('/api/order',order)
     app.router.add_get('/assets/monitor.css',css)
     app.router.add_get('/assets/monitor.js',js)
     app.router.add_get('/api/status',status)

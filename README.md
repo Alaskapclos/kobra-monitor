@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.9.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.10.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung, Kamera und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -82,6 +82,14 @@ vorhandene VPN auf ihn zu. Es gibt keinen vorgeschriebenen VPN-Anbieter.
 
 [Anleitung und Grenzen des Fernzugriffs](docs/REMOTE_ACCESS.md).
 Kein Portforwarding aus dem öffentlichen Internet auf den Monitor.
+
+## Drucker anordnen
+
+Ziehe eine Druckerkarte auf die gewünschte Position. Auf Touchgeräten nutzt du
+den Punktgriff links. Alternativ die Karte mit Tab fokussieren und mit
+Alt + Pfeiltasten verschieben. Die Reihenfolge wird auf dem Monitor gespeichert
+und gilt auf allen Geräten. Die Auswahl und laufende Druckerverbindungen bleiben
+beim Umsortieren erhalten. Dies ändert keine Druckereinstellung.
 
 ## Was du siehst
 

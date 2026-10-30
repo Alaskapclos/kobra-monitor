@@ -110,9 +110,68 @@ function renderPrinter(snapshot) {
   document.title=`${names[connection]||'Verbinden'} · Kobra Monitor`;
 }
 
+let draggedPrinter=null,dropPrinter=null,orderSaving=false,pendingOrder=null,suppressPickerClickUntil=0;
+function reorderedIps(ips,from,to){
+  if(from===to||!ips.includes(from)||!ips.includes(to))return [...ips];
+  const result=ips.filter(ip=>ip!==from);result.splice(ips.indexOf(to),0,from);return result;
+}
+function clearPrinterDrag(){
+  draggedPrinter=null;dropPrinter=null;
+  for(const button of printerButtons.values())button.classList.remove('dragging','drop-target');
+}
+async function movePrinter(from,to){
+  if(orderSaving||!lastResponse)return;
+  const ips=pendingOrder||lastResponse.ips||[];const next=reorderedIps(ips,from,to);
+  if(next.every((ip,i)=>ip===ips[i]))return;
+  orderSaving=true;pendingOrder=next;
+  $('printer-order-status').textContent='Reihenfolge wird gespeichert …';
+  render(lastResponse);
+  try{
+    const saved=await window.kobraAuth.reorder(next);
+    pendingOrder=saved;
+    $('printer-order-status').textContent='Reihenfolge gespeichert.';
+  }catch(error){
+    pendingOrder=null;$('printer-order-status').textContent=error.message||'Reihenfolge nicht gespeichert. Bitte erneut versuchen.';
+  }finally{orderSaving=false;render(lastResponse);}
+}
+function bindPrinterDrag(button,ip){
+  button.draggable=false;button.dataset.ip=ip;
+  button.setAttribute('aria-describedby','printer-order-status');
+  let pointerStart=null,moved=false;
+  button.addEventListener('keydown',event=>{
+    if(!event.altKey||!['ArrowLeft','ArrowUp','ArrowRight','ArrowDown'].includes(event.key))return;
+    event.preventDefault();const ips=lastResponse?.ips||[],index=ips.indexOf(ip);
+    const target=index+(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1);
+    if(target>=0&&target<ips.length)movePrinter(ip,ips[target]);
+  });
+  button.addEventListener('pointerdown',event=>{
+    if(event.button!==0||orderSaving||(event.pointerType==='touch'&&!event.target.closest('.picker-grip')))return;
+    pointerStart=[event.clientX,event.clientY];moved=false;draggedPrinter=ip;dropPrinter=null;
+    button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener('pointermove',event=>{
+    if(draggedPrinter!==ip||!pointerStart)return;
+    if(!moved&&Math.hypot(event.clientX-pointerStart[0],event.clientY-pointerStart[1])<8)return;
+    moved=true;button.classList.add('dragging');event.preventDefault();
+    const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.printer-picker');
+    dropPrinter=target?.dataset.ip||null;
+    for(const item of printerButtons.values())item.classList.toggle('drop-target',item===target&&dropPrinter!==ip);
+  });
+  button.addEventListener('pointerup',event=>{
+    if(draggedPrinter!==ip)return;
+    const target=dropPrinter,wasMoved=moved;pointerStart=null;moved=false;clearPrinterDrag();
+    if(wasMoved){event.preventDefault();suppressPickerClickUntil=Date.now()+300;if(target)movePrinter(ip,target);}
+  });
+  button.addEventListener('pointercancel',()=>{pointerStart=null;moved=false;clearPrinterDrag();});
+  button.addEventListener('lostpointercapture',()=>{pointerStart=null;moved=false;if(draggedPrinter===ip)clearPrinterDrag();});
+}
+
 function render(snapshot) {
+  if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[]);
-  const printers=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
+  const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
+  const order=pendingOrder||snapshot.ips||source.map(p=>p.ip);
+  const printers=[...source].sort((a,b)=>order.indexOf(a.ip)-order.indexOf(b.ip));
   if (!printers.some(p=>p.ip===selectedIp)) selectedIp=printers[0]?.ip;
   const area=$('printer-switcher');
   const navCount=document.querySelector('.nav-count');
@@ -121,6 +180,7 @@ function render(snapshot) {
     let button=printerButtons.get(printer.ip);
     if(!button) {
       button=document.createElement('button');button.type='button';button.className='printer-picker';
+      const grip=document.createElement('span');grip.className='picker-grip';grip.textContent='⠿';grip.setAttribute('aria-hidden','true');
       const identity=document.createElement('span');identity.className='picker-identity';
       const name=document.createElement('strong');name.className='picker-name';
       const address=document.createElement('span');address.className='picker-ip';
@@ -128,8 +188,9 @@ function render(snapshot) {
       const info=document.createElement('span');info.className='picker-info';
       const state=document.createElement('span');state.className='picker-state';
       const detail=document.createElement('span');detail.className='picker-detail';
-      info.append(state,detail);button.append(identity,info);
-      button.addEventListener('click',()=>{selectedIp=printer.ip;if(lastResponse)render(lastResponse);});
+      info.append(state,detail);button.append(grip,identity,info);
+      bindPrinterDrag(button,printer.ip);
+      button.addEventListener('click',()=>{if(Date.now()<suppressPickerClickUntil)return;selectedIp=printer.ip;if(lastResponse)render(lastResponse);});
       printerButtons.set(printer.ip,button);area.append(button);
     }
     const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
@@ -149,6 +210,13 @@ function render(snapshot) {
   for(const [ip,button] of printerButtons) {
     if(!printers.some(p=>p.ip===ip)){button.remove();printerButtons.delete(ip);}
   }
+  if(!draggedPrinter){
+    const focused=document.activeElement;
+    printers.forEach((printer,index)=>{const button=printerButtons.get(printer.ip);if(area.children[index]!==button)area.insertBefore(button,area.children[index]||null);});
+    if([...printerButtons.values()].includes(focused)&&document.activeElement!==focused)focused.focus({preventScroll:true});
+  }
+  area.setAttribute('aria-busy',String(orderSaving));
+  $('printer-order-status').hidden=printers.length<2;
   const chosen=printers.find(p=>p.ip===selectedIp);
   if(chosen)renderPrinter(chosen);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();
