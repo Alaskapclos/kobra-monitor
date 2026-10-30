@@ -58,6 +58,10 @@ class AccessTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.status,200)
         self.assertTrue(result.cookies['kobra_session']['httponly'])
         self.assertEqual(result.cookies['kobra_session']['samesite'],'Strict')
+        if self.access.account is None:
+            first={'Cookie':'kobra_session='+result.cookies['kobra_session'].value,'X-Kobra-CSRF':json.loads(result.text)['csrf'],'Content-Type':'application/json','Origin':'http://localhost'}
+            result=await self.call('POST','/api/account',{'username':'Klaus','password':'Ein gutes Testpasswort!','password_confirmation':'Ein gutes Testpasswort!'},first)
+            self.assertEqual(result.status,200)
         return {'Cookie':'kobra_session='+result.cookies['kobra_session'].value,'X-Kobra-CSRF':json.loads(result.text)['csrf'],'Content-Type':'application/json','Origin':'http://localhost'}
     async def test_unauthenticated_browser_cannot_read_status_or_configure(self):
         self.assertEqual((await self.call('GET','/api/status')).status,401)

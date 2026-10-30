@@ -272,12 +272,15 @@ def build_app(monitor,access=None):
         public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
         is_setup=access is not None and request.method=='POST' and request.path=='/api/setup'
-        valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup
+        is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
+        valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
             response = web.json_response({'error':'Nur Statusabfragen und lokale Einrichtung erlaubt.','read_only':True}, status=403)
         elif access is not None and request.path not in public and not access.session(request):
             response = web.json_response({'error':'Bitte anmelden.','read_only':True},status=401)
-        elif is_setup and not access.can_write(request):
+        elif access is not None and access.account is None and request.path not in public|{'/api/account','/api/logout'}:
+            response = web.json_response({'error':'Bitte zuerst dein Benutzerkonto einrichten.','read_only':True},status=403)
+        elif (is_setup or is_account) and not access.can_write(request):
             response = web.json_response({'error':'Einrichtung bitte aus dieser Oberfläche aufrufen.'},status=403)
         else:
             response = await handler(request)
@@ -295,8 +298,7 @@ def build_app(monitor,access=None):
     async def session(request):
         if access is None:return web.json_response({'authenticated':True,'csrf':'','read_only':True})
         if request.method=='POST':return await access.login(request)
-        current=access.session(request)
-        return web.json_response({'authenticated':bool(current),'csrf':current['csrf'] if current else None,'read_only':True})
+        return web.json_response(access.state(request))
     async def setup(request):
         if request.content_type!='application/json':return web.json_response({'error':'Ungültiges Datenformat.'},status=400)
         try:
@@ -352,6 +354,9 @@ def build_app(monitor,access=None):
     app.router.add_get('/assets/setup.css',setup_css)
     app.router.add_get('/api/session',session)
     app.router.add_post('/api/session',session)
+    if access is not None:
+        app.router.add_post('/api/account',access.save_account)
+        app.router.add_post('/api/logout',access.logout)
     app.router.add_post('/api/setup',setup)
     app.router.add_get('/assets/monitor.css',css)
     app.router.add_get('/assets/monitor.js',js)
@@ -379,10 +384,11 @@ async def serve(args):
             await runner.setup()
             await web.TCPSite(runner,args.listen,args.port).start()
             print(f'Kobra Monitor: http://127.0.0.1:{args.port}',flush=True)
-            print('Nur lesen. Einrichtung im Browser. Zugangscode: python monitor.py --show-access-code',flush=True)
+            print('Nur lesen. Anmeldung und Einrichtung im Browser.',flush=True)
+            if not access.account:print('Erste Einrichtung: python monitor.py --show-setup-link',flush=True)
             if args.open:
                 import webbrowser
-                webbrowser.open(f'http://127.0.0.1:{args.port}/#access='+quote(Access(args.data_dir).token,safe=''))
+                webbrowser.open(f'http://127.0.0.1:{args.port}/'+('' if Access(args.data_dir).account else '#access='+quote(Access(args.data_dir).token,safe='')))
             stop = asyncio.Event()
             loop = asyncio.get_running_loop()
             for sig in (signal.SIGINT, signal.SIGTERM):
@@ -401,12 +407,17 @@ def main():
     parser.add_argument('--open',action='store_true',help='Statusübersicht im Browser öffnen')
     parser.add_argument('--listen',default=os.environ.get('KOBRA_LISTEN','127.0.0.1'),help='Lokale Bindeadresse; Standard nur dieser Rechner')
     parser.add_argument('--data-dir',default=os.environ.get('KOBRA_DATA_DIR',str(BASE/'.state')),help='Dauerhafter Datenordner')
+    parser.add_argument('--show-setup-link',action='store_true',help='Geschützten Link für die einmalige Kontoeinrichtung anzeigen')
     parser.add_argument('--show-access-code',action='store_true',help='Lokalen Zugangscode anzeigen und beenden')
     args=parser.parse_args()
     try:ipaddress.ip_address(args.listen)
     except ValueError:parser.error('Ungültige Bindeadresse.')
-    if args.show_access_code:
-        print(Access(args.data_dir).token)
+    if args.show_access_code or args.show_setup_link:
+        access=Access(args.data_dir)
+        if access.account:
+            print('Ein Benutzerkonto ist eingerichtet. Bitte mit Benutzername und Passwort anmelden.')
+            return
+        print(f'http://127.0.0.1:{args.port}/#access='+quote(access.token,safe='') if args.show_setup_link else access.token)
         return
     try:
         configured=args.ip or ([v.strip() for v in os.environ['KOBRA_PRINTER_IPS'].split(',')] if os.environ.get('KOBRA_PRINTER_IPS') else load_config(args.data_dir))
@@ -419,7 +430,7 @@ def main():
                 running=json.loads(response.read())
             if running.get('service')=='kobra-monitor' and set(running.get('ips',[running.get('ip')]))==set(args.ips) and running.get('read_only') is True:
                 import webbrowser
-                webbrowser.open(f'http://127.0.0.1:{args.port}/#access='+quote(Access(args.data_dir).token,safe=''))
+                webbrowser.open(f'http://127.0.0.1:{args.port}/'+('' if Access(args.data_dir).account else '#access='+quote(Access(args.data_dir).token,safe='')))
                 print('Der Kobra Monitor läuft bereits. Statusübersicht geöffnet.',flush=True)
                 return
         except (OSError,ValueError):

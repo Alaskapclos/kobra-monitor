@@ -96,3 +96,14 @@ sieben Aufträge samt Berichten und Zeitverläufen waren lesbar. Die Übertragun
 auf den Mac war einmalig, der tägliche Dienst sichert im eigenen NAS-Volume.
 Beide für die Wiederherstellung benötigten Container-Abbilder wurden ebenfalls
 außerhalb des NAS aufbewahrt. Sie sind nicht im kleinen Daten-ZIP enthalten.
+
+## Benutzerkonten ab 0.9
+
+`account.json` enthält Benutzername, zufälligen Salt und scrypt-Prüfwert. Diese
+Datei gehört zur vollständigen Sicherung und wird validiert. Änderungen während
+der Sicherung lassen diese sicher fehlschlagen; der nächste Versuch verwendet
+einen konsistenten Stand. Eine Wiederherstellung stellt das damalige Konto
+wieder her. Der alte Einrichtungsschlüssel ist bei eingerichtetem Konto kein
+Anmeldeweg. Archive bleiben vertraulich. Für 0.9-Stände Monitor und Sicherungs-
+werkzeug ab 0.9 verwenden; ein Downgrade auf die frühere Code-Anmeldung würde
+das neue Kontomodell nicht durchsetzen und ist nicht unterstützt.

@@ -1,3 +1,12 @@
+## 0.9.0-alpha.1
+
+- Lokales Besitzerkonto mit frei gewähltem Benutzernamen und Passwort.
+- Geschützter einmaliger Umstieg von der Code-Anmeldung; Code danach gesperrt.
+- Konto ändern, Abmelden, Sitzungen widerrufen, lokale interaktive Wiederherstellung.
+- Passwörter mit scrypt gehasht und gesalzen; kein Klartext in Datenablage/Logs.
+- Assistent: Konto → Drucker → Übersicht. Kontodaten in vollständigen Sicherungen.
+- Druckerzugriff weiterhin ausschließlich lesend.
+
 # Änderungen
 
 ## 0.8.0-alpha.1

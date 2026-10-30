@@ -118,3 +118,20 @@ Tagesstand; die Prüfung eines realen 24-Stunden-Zyklus steht weiterhin aus.
 Ein tatsächliches Downgrade oder Austausch des produktiven Datenvolumes
 wurde nicht ausgeführt. Tailscale und NAS-Sicherheitseinstellungen wurden
 nicht verändert.
+
+## Benutzerkonto 0.9.0-alpha.1
+
+78 Python-Tests und 14 Leseschutztests bestanden lokal. Darunter: geschützte
+Ersteinrichtung, Umstieg mit Sperre des alten Codes, Unicode-Benutzernamen,
+Passwortbestätigung und Längenprüfung, scrypt/Salt/Dateirechte, Fehlerdrosselung,
+CSRF/Origin, Abmelden, Widerruf anderer Sitzungen nach Kontoänderung und
+vollständige Sicherung/Wiederherstellung einschließlich Konto. Beschädigte
+Kontodateien aktivieren keinen Code-Ausweichzugang.
+
+Die Browserprüfung erfolgte auf einem getrennten lokalen Testdienst mit
+ausgeschalteter Druckerkommunikation: Konto anlegen, falsche Bestätigung,
+Druckereinrichtung, Abmelden und erneutes Anmelden mit selbst gewählten
+Testdaten erfolgreich. Keine echten Benutzerpasswörter durch den Agenten gesetzt.
+Die NAS-Hauptinstanz bleibt bis zum geprüften Imagewechsel auf 0.8.
+Die Installation hat zunächst ein Besitzerkonto, keine Benutzerverwaltung mit
+mehreren Rollen. Die Rücksetzung erfolgt lokal, nicht per E-Mail.

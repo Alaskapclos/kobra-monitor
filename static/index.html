@@ -13,8 +13,26 @@
 <body>
   <div id="setup-panel" class="setup-overlay" hidden><section class="setup-box" role="dialog" aria-modal="true" aria-labelledby="setup-heading">
     <div class="eyebrow">DEIN LOKALER DRUCKERBEGLEITER</div><h2 id="setup-heading">Willkommen bei Kobra Monitor.</h2>
-    <p class="setup-steps">1 · Browser verbinden &nbsp; 2 · Drucker hinzufügen &nbsp; 3 · Loslegen</p>
-    <div id="setup-login"><p>Verbinde diesen Browser mit deinem Monitor. Der Zugangscode gehört zu deiner Installation und schützt auch den Zugriff über dein VPN.</p><form id="setup-login-form"><label for="setup-code">Dein Zugangscode</label><input id="setup-code" type="password" autocomplete="current-password" required><button id="setup-login-button" class="setup-primary" type="submit">Verbinden</button></form><p>Auf dem Rechner öffnet der Starter die Anmeldung automatisch. Auf Server/NAS zeigst du den Code mit <code>python monitor.py --show-access-code</code> bzw. dem entsprechenden Docker-Befehl aus der Anleitung an.</p></div>
+    <p id="setup-steps" class="setup-steps">1 · Dein Konto &nbsp; 2 · Deine Drucker &nbsp; 3 · Loslegen</p>
+    <div id="setup-login">
+      <div id="setup-login-credentials"><p>Melde dich mit deinem lokalen Benutzerkonto an.</p>
+        <form id="setup-login-form"><label for="login-name">Benutzername</label><input id="login-name" name="username" autocomplete="username" maxlength="64" required spellcheck="false" autocapitalize="none">
+          <label for="login-password">Passwort</label><input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+          <button id="setup-login-button" class="setup-primary" type="submit">Anmelden</button></form>
+        <details class="setup-help"><summary>Passwort vergessen?</summary><p>Du kannst das Konto direkt auf deinem Rechner oder NAS zurücksetzen. Deine Druckdaten bleiben dabei erhalten. Die Schritte findest du in der Installationsanleitung unter „Benutzerkonto“.</p></details>
+      </div>
+      <div id="setup-initial" hidden><p>Öffne Kobra Monitor für die erste Einrichtung über den Starter auf deinem Rechner oder über den geschützten Einrichtungslink deines NAS. Danach legst du deinen Benutzernamen und dein Passwort selbst fest.</p>
+        <details class="setup-help"><summary>Bestehende Installation mit Zugangscode umstellen</summary><p>Gib deinen bisherigen Code einmalig ein. Nach dem Anlegen deines Kontos meldest du dich nur noch mit Benutzername und Passwort an.</p><form id="setup-migrate-form"><label for="setup-code">Bisheriger Zugangscode</label><input id="setup-code" type="password" autocomplete="off" required><button id="setup-migrate-button" class="setup-primary" type="submit">Konto einrichten</button></form></details>
+      </div>
+    </div>
+    <div id="setup-account" hidden><p id="account-intro"></p><form id="account-form">
+      <label for="account-name">Dein Benutzername</label><input id="account-name" name="username" autocomplete="username" minlength="3" maxlength="64" required spellcheck="false" autocapitalize="none">
+      <div id="account-current-row" hidden><label for="account-current">Bisheriges Passwort</label><input id="account-current" type="password" autocomplete="current-password" maxlength="128"></div>
+      <label for="account-password">Neues Passwort</label><input id="account-password" name="new-password" type="password" autocomplete="new-password" minlength="15" maxlength="128" required aria-describedby="account-password-help">
+      <p id="account-password-help">Mindestens 15 Zeichen. Zum Beispiel ein langer Satz, den du dir gut merken kannst. Du kannst einen Passwortmanager verwenden.</p>
+      <label for="account-confirm">Passwort wiederholen</label><input id="account-confirm" type="password" autocomplete="new-password" minlength="15" maxlength="128" required>
+      <div class="setup-actions"><button id="account-save" class="setup-primary" type="submit">Konto anlegen</button><button id="account-cancel" class="timeline-button" type="button" hidden>Abbrechen</button></div>
+    </form></div>
     <div id="setup-printers" hidden><p>Aktiviere den LAN-Modus am Drucker. Die IP-Adresse findest du in seinen Netzwerkeinstellungen oder im Router. Rechner oder Server müssen den Drucker erreichen können.</p><form id="setup-printer-form"><label for="setup-ips">Druckeradressen · eine pro Zeile</label><textarea id="setup-ips" placeholder="192.168.1.100" required spellcheck="false"></textarea><p>Du kannst bis zu 16 Adressen eintragen. Der Monitor liest ausschließlich den Status; er steuert keinen Druck.</p><div class="setup-actions"><button id="setup-save" class="setup-primary" type="submit">Speichern und verbinden</button><button id="setup-cancel" class="timeline-button" type="button">Zur Übersicht</button></div></form></div>
     <div id="setup-done" hidden><h3>Deine Drucker sind eingerichtet.</h3><p>Die Statuswerte erscheinen nach dem Verbindungsaufbau. Falls ein Gerät offline bleibt, prüfe LAN-Modus und IP-Adresse. Über „Einrichten“ kannst du die Adressen jederzeit ändern.</p><p>Von unterwegs nutzt du diese Installation über Tailscale oder dein VPN. Der Rechner bzw. Server muss dafür eingeschaltet bleiben.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
     <p id="setup-error" class="setup-error" role="alert"></p>
@@ -23,11 +41,11 @@
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
     <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.8 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.9 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
-    <section class="page-heading"><div><div class="eyebrow">LOKAL VERBUNDEN. GUT IM BLICK.</div><h1>Deine Druckerübersicht.</h1><p>Live-Status, Temperaturen und Filament an einem Ort.</p></div><div class="heading-actions"><button id="setup-open" class="timeline-button" type="button">Einrichten</button><button id="refresh" class="refresh-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .2 5M16 3v4h-4"/></svg>Aktualisieren</button></div></section>
+    <section class="page-heading"><div><div class="eyebrow">LOKAL VERBUNDEN. GUT IM BLICK.</div><h1>Deine Druckerübersicht.</h1><p>Live-Status, Temperaturen und Filament an einem Ort.</p></div><div class="heading-actions"><button id="account-open" class="timeline-button" type="button" hidden>Konto</button><button id="logout" class="timeline-button" type="button" hidden>Abmelden</button><button id="setup-open" class="timeline-button" type="button">Einrichten</button><button id="refresh" class="refresh-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .2 5M16 3v4h-4"/></svg>Aktualisieren</button></div></section>
     <div id="connection-banner" class="connection-banner" role="status" aria-live="polite" hidden></div>
     <section id="printer-switcher" class="printer-switcher" aria-label="Drucker auswählen"></section>
     <section class="overview-grid" aria-label="Drucker und Temperaturen">

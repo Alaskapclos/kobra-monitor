@@ -17,3 +17,7 @@ backups
 kobra-backup-*.zip
 .kobra-backup-*
 .kobra-restore-*
+
+# Local account and atomic credential writes
+account.json
+.account-*

@@ -23,11 +23,8 @@ tailscale serve --bg http://127.0.0.1:7125
 ```
 
 4. Die von Tailscale angezeigte HTTPS-Adresse auf dem Mobilgerät öffnen.
-5. Den Zugangscode dieser Monitor-Installation eingeben. Bei Docker:
-
-```sh
-docker compose exec monitor python monitor.py --show-access-code
-```
+5. Mit dem selbst festgelegten Benutzernamen und Passwort anmelden. Das Konto
+   zuvor zu Hause über den Einrichtungsassistenten anlegen.
 
 Die Tailscale-Einrichtung kann eine Freigabe für HTTPS/MagicDNS verlangen.
 Serve ist für das Tailnet; **Funnel wird für dieses Projekt nicht verwendet**.
@@ -65,7 +62,7 @@ keinen Betrieb unter einem URL-Unterpfad; eine eigene Hostadresse verwenden.
 
 Firewall-Regeln auf dem Host und VPN-Zugriffsregeln auf das gewünschte Netz
 beschränken. Keine öffentliche Router-Portweiterleitung einrichten. Der
-Zugangscode ergänzt das VPN, ersetzt es aber nicht.
+Benutzerkonto ergänzt das VPN, ersetzt es aber nicht.
 
 ## Reichweite des Cloud-Ersatzes
 

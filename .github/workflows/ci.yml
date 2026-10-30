@@ -35,18 +35,19 @@ jobs:
       - name: Test full backup and restore with read-only source volume
         run: |
           docker compose exec -T monitor python -c 'from configuration import save_config; save_config("/data", ["192.168.1.20"])'
+          docker compose exec -T monitor python -c 'from accounts import write_account; write_account("/data", "CI-Fixture", "Fixture-only-passphrase-2026!")'
           monitor_container_id="$(docker compose ps -q monitor)"
           docker run --rm --network none --read-only --no-healthcheck \
             --volumes-from "$monitor_container_id:ro" \
             --tmpfs /snapshots:uid=10001,gid=10001,mode=0700,size=64m \
             --tmpfs /tmp:mode=1777,size=64m \
-            kobra-monitor:0.8.0-alpha.1 sh -c '
-              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.8.0-alpha.1 &&
+            kobra-monitor:0.9.0-alpha.1 sh -c '
+              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.9.0-alpha.1 &&
               python backup.py restore /snapshots/*.zip --target /tmp/restored &&
-              python -c "from pathlib import Path; from configuration import load_config; assert load_config(\"/tmp/restored\")==[\"192.168.1.20\"]; assert Path(\"/data/access-token\").read_bytes()==Path(\"/tmp/restored/access-token\").read_bytes(); print(\"Backup restore verified without printer connections.\")"
+              python -c "from pathlib import Path; from configuration import load_config; assert load_config(\"/tmp/restored\")==[\"192.168.1.20\"]; assert Path(\"/data/access-token\").read_bytes()==Path(\"/tmp/restored/access-token\").read_bytes(); assert Path(\"/data/account.json\").read_bytes()==Path(\"/tmp/restored/account.json\").read_bytes(); print(\"Backup restore verified without printer connections.\")"
             '
       - name: Export tested NAS image
-        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.8.0-alpha.1
+        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.9.0-alpha.1
       - uses: actions/upload-artifact@v4
         with:
           name: kobra-monitor-linux-amd64

@@ -30,11 +30,13 @@ def digest(path):
 
 def validate_data(directory):
     from configuration import load_config
+    from accounts import read_account
     if not (directory / 'config.json').is_file() or not load_config(directory):
         raise ValueError('Die Druckereinrichtung fehlt oder ist ungültig.')
     token = (directory / 'access-token').read_text().strip()
     if len(token) < 24:
         raise ValueError('Der Zugangscode fehlt oder ist ungültig.')
+    read_account(directory) # Optional for old installations; malformed accounts fail closed.
     db = sqlite3.connect((directory / 'history.sqlite3').resolve().as_uri() + '?mode=ro', uri=True)
     try:
         if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
@@ -61,6 +63,8 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
         data.mkdir(mode=0o700)
         before = (source / 'config.json').read_bytes()
         token_before = (source / 'access-token').read_bytes()
+        account_path = source / 'account.json'
+        account_before = account_path.read_bytes() if account_path.exists() else None
         for path in source.rglob('*'):
             relative = path.relative_to(source)
             if any(part in EXCLUDED for part in relative.parts):
@@ -89,6 +93,10 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
             raise ValueError('Die Einrichtung wurde während der Sicherung geändert. Bitte wiederholen.')
         if (data / 'config.json').read_bytes() != before or (data / 'access-token').read_bytes() != token_before:
             raise ValueError('Die Einrichtung änderte sich während der Sicherung.')
+        account_after = account_path.read_bytes() if account_path.exists() else None
+        snapshot_account = (data / 'account.json').read_bytes() if (data / 'account.json').exists() else None
+        if account_before != account_after or account_before != snapshot_account:
+            raise ValueError('Das Benutzerkonto wurde während der Sicherung geändert. Bitte wiederholen.')
         validate_data(data)
         if deployment:
             shutil.copyfile(deployment, stage / 'compose.yaml')
@@ -96,6 +104,7 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
                  for p in stage.rglob('*') if p.is_file()}
         manifest = {'format': FORMAT, 'created_at': now, 'created_utc': stamp,
                     'restore_image': image, 'contains_access_code': True,
+                    'contains_account': account_before is not None,
                     'tls_note': 'Temporary handshake certificates are regenerated on connection.',
                     'files': files}
         (stage / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')

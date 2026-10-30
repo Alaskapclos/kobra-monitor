@@ -57,6 +57,16 @@ class BackupTests(unittest.TestCase):
             self.assertEqual(archive.stat().st_mode & 0o777, 0o600)
             self.assertEqual((target / 'access-token').stat().st_mode & 0o777, 0o600)
 
+    def test_account_hash_survives_backup_and_restore_without_plaintext(self):
+        from accounts import write_account, read_account, matches
+        secret='Ein langes Sicherungs-Passwort!'
+        write_account(self.data,'Besitzer',secret)
+        archive=self.make();target=self.root/'with-account';restore(archive,target)
+        self.assertTrue(matches(read_account(target),'Besitzer',secret))
+        self.assertNotIn(secret,json.dumps(inspect(archive)))
+        (self.data/'account.json').write_text('{}')
+        with self.assertRaises(ValueError):self.make()
+
     def test_nested_backup_and_symlinks_are_not_silently_copied(self):
         (self.data / 'backups').mkdir()
         (self.data / 'backups' / 'old.zip').write_bytes(b'old')

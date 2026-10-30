@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.8.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.9.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung, Kamera und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -54,17 +54,14 @@ docker compose up -d --build
 ```
 
 Standardmäßig ist die Oberfläche nur auf dem Server selbst erreichbar. Historie,
-Druckerzuordnung und Zugangscode liegen dauerhaft im Volume `monitor-data`.
-Für die Einrichtung aus einem anderen Browser wird der Zugangscode angezeigt mit:
+Druckerzuordnung und dein lokales Benutzerkonto liegen im Volume `monitor-data`.
+Beim ersten Start legst du Benutzername und Passwort selbst fest. Auf dem Rechner
+führt der Starter direkt dorthin. Auf einem NAS öffnest du einmalig den privaten
+Einrichtungslink; danach meldest du dich auf allen Geräten mit deinem Konto an.
+[Schritte für Einrichtung und Kontowiederherstellung](docs/INSTALLATION.md#benutzerkonto).
 
-```sh
-docker compose exec monitor python monitor.py --show-access-code
-```
-
-Der Code ist geheim und gehört nicht in Screenshots, öffentliche Issues oder Git.
-Der amd64-Container wurde in der CI gebaut und auf einem UGREEN DXP4800GT
-mit UGOS praktisch geprüft. Andere NAS-Modelle, arm64 und ein Austausch des
-Images mit bestehendem Volume sind noch nicht praktisch geprüft.
+Der amd64-Container wurde in der CI gebaut und auf UGREEN DXP4800GT mit UGOS
+praktisch geprüft. Weitere NAS-Modelle und ARM64 stehen noch aus.
 
 ## Daten sichern
 
@@ -101,11 +98,12 @@ Verbindungsverlust bedeutet niemals automatisch Druckende.
 
 ## Zugang und Daten
 
-Jede Installation erzeugt einen eigenen Zugangscode. Der Desktop-Starter übergibt
-ihn einmal im URL-Fragment; die Oberfläche entfernt das Fragment sofort. Andere
-Browser melden sich mit diesem Code an. Sitzungen laufen nach zwölf Stunden ab
-und werden beim Dienstneustart ungültig. Alle angemeldeten Benutzer dieser Alpha
-haben denselben Zugriff einschließlich Änderung der lokalen Druckerzuordnung.
+Du legst ein lokales Besitzerkonto mit Benutzername und Passwort an. Das Passwort
+wird mit scrypt und einem zufälligen Salt als Prüfwert gespeichert. Passwortmanager
+werden unterstützt. Unter **Konto** kannst du Zugangsdaten ändern; **Abmelden**
+beendet deine Browsersitzung. Der alte Zugangscode ist nach der Umstellung gesperrt.
+Sitzungen laufen nach zwölf Stunden ab und werden beim Dienstneustart ungültig.
+Es gibt derzeit ein gemeinsames Konto pro Installation, keine getrennten Rollen.
 
 Datenordner: `.state/` im Projekt, im Container `/data`. Für andere Orte:
 `--data-dir /pfad` oder `KOBRA_DATA_DIR`. Einzelheiten, Sicherung und Update:

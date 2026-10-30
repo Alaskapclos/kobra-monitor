@@ -38,7 +38,7 @@ Container-Test das Artefakt **kobra-monitor-linux-amd64** bereitstellen:
 3. Das ZIP entpacken. Es enthält `kobra-monitor-linux-amd64.tar`.
 4. Diese TAR-Datei in UGOS unter **Docker → Image → Import** importieren.
 
-Erwarteter Image-Name: `kobra-monitor:0.8.0-alpha.1`. Das Abbild enthält den
+Erwarteter Image-Name: `kobra-monitor:0.9.0-alpha.1`. Das Abbild enthält den
 Quellcode und seine Bibliotheken; persönliche Datenvolumes und Zugangscodes
 werden nicht in das Abbild exportiert. Das Artefakt ist privat und wird sieben
 Tage aufbewahrt. Ein neuer erfolgreicher Workflow kann es erneut erzeugen.
@@ -71,18 +71,26 @@ Neustart durch `restart: unless-stopped` startet nur die lokale Überwachung.
 
 ## 4. Im Browser einrichten
 
-1. Im Heimnetz `http://NAS-IP:7125` öffnen.
-2. In UGOS den Monitor-Container öffnen und dessen **Terminal** verwenden.
-3. Dort eingeben:
+1. In UGOS den Monitor-Container öffnen und dessen **Terminal** verwenden.
+2. Dort eingeben:
 
 ```sh
-python monitor.py --show-access-code
+python monitor.py --show-setup-link
 ```
 
-4. Den angezeigten Code in die Browser-Anmeldung übernehmen. Den Code nicht
-   in öffentliche Bilder oder Fehlermeldungen kopieren.
+3. Im ausgegebenen privaten Link `127.0.0.1` durch deine NAS-IP ersetzen,
+   den Rest einschließlich `#access=…` unverändert lassen und im Browser öffnen.
+   Dies ist nur beim ersten Einrichten nötig. Den Link nicht veröffentlichen.
+4. Deinen Benutzernamen und dein Passwort festlegen, Passwort wiederholen,
+   **Konto anlegen** wählen.
 5. Im Assistenten die Druckeradressen aus den Drucker-/Routereinstellungen eintragen.
 6. **Speichern und verbinden**, anschließend **Zur Druckerübersicht** wählen.
+7. Auf weiteren Geräten einfach `http://NAS-IP:7125` bzw. die private VPN-/HTTPS-
+   Adresse öffnen und mit Benutzername und Passwort anmelden.
+
+Beim Update einer Code-Installation statt Schritt 2–3 den bisherigen Code im
+Browser unter „Bestehende Installation … umstellen“ einmal eingeben. Danach ist
+der Code kein Anmeldeweg mehr. [Passwort vergessen / Konto ändern](INSTALLATION.md#benutzerkonto).
 
 Der Monitor veranlasst keine Pause, keinen Start, keinen Upload und keine
 Heizung oder Bewegung. Eine nicht erreichbare Druckeradresse erscheint offline.
