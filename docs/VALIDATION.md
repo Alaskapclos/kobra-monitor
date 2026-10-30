@@ -161,4 +161,14 @@ keine Druckerverbindung neu starten; Anmeldung, CSRF und Origin für Sortieren
 erforderlich. Browser-Fixture ohne Druckerkommunikation: Ziehen und Tastatur
 verschieben die Karten; die Reihenfolge bleibt nach Neuladen erhalten und die
 ausgewählte Druckeransicht wird während des Sortierens beibehalten.
-Der NAS-Einsatz des neuen Images wird gesondert geprüft.
+Der NAS-Monitor und der getrennte Sicherungsdienst wurden auf das geprüfte
+0.10-Image aktualisiert. Alle sieben Aufträge und der Kontoprüfwert sind
+unverändert. Die gespeicherte Reihenfolge ist erster Drucker vor zweitem
+Drucker; eine vollständige Sicherung wurde mit dieser Reihenfolge isoliert
+wiederhergestellt. Fälligkeitsprüfung erzeugt keinen doppelten Tagesstand.
+Die Verbindung war beim Versionswechsel rund fünf Sekunden unterbrochen.
+Die Browser-Sichtprüfung am echten NAS wartet noch auf erneute Anmeldung;
+Drag-and-drop und Tastatur wurden bisher auf der isolierten Fixture geprüft.
+Eine Prüfung auf einem physischen Touchgerät steht noch aus.
+
+[GitHub-Prüflauf 41135356856](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41135356856) für Code-Commit `0e8d9552525edbf848ebe079e9a2e4414f0f9f10`: alle sieben Jobs erfolgreich.
