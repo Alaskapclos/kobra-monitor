@@ -1,5 +1,11 @@
 ## 0.12.0-alpha.1
 
+## 0.13.1-alpha.1
+
+- Fehlgeschlagene Decoderprüfung nach kurzer Wartezeit wiederholen, statt eine Kamera dauerhaft zu sperren.
+- Meldungen unterscheiden die Aufbereitung auf dem Monitor-Server von Handy/Mac als reinen Anzeigegeräten.
+
+
 ## 0.13.0-alpha.2
 
 - Optionale Kameraübersicht mit zwei oder vier Bildern pro Seite, Druckernamen und eigener Fehlermeldung je Bild.

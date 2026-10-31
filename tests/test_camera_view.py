@@ -57,7 +57,7 @@ class CameraViewTests(unittest.IsolatedAsyncioTestCase):
     async def test_missing_decoder_returns_actionable_error(self):
         self.views.available=lambda:False
         response=await self.views.frame('192.168.1.20',['192.168.1.20'])
-        self.assertEqual(response.status,503);self.assertIn('FFmpeg',response.text);self.assertFalse(self.views.readers)
+        self.assertEqual(response.status,503);self.assertIn('Monitor-Server',response.text);self.assertFalse(self.views.readers)
     async def test_reader_is_fixed_to_stock_stream_and_disallows_redirects(self):
         reader=CameraViews()._reader('192.168.1.20')
         self.assertEqual(reader._url,'http://192.168.1.20:18088/flv')

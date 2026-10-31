@@ -31,3 +31,7 @@ Neue Bilder werden vor dem Wechsel vollständig dekodiert. Das vorige Bild bleib
 Ansicht „Kameraübersicht“ wählen, zwei oder vier Bilder pro Seite einstellen, „Kameras anzeigen“ öffnen. Mehr Drucker erscheinen auf weiteren Seiten. Gespeicherte Druckerreihenfolge und Namen werden übernommen. Jedes Bild meldet Verbindungsfehler getrennt. Auf kleinen Bildschirmen stehen Bilder untereinander. Ein Wechsel der Statusauswahl verändert die Matrix nicht.
 
 Beim Seitenwechsel werden die lokalen Leser dieser Ansicht freigegeben, bevor neue beginnen. Andere Browser behalten ihre noch verwendeten Leser. Die Freigabe ist nur eine lokale Ressourcenverwaltung; sie sendet keinen Befehl an den Drucker und verlangt dieselbe Anmeldung, CSRF- und Origin-Prüfung wie die Einrichtung. Vergessene Leser laufen nach 15–18 Sekunden aus. Serverweit maximal vier verschiedene Kameras; wenn andere Browser die Grenze bereits belegen, erscheint ein Hinweis. Vier reale Kameras und große Druckerflotten wurden bisher nicht mit Hardware erprobt.
+
+## Decoderprüfung ab 0.13.1
+
+FFmpeg wird auf dem Monitor-Server benötigt. Handy und Mac als reine Browser-Anzeigegeräte brauchen es nicht. Ein fehlgeschlagener Prüflauf wird nach fünf Sekunden erneut versucht; ein einmaliger Timeout sperrt die Kamera nicht mehr bis zum Dienstneustart. Erfolgreiche Prüfungen bleiben gespeichert.

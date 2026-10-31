@@ -36,6 +36,8 @@ jobs:
       - run: docker compose config --quiet
       - run: docker compose up --build -d --wait
       - run: curl --fail http://127.0.0.1:7125/health
+      - name: Verify decoder readiness in the running monitor
+        run: python -c "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:7125/health'))['camera_available'] is True"
       - name: Test camera decoder with synthetic localhost FLV (no printer)
         run: |
           docker compose exec -T monitor python -c "from camera_view import CameraViews; assert CameraViews().available()"
@@ -49,13 +51,13 @@ jobs:
             --volumes-from "$monitor_container_id:ro" \
             --tmpfs /snapshots:uid=10001,gid=10001,mode=0700,size=64m \
             --tmpfs /tmp:mode=1777,size=64m \
-            kobra-monitor:0.13.0-alpha.2 sh -c '
-              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.13.0-alpha.2 &&
+            kobra-monitor:0.13.1-alpha.1 sh -c '
+              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.13.1-alpha.1 &&
               python backup.py restore /snapshots/*.zip --target /tmp/restored &&
               python -c "from pathlib import Path; from configuration import load_config; assert load_config(\"/tmp/restored\")==[\"192.168.1.20\"]; assert Path(\"/data/access-token\").read_bytes()==Path(\"/tmp/restored/access-token\").read_bytes(); assert Path(\"/data/account.json\").read_bytes()==Path(\"/tmp/restored/account.json\").read_bytes(); print(\"Backup restore verified without printer connections.\")"
             '
       - name: Export tested NAS image
-        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.13.0-alpha.2
+        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.13.1-alpha.1
       - uses: actions/upload-artifact@v4
         with:
           name: kobra-monitor-linux-amd64

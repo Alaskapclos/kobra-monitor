@@ -29,7 +29,7 @@ window.KobraCameraFrame=class {
 };
 window.kobraCamera=(()=>{
   const $=id=>document.getElementById(id),button=$('camera-open'),image=$('camera-image'),message=$('camera-message'),mode=$('camera-mode'),size=$('camera-page-size'),grid=$('camera-grid'),pager=$('camera-pagination');
-  let ip='',available=false,opened=false,printers=[],page=0,views=[],viewer='',epoch=0;
+  let ip='',available=false,decoderMessage='',opened=false,printers=[],page=0,views=[],viewer='',epoch=0;
   mode.value='single';size.value='4';
   const pages=()=>Math.max(1,Math.ceil(printers.length/Number(size.value)));
   const visible=()=>mode.value==='all'?printers.slice(page*Number(size.value),(page+1)*Number(size.value)):[{ip}];
@@ -41,7 +41,7 @@ window.kobraCamera=(()=>{
   }
   function stopViews(){const oldViewer=viewer;viewer='';for(const view of views)view.close();views=[];grid.replaceChildren();image.hidden=true;
     return oldViewer?Promise.resolve(window.kobraAuth?.releaseCameras?.(oldViewer)).catch(()=>{}):Promise.resolve();}
-  function close(){opened=false;epoch++;stopViews();controls();message.textContent=available?'Das Kamerabild wird nur beim Öffnen geladen.':'Die Kamera benötigt aktuelles FFmpeg auf dem Monitor-Rechner. Im NAS-Paket ist es enthalten.';}
+  function close(){opened=false;epoch++;stopViews();controls();message.textContent=available?'Das Kamerabild wird nur beim Öffnen geladen.':decoderMessage||'Die Videoaufbereitung auf dem Monitor-Server wird geprüft. Auf Handy oder Mac als Anzeigegerät ist keine Installation nötig.';}
   async function show(){
     const generation=++epoch;message.textContent='Kameraansicht wird geladen …';await stopViews();
     if(!opened||generation!==epoch||document.hidden)return;
@@ -68,7 +68,8 @@ window.kobraCamera=(()=>{
     const before=visible().map(p=>p.ip).join(',');printers=next||[];controls();
     if(opened&&mode.value==='all'&&before!==visible().map(p=>p.ip).join(','))show();
     if(mode.value==='all')grid.querySelectorAll('.camera-tile').forEach((tile,i)=>{const p=visible()[i];if(p)tile.querySelector('h3').textContent=p.data?.printer_name||p.data?.model_name||'Drucker';});
-  },setPrinter(nextIp,decoderAvailable){
+  },setPrinter(nextIp,decoderAvailable,availabilityMessage){
+    decoderMessage=availabilityMessage||'';
     const changed=ip!==(nextIp||'');ip=nextIp||'';const availabilityChanged=available!==!!decoderAvailable;available=!!decoderAvailable;
     if(availabilityChanged||changed&&mode.value==='single')close();controls();image.alt='Livebild des Druckers '+ip;
   }};

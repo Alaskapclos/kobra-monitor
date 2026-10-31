@@ -220,7 +220,7 @@ function render(snapshot) {
   const chosen=printers.find(p=>p.ip===selectedIp);
   if(chosen)renderPrinter(chosen);
   window.kobraCamera?.setPrinters?.(printers);
-  window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available);
+  window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available,snapshot.camera_message);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();
   if(archiveIp!==selectedIp) {
     archiveIp=selectedIp;archivePage=0;historySignature=null;

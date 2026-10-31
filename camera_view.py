@@ -2,21 +2,38 @@
 """Read existing stock S1 FLV streams; never publish camera/device commands."""
 import asyncio
 import contextlib
-from functools import lru_cache
 import subprocess
 import shutil
 import time
 from aiohttp import web
 
 
-@lru_cache(maxsize=1)
-def decoder_available():
-    executable=shutil.which('ffmpeg')
-    if not executable:return False
-    try:
-        result=subprocess.run([executable,'-hide_banner','-h','protocol=http'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=3)
-        return result.returncode==0 and b'max_redirects' in result.stdout
-    except (OSError,subprocess.TimeoutExpired):return False
+class DecoderAvailability:
+    """Cache success, but retry a failed startup check after a short cooldown."""
+    def __init__(self, clock=time.monotonic, retry_after=5):
+        self.clock=clock;self.retry_after=retry_after;self.ready=False;self.retry_at=0;self.reason='checking'
+
+    def __call__(self):
+        if self.ready:return True
+        if self.clock()<self.retry_at:return False
+        self.retry_at=self.clock()+self.retry_after
+        executable=shutil.which('ffmpeg')
+        if not executable:self.reason='missing';return False
+        try:
+            result=subprocess.run([executable,'-hide_banner','-h','protocol=http'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=3)
+            self.ready=result.returncode==0 and b'max_redirects' in result.stdout
+            self.reason='ready' if self.ready else 'unsupported'
+        except (OSError,subprocess.TimeoutExpired):self.reason='retrying'
+        return self.ready
+
+    def message(self):
+        if self.ready:return ''
+        if self.reason=='missing':return 'FFmpeg fehlt auf dem Monitor-Server. Im NAS-Paket ist es enthalten. Auf Handy oder Mac als Anzeigegerät ist keine Installation nötig.'
+        if self.reason=='unsupported':return 'Die Videoaufbereitung auf dem Monitor-Server ist nicht bereit. Sie wird automatisch erneut geprüft. Auf Handy oder Mac als Anzeigegerät ist keine Installation nötig.'
+        return 'Die Videoaufbereitung auf dem Monitor-Server wird erneut geprüft. Die Kamera-Schaltfläche wird automatisch freigegeben. Auf Handy oder Mac als Anzeigegerät ist keine Installation nötig.'
+
+
+decoder_available=DecoderAvailability()
 
 
 class CameraViews:
@@ -85,7 +102,7 @@ class CameraViews:
         if ip not in configured:
             return web.json_response({'error':'Dieser Drucker ist nicht eingerichtet.'},status=400)
         if not self.available():
-            return web.json_response({'error':'Die Kamera benötigt aktuelles FFmpeg auf dem Monitor-Rechner. Im NAS-Paket ist es enthalten.'},status=503)
+            return web.json_response({'error':'Die Videoaufbereitung auf dem Monitor-Server wird erneut geprüft. Auf Handy oder Mac als Anzeigegerät ist keine Installation nötig.'},status=503)
         await self.prune(configured)
         reader=self.readers.get(ip)
         if reader is None:

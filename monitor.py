@@ -28,7 +28,7 @@ from kobra_connect import do_handshake, CloudModeError
 from history import History
 from access import Access
 from configuration import printer_ips, load_config, save_config
-from camera_view import CameraViews
+from camera_view import CameraViews, decoder_available
 
 STALE_AFTER = 90
 RETRY_AFTER = 15
@@ -241,7 +241,7 @@ class Fleet:
 
     def snapshot(self):
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
-        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs(), 'camera_available':self.cameras.available()}
+        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message()}
 
     async def reorder(self,ips):
         async with self.config_lock:
@@ -344,7 +344,11 @@ def build_app(monitor,access=None):
         if text is None:return web.json_response({'error':'Auftrag nicht gefunden.'},status=404)
         return web.Response(text=text,content_type='text/markdown',charset='utf-8',headers={
             'Content-Disposition':f'attachment; filename="Kobra-Druckbericht-{job_id[:8]}.md"'})
-    async def health(request): return web.json_response({'ok':True,'service':'kobra-monitor','read_only':True,'ip':monitor.ip,'ips':getattr(monitor,'ips',[monitor.ip])})
+    async def health(request):
+        result={'ok':True,'service':'kobra-monitor','read_only':True,'ip':monitor.ip,'ips':getattr(monitor,'ips',[monitor.ip])}
+        cameras=getattr(monitor,'cameras',None)
+        if cameras is not None and hasattr(cameras,'available'):result['camera_available']=cameras.available()
+        return web.json_response(result)
     async def timeline(request):
         job_id=request.query.get('job','')
         if len(job_id)!=32 or any(c not in '0123456789abcdef' for c in job_id):
