@@ -28,3 +28,7 @@ account.json
 
 # Atomic local push-key creation
 .push-*
+
+# Private inventory endpoint and local slot mappings
+spoolman.json
+.spoolman-*

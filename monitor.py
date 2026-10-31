@@ -28,6 +28,7 @@ from kobra_connect import do_handshake, CloudModeError
 from history import History
 from access import Access
 from configuration import printer_ips, load_config, save_config
+from spools import Spools
 from notifications import Notifications
 from diagnostics import summary as diagnostic_summary
 from camera_view import CameraViews, decoder_available
@@ -242,6 +243,7 @@ class Fleet:
         self.telemetry = self
         self.cameras = CameraViews()
         self.notifications = Notifications(self.history,self.data_dir,self.notification_names)
+        self.spools = Spools(self.data_dir)
 
     def notification_names(self):
         return {ip:(item.telemetry.snapshot().get('data') or {}).get('printer_name') or 'Drucker '+str(self.ips.index(ip)+1) for ip,item in self.monitors.items()}
@@ -285,12 +287,12 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications')
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
@@ -379,12 +381,40 @@ def build_app(monitor,access=None):
         await monitor.cameras.release(viewer)
         return web.json_response({'released':True,'read_only':True})
     async def notification_assets(request):
-        file={'/assets/diagnostics.js':'diagnostics.js','/assets/notifications.js':'notifications.js','/service-worker.js':'service-worker.js','/manifest.webmanifest':'manifest.webmanifest','/assets/app-icon.svg':'app-icon.svg'}[request.path]
+        file={'/assets/spools.js':'spools.js','/assets/diagnostics.js':'diagnostics.js','/assets/notifications.js':'notifications.js','/service-worker.js':'service-worker.js','/manifest.webmanifest':'manifest.webmanifest','/assets/app-icon.svg':'app-icon.svg'}[request.path]
         response=web.FileResponse(BASE/'static'/file)
         if file=='service-worker.js':response.headers['Service-Worker-Allowed']='/'
         return response
     async def diagnostics(request):
         return web.json_response(await asyncio.to_thread(diagnostic_summary,monitor))
+
+    async def spools(request):
+        service=getattr(monitor,'spools',None)
+        if service is None:return web.json_response({'error':'Spulenverwaltung hier nicht verfügbar.'},status=503)
+        try:
+            if request.method=='GET':return web.json_response(service.state())
+            if request.content_type!='application/json':raise ValueError('Ungültiges Datenformat.')
+            body=await request.json()
+            if body.get('action')=='configure':result=await service.configure(body.get('url'))
+            elif body.get('action')=='refresh':result=await service.refresh()
+            elif body.get('action')=='assign':
+                ip=body.get('ip')
+                printer=monitor.monitors.get(ip) if isinstance(ip,str) else None
+                snapshot=printer.telemetry.snapshot() if printer else {}
+                slots=(snapshot.get('data') or {}).get('ace_slots') or []
+                reported={slot.get('global_index',slot.get('index')) for slot in slots if isinstance(slot,dict)}
+                # Removing an old mapping remains possible after a slot/printer disappears.
+                if body.get('spool_id') is None and ip in service.mappings:
+                    reported.update(int(slot) for slot in service.mappings[ip])
+                ips=list(getattr(monitor,'ips',[]))
+                if body.get('spool_id') is None and ip in service.mappings:ips.append(ip)
+                result=await service.assign(ip,body.get('slot'),body.get('spool_id'),ips,reported)
+            else:raise ValueError('Unbekannte Aktion.')
+            return web.json_response(result)
+        except ValueError as exc:
+            return web.json_response({'error':str(exc)[:350] or 'Bitte die Angaben prüfen.'},status=400)
+        except (TypeError,AttributeError):
+            return web.json_response({'error':'Bitte die Angaben prüfen.'},status=400)
 
     async def notifications(request):
         service=getattr(monitor,'notifications',None)
@@ -445,10 +475,12 @@ def build_app(monitor,access=None):
     app.router.add_get('/health',health)
     app.router.add_get('/api/camera/frame',camera_frame)
     if access is not None:app.router.add_post('/api/camera/release',camera_release)
-    for path in ('/assets/notifications.js','/assets/diagnostics.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg'):
+    for path in ('/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg'):
         app.router.add_get(path,notification_assets)
     app.router.add_get('/api/notifications',notifications)
     app.router.add_get('/api/diagnostics',diagnostics)
+    app.router.add_get('/api/spools',spools)
+    if access is not None:app.router.add_post('/api/spools',spools)
     if access is not None:app.router.add_post('/api/notifications',notifications)
     app.router.add_get('/favicon.ico',favicon)
     app.router.add_route('*','/{path:.*}',blocked)

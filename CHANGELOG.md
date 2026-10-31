@@ -1,5 +1,12 @@
 ## 0.16.0-alpha.1
 
+## 0.17.0-alpha.1
+
+- Optionale lesende Spoolman-Anbindung und manuelle ACE-Slot-Zuordnung im Monitor.
+- Private Zuordnungen in Vollsicherung; getrennte Gewichtsherkunft, Frische und Fehleranzeige.
+- Ursprünglichen Gesamtplan in ROADMAP.md abgeglichen; ReSpool/NFC, Verbrauch, Orca und Warteschlange bleiben enthalten.
+
+
 - Druckerkarten zeigen unabhängig voneinander Druckstatus, Fortschritt, geschätzte Restzeit und Ist-Temperaturen.
 - Druck- und Temperaturdaten werden getrennt auf Aktualität geprüft. Bei Verbindungsverlust werden Livewerte ausgeblendet.
 - Vorbereitung zeigt keinen möglicherweise alten Fortschritt oder Restzeitwert. Details und gespeicherte Sortierung bleiben erhalten.

@@ -1,7 +1,7 @@
 # Import the matching linux/amd64 image in UGOS Docker before deployment.
 services:
   monitor:
-    image: kobra-monitor:0.16.0-alpha.1
+    image: kobra-monitor:0.17.0-alpha.1
     platform: linux/amd64
     restart: unless-stopped
     init: true

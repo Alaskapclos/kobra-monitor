@@ -31,11 +31,13 @@ def digest(path):
 def validate_data(directory):
     from configuration import load_config
     from accounts import read_account
+    from spools import Spools
     if not (directory / 'config.json').is_file() or not load_config(directory):
         raise ValueError('Die Druckereinrichtung fehlt oder ist ungültig.')
     token = (directory / 'access-token').read_text().strip()
     if len(token) < 24:
         raise ValueError('Der Zugangscode fehlt oder ist ungültig.')
+    Spools(directory) # Validate optional local inventory endpoint and slot mappings.
     read_account(directory) # Optional for old installations; malformed accounts fail closed.
     db = sqlite3.connect((directory / 'history.sqlite3').resolve().as_uri() + '?mode=ro', uri=True)
     try:
@@ -77,7 +79,7 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
         account_before = account_path.read_bytes() if account_path.exists() else None
         for path in source.rglob('*'):
             relative = path.relative_to(source)
-            if path.name.startswith('.push-') or any(part in EXCLUDED for part in relative.parts):
+            if path.name.startswith(('.push-', '.spoolman-')) or any(part in EXCLUDED for part in relative.parts):
                 continue
             if path.is_symlink():
                 raise ValueError('Symbolische Verknüpfungen im Datenordner werden nicht gesichert.')
