@@ -21,3 +21,7 @@ FFmpeg: https://ffmpeg.org/ ; [Debian-Quellpaket](https://sources.debian.org/src
 ## Prüfstand
 
 Auf beiden vorhandenen S1 ohne MQTT-Kamerabefehle FLV gelesen und echte 1280×720-JPEG-Bilder erzeugt. Getrennte Browser-Vorschau: beide Kameras sichtbar, beim Druckerwechsel vorheriges Bild geschlossen. Automatische Tests prüfen Anmeldung, verbotene Steuerpfade, festes Ziel, Weiterleitungssperre, gemeinsame Decoder, Leerlaufbereinigung, veraltete Bilder und Kapazitätsgrenze. Zusätzlicher echter Decoder-Test verwendet nur einen künstlichen lokalen FLV-Stream. NAS-Deployment und Handyprüfung werden nachgetragen.
+
+### Bildwechsel 0.12.1
+
+Neue Bilder werden vor dem Wechsel vollständig dekodiert. Das vorige Bild bleibt während des Nachladens sichtbar. Bei kurzen Fehlern erscheint „Letztes Kamerabild – aktuell keine Live-Aktualisierung“; nach zehn Sekunden ohne neues Bild wird es beim nächsten fehlgeschlagenen Abruf entfernt. Der Nutzer hat die Kameraansicht auf dem Handy bestätigt; die Korrektur des gemeldeten Flackerns wird getrennt geprüft.
