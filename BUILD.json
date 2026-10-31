@@ -35,7 +35,7 @@
     "diagnostics": "7 Python and 8 JS cases passed; privacy, freshness, counts, access, errors, authenticated 390px fixture and clipboard; all seven CI jobs passed; NAS HTTPS asset/protection and full restore passed; user confirmed operational view on 2026-10-31",
     "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; all seven CI jobs and NAS HTTPS asset checks/full isolated restore passed; real user view pending",
     "spools": "134 Python/14 read-only/62 JS passed; fixture assignment/reload/duplicate and 390px; seven CI jobs passed; authenticated real NAS inventory read (0 spools, 4 slots) and full isolated restore passed; no real assignment yet",
-    "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; physical ReSpool and authenticated production UI pending"
+    "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; authenticated production UI verified on both printer selections, zero-spool inventory read and duplicate manufacturer SKU warning; physical ReSpool test pending"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -77,7 +77,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "77993181fe62347ce94d87819b7c628e0a1b941a3ae37b6e140f7a6c396076ee",
+    "docs/VALIDATION.md": "e37f8a07bb9bffca2923c37580a3c2e814f4ad7c20f5a2127c4f034c54c6dd94",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "f51f5ee1e1912a20be172307a310877efba6e246f999e9c0c325c957badaf1e8",
