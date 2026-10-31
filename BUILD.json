@@ -77,7 +77,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "e37f8a07bb9bffca2923c37580a3c2e814f4ad7c20f5a2127c4f034c54c6dd94",
+    "docs/VALIDATION.md": "fe0dc265c3b099fc4943728cb0e795f9dd5413db31086c27d04f8044fd33c8de",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "f51f5ee1e1912a20be172307a310877efba6e246f999e9c0c325c957badaf1e8",
@@ -203,5 +203,5 @@
     "run": 41226007720,
     "status": "7_jobs_passed"
   },
-  "spoolman_link_validation": "Saved HTTP(S) address, separate tab without referrer; URL and credential guards passed; production deployment pending"
+  "spoolman_link_validation": "Authenticated isolated browser link visible with closed setup; URL guards, 141 Python/14 read-only/68 JS and seven CI jobs passed; NAS monitor/backup deployed, HTTPS assets equal, full isolated restore valid; authenticated production click test pending"
 }
