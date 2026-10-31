@@ -12,3 +12,11 @@ propcache==0.5.4
 pycparser==3.12
 yarl==1.25.1
 tzdata==2025.2
+certifi==2026.10.23
+charset-normalizer==3.5.2
+http-ece==1.2.1
+py-vapid==1.9.6
+pywebpush==2.5.0
+requests==2.34.2
+six==1.17.0
+urllib3==2.8.0

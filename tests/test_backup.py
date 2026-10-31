@@ -36,6 +36,25 @@ class BackupTests(unittest.TestCase):
     def make(self, **kw):
         return create(self.data, self.destination, self.image, **kw)
 
+    def test_push_keys_devices_and_queue_restore_together(self):
+        from notifications import Notifications
+        from test_notifications import info,PREFS
+        service=Notifications(self.history,self.data)
+        device=service.subscribe(info(),'Fixture',PREFS,'https://monitor.example.test')
+        service.test(device)
+        archive=self.make();target=self.root/'push-restored'
+        restore(archive,target)
+        self.assertEqual((target/'push-vapid.pem').read_bytes(),(self.data/'push-vapid.pem').read_bytes())
+        restored=History(target/'history.sqlite3')
+        try:
+            other=Notifications(restored,target)
+            self.assertEqual(other.public_key(),service.public_key())
+            self.assertEqual(other.state()['devices'][0]['id'],device)
+            self.assertEqual(restored.db.execute("SELECT count(*) FROM push_queue WHERE status='pending'").fetchone()[0],1)
+        finally:restored.close()
+        (self.data/'push-vapid.pem').unlink()
+        with self.assertRaises(ValueError):self.make()
+
     def test_full_roundtrip_includes_live_wal_config_code_and_extra_state(self):
         (self.data / 'extra.json').write_text('{"setting":true}')
         deployment = self.root / 'compose.yaml'

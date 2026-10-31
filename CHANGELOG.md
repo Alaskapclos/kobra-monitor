@@ -1,4 +1,9 @@
-## 0.12.0-alpha.1
+## 0.14.0-alpha.1
+
+- Optionale verschlüsselte Web-Push-Meldungen pro Gerät für bestätigtes Druckende/Abbruch, Druckerstörungen und längere Verbindungsabbrüche.
+- iPhone/iPad als Home-Bildschirm-App, Android und unterstützte Desktop-Browser über HTTPS. Geführte Einrichtung, Auswahl, Testmeldung und Entfernen.
+- Dauerhafte Warteschlange, begrenzte Wiederholungen und Entdoppelung; Verbindungsverlust ist kein Druckende.
+- VAPID-Schlüssel und Geräteanmeldungen werden mit der vollständigen Installation gesichert. Kein Offline-Cache für Konto, Status oder Kamerabilder.
 
 ## 0.13.1-alpha.1
 

@@ -28,6 +28,7 @@ from kobra_connect import do_handshake, CloudModeError
 from history import History
 from access import Access
 from configuration import printer_ips, load_config, save_config
+from notifications import Notifications
 from camera_view import CameraViews, decoder_available
 
 STALE_AFTER = 90
@@ -238,6 +239,10 @@ class Fleet:
             self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history)
         self.telemetry = self
         self.cameras = CameraViews()
+        self.notifications = Notifications(self.history,self.data_dir,self.notification_names)
+
+    def notification_names(self):
+        return {ip:(item.telemetry.snapshot().get('data') or {}).get('printer_name') or 'Drucker '+str(self.ips.index(ip)+1) for ip,item in self.monitors.items()}
 
     def snapshot(self):
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
@@ -278,12 +283,12 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/favicon.ico','/api/session'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release')
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
@@ -371,6 +376,31 @@ def build_app(monitor,access=None):
             return web.json_response({'error':'Ungültige Kameraansicht.'},status=400)
         await monitor.cameras.release(viewer)
         return web.json_response({'released':True,'read_only':True})
+    async def notification_assets(request):
+        file={'/assets/notifications.js':'notifications.js','/service-worker.js':'service-worker.js','/manifest.webmanifest':'manifest.webmanifest','/assets/app-icon.svg':'app-icon.svg'}[request.path]
+        response=web.FileResponse(BASE/'static'/file)
+        if file=='service-worker.js':response.headers['Service-Worker-Allowed']='/'
+        return response
+    async def notifications(request):
+        service=getattr(monitor,'notifications',None)
+        if service is None:return web.json_response({'error':'Benachrichtigungen sind hier nicht verfügbar.'},status=503)
+        try:
+            if request.method=='GET':return web.json_response({**service.state(),'public_key':service.public_key()})
+            if request.content_type!='application/json':raise ValueError('Ungültiges Datenformat.')
+            body=await request.json()
+            action=body.get('action')
+            if action=='subscribe':
+                device_id=service.subscribe(body.get('subscription'),body.get('label'),body.get('preferences'),request.headers.get('Origin',''))
+                return web.json_response({'ok':True,'id':device_id,'read_only':True})
+            device_id=body.get('id')
+            if not isinstance(device_id,str) or len(device_id)!=32 or any(c not in '0123456789abcdef' for c in device_id):raise ValueError('Ungültiges Gerät.')
+            if action=='remove':service.remove(device_id)
+            elif action=='test':service.test(device_id)
+            else:raise ValueError('Unbekannte Aktion.')
+            return web.json_response({'ok':True,'read_only':True})
+        except (ValueError,TypeError,AttributeError):
+            return web.json_response({'error':'Die Angaben sind ungültig oder das Gerät ist nicht verfügbar. Bitte prüfen und gegebenenfalls eine Minute warten.'},status=400)
+
     async def favicon(request): return web.Response(status=204)
     async def jobs(request):
         ip=request.query.get('ip','')
@@ -410,11 +440,18 @@ def build_app(monitor,access=None):
     app.router.add_get('/health',health)
     app.router.add_get('/api/camera/frame',camera_frame)
     if access is not None:app.router.add_post('/api/camera/release',camera_release)
+    for path in ('/assets/notifications.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg'):
+        app.router.add_get(path,notification_assets)
+    app.router.add_get('/api/notifications',notifications)
+    if access is not None:app.router.add_post('/api/notifications',notifications)
     app.router.add_get('/favicon.ico',favicon)
     app.router.add_route('*','/{path:.*}',blocked)
     if getattr(monitor,'cameras',None) is not None:
         app.on_startup.append(monitor.cameras.start)
         app.on_cleanup.append(monitor.cameras.stop)
+    if getattr(monitor,'notifications',None) is not None:
+        app.on_startup.append(monitor.notifications.start)
+        app.on_cleanup.append(monitor.notifications.stop)
     app.on_startup.append(monitor.start)
     app.on_cleanup.append(monitor.stop)
     return app

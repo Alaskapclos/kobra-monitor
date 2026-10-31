@@ -107,3 +107,5 @@ wieder her. Der alte Einrichtungsschlüssel ist bei eingerichtetem Konto kein
 Anmeldeweg. Archive bleiben vertraulich. Für 0.9-Stände Monitor und Sicherungs-
 werkzeug ab 0.9 verwenden; ein Downgrade auf die frühere Code-Anmeldung würde
 das neue Kontomodell nicht durchsetzen und ist nicht unterstützt.
+
+Seit 0.14 gehören auch `push-vapid.pem`, Geräteanmeldungen und Benachrichtigungswarteschlange zur vollständigen Sicherung. Sie sind privat. Eine wiederhergestellte Kopie zum Prüfen nicht als zweiten sendenden Monitor starten.

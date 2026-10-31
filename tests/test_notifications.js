@@ -1,0 +1,32 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
+class Element{constructor(){this.handlers={};this.children=[];this.hidden=true;this.value='';this.checked=true;}addEventListener(k,f){this.handlers[k]=f;}setAttribute(k,v){this[k]=v;}replaceChildren(){this.children=[];}append(...items){this.children.push(...items);}}
+const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);};
+const stored=new Map(),calls=[];let permissionCalls=0,subscriptions=0,unsubscribed=0;
+const device={id:'a'.repeat(32),label:'Fixture phone',preferences:{completed:true,errors:false,disconnect:true,delay_seconds:180},last_status:'ready'};
+const state={devices:[],public_key:'B'+'a'.repeat(86)};
+const sub={toJSON:()=>({endpoint:'fixture',keys:{}}),unsubscribe:async()=>{unsubscribed++;}};
+const registration={pushManager:{getSubscription:async()=>null,subscribe:async()=>{subscriptions++;return sub;}}};
+const navigator={userAgent:'iPhone',platform:'iPhone',maxTouchPoints:1,serviceWorker:{register:async()=>registration,ready:Promise.resolve(registration),getRegistration:async()=>registration}};
+const Notification={permission:'default',requestPermission:()=>{permissionCalls++;return Promise.resolve('granted');}};
+let standalone=false;
+const window={isSecureContext:true,Notification,PushManager:{},matchMedia:()=>({matches:standalone}),kobraAuth:{notificationRequest:async body=>{calls.push(body);if(!body)return state;if(body.action==='subscribe'){state.devices=[device];return {id:device.id};}if(body.action==='remove')state.devices=[];return {ok:true};}}};
+const context=vm.createContext({window,navigator,Notification,localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v),removeItem:k=>stored.delete(k)},document:{getElementById:node,createElement:()=>new Element()},Uint8Array,atob:s=>Buffer.from(s,'base64').toString('binary')});
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/notifications.js'),'utf8'),context);
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+(async()=>{
+ assert.match(window.kobraNotifications.support(),/Home-Bildschirm/);assert.equal(permissionCalls,0,'No unsolicited permission request');
+ window.isSecureContext=false;assert.match(window.kobraNotifications.support(),/HTTPS/);window.isSecureContext=true;standalone=true;assert.equal(window.kobraNotifications.support(),'');
+ Notification.permission='denied';assert.match(window.kobraNotifications.support(),/gesperrt/);Notification.permission='default';
+ node('notify-settings').hidden=true;node('notify-open').handlers.click();await tick();assert.equal(node('notify-settings').hidden,false);assert.equal(permissionCalls,0);assert.equal(node('notify-enable').disabled,false);
+ node('notify-label').value='Fixture phone';node('notify-delay').value='180';node('notify-enable').handlers.click();assert.equal(permissionCalls,1,'Permission requested synchronously from click');await tick();await tick();assert.equal(subscriptions,1);assert.equal(stored.get('kobra-push-device'),device.id);assert.equal(node('notify-errors').checked,false);
+ const row=node('notify-devices').children[0];row.children[1].children[0].handlers.click();await tick();assert.equal(calls.filter(x=>x?.action==='test').length,1);
+ const row2=node('notify-devices').children[0];row2.children[1].children[1].handlers.click();await tick();assert.equal(stored.has('kobra-push-device'),false);assert.equal(state.devices.length,0);
+ const handlers={},shown=[];let focused=0;
+ const worker={registration:{showNotification:async(...args)=>shown.push(args)},location:{origin:'https://monitor.example.test'},clients:{matchAll:async()=>[{url:'https://monitor.example.test/',navigate:async()=>{},focus:()=>focused++}],openWindow:async()=>{}},addEventListener:(k,f)=>handlers[k]=f};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../static/service-worker.js'),'utf8'),{self:worker,URL,Date});
+ let done;handlers.push({data:{json:()=>({title:'Fixture',body:'Encrypted message',url:'https://evil.invalid/'})},waitUntil:p=>done=p});await done;assert.equal(shown[0][0],'Fixture');assert.equal(shown[0][1].data.url,'/');
+ handlers.notificationclick({notification:{close(){}},waitUntil:p=>done=p});await done;assert.equal(focused,1);
+ assert.equal('fetch' in handlers,false,'Never cache authenticated pages or camera images');
+ console.log('10 notification UI/worker cases passed: iOS guidance, HTTPS, blocked permission, opt-in, user gesture, registration, test, removal, safe push/click, no caching');
+})().catch(error=>{console.error(error);process.exitCode=1;});

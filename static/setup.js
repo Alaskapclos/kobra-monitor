@@ -132,6 +132,11 @@ window.kobraAuth=(()=>{
     const response=await fetch('/api/camera/release',{method:'POST',headers:{'Content-Type':'application/json','X-Kobra-CSRF':csrf},body:JSON.stringify({viewer}),signal:AbortSignal.timeout(5000)});
     if(!response.ok)throw new Error('Die vorige Kameraansicht wird automatisch freigegeben.');
   }
-  return {reorder,releaseCameras,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
+  async function notificationRequest(body){
+    const response=await fetch('/api/notifications',{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(15000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Benachrichtigungen konnten nicht geladen werden.');return result;
+  }
+  return {reorder,releaseCameras,notificationRequest,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
     setPrinters(ips,states=[]){printers=ips||[];printerStates=states;renderConnections();if(authenticated&&accountConfigured&&!printers.length&&panel.hidden)configure();}};
 })();

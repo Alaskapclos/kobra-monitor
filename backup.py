@@ -43,6 +43,16 @@ def validate_data(directory):
             raise ValueError('Die Verlaufsdatenbank ist beschädigt.')
         for table in ('jobs', 'events', 'samples'):
             db.execute('SELECT 1 FROM ' + table + ' LIMIT 1').fetchall()
+        devices=db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='push_devices'").fetchone()
+        key_path=directory/'push-vapid.pem'
+        if devices and db.execute('SELECT count(*) FROM push_devices').fetchone()[0] and not key_path.is_file():
+            raise ValueError('Der Benachrichtigungsschlüssel fehlt in der Sicherung.')
+        if key_path.exists():
+            from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric import ec
+            key=serialization.load_pem_private_key(key_path.read_bytes(),password=None)
+            if not isinstance(key,ec.EllipticCurvePrivateKey) or not isinstance(key.curve,ec.SECP256R1):
+                raise ValueError('Ungültiger Benachrichtigungsschlüssel in der Sicherung.')
     finally:
         db.close()
 
@@ -67,7 +77,7 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
         account_before = account_path.read_bytes() if account_path.exists() else None
         for path in source.rglob('*'):
             relative = path.relative_to(source)
-            if any(part in EXCLUDED for part in relative.parts):
+            if path.name.startswith('.push-') or any(part in EXCLUDED for part in relative.parts):
                 continue
             if path.is_symlink():
                 raise ValueError('Symbolische Verknüpfungen im Datenordner werden nicht gesichert.')

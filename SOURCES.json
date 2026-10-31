@@ -17,5 +17,23 @@
     "license": "component-specific LGPL/GPL; /usr/share/doc/ffmpeg/copyright in image",
     "source_packages": "https://sources.debian.org/src/ffmpeg/",
     "local_changes": "none; invoked as independent decoder process"
+  },
+  "pywebpush": {
+    "repository": "https://github.com/web-push-libs/pywebpush",
+    "version": "2.5.0",
+    "license": "MPL-2.0",
+    "local_changes": "none; encrypted Web Push via documented API"
+  },
+  "py-vapid": {
+    "repository": "https://github.com/web-push-libs/vapid",
+    "version": "1.9.6",
+    "license": "MPL-2.0",
+    "local_changes": "none"
+  },
+  "http-ece": {
+    "repository": "https://github.com/web-push-libs/encrypted-content-encoding",
+    "version": "1.2.1",
+    "license": "MIT",
+    "local_changes": "none"
   }
 }
