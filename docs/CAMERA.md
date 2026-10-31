@@ -1,6 +1,6 @@
 # Kamera
 
-Unter **Kamera anzeigen** öffnest du den vorhandenen lokalen Stream des ausgewählten Druckers. Die Ansicht lädt ungefähr zwei Bilder pro Sekunde. Bilder werden im Arbeitsspeicher verarbeitet, nicht aufgezeichnet. Beim Wechsel des Druckers, Öffnen der Einrichtung oder Verlassen des Tabs wird die Ansicht geschlossen. Eine ungenutzte Verbindung wird nach etwa 15–18 Sekunden beendet.
+Unter **Kamera anzeigen** öffnest du den vorhandenen lokalen Stream des ausgewählten Druckers. Die Ansicht lädt ungefähr zwei Bilder pro Sekunde. Bilder werden im Arbeitsspeicher verarbeitet, nicht aufgezeichnet. In der Einzelansicht schließt ein Druckerwechsel das vorige Bild. Die Kameraübersicht bleibt davon unabhängig. Beim Öffnen der Einrichtung oder Verlassen des Tabs werden die Ansichten geschlossen. Eine ungenutzte Verbindung wird nach etwa 15–18 Sekunden beendet.
 
 Die Kamera nutzt dieselbe Anmeldung wie Status und Verlauf. Auf Handy und Rechner über die private HTTPS-Adresse zugreifen; Tailscale oder das eigene VPN muss verbunden sein. Der Browser spricht nur mit dem Monitor, nicht direkt mit dem Drucker.
 
