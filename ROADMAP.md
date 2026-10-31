@@ -16,7 +16,7 @@ Abgleich vom 31.10.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit 
 
 Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie und Berichte, NAS-Betrieb und isolierte Sicherungswiederherstellung, Benutzerkonto, HTTPS über Tailscale, einfache Druckereinrichtung, gespeicherte Reihenfolge, Kameraübersicht, Web-Push-Testempfang auf iPhone und Android, Betriebsstatus und Druckerkarten mit Einzelwerten.
 
-Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 prüfen; Push-Empfang aus tatsächlichen Druckereignissen separat bestätigen. Sonderstände ersetzen den täglichen Zyklus nicht.
+Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 prüfen; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
 
 ## Nächste Schritte in dieser Reihenfolge
 
