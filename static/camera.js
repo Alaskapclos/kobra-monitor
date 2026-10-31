@@ -45,7 +45,7 @@ window.kobraCamera=(()=>{
   async function show(){
     const generation=++epoch;message.textContent='Kameraansicht wird geladen …';await stopViews();
     if(!opened||generation!==epoch||document.hidden)return;
-    viewer=crypto.randomUUID().replaceAll('-','');controls();const all=mode.value==='all';
+    viewer=Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join('');controls();const all=mode.value==='all';
     message.textContent=all?'Nur die Kameras dieser Seite werden geladen. Keine Aufzeichnung.':'Kamerabild wird geladen …';
     for(const printer of visible()){
       let targetImage=image,targetMessage=message;

@@ -9,7 +9,7 @@ class Element {
 }
 const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);};
 let token=0,releaseGate=null;const released=[],active=new Set();
-const context=vm.createContext({window:{kobraAuth:{releaseCameras:async viewer=>{released.push(viewer);if(releaseGate)await releaseGate;}}},document:{hidden:false,getElementById:node,addEventListener(){},createElement:tag=>Object.assign(new Element(),{tag})},crypto:{randomUUID:()=>String(++token).padStart(32,'0')},URLSearchParams});
+const context=vm.createContext({window:{kobraAuth:{releaseCameras:async viewer=>{released.push(viewer);if(releaseGate)await releaseGate;}}},document:{hidden:false,getElementById:node,addEventListener(){},createElement:tag=>Object.assign(new Element(),{tag})},crypto:{getRandomValues:bytes=>{bytes[15]=++token;return bytes;}},URLSearchParams});
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/camera.js'),'utf8'),context);
 context.window.KobraCameraFrame=class{constructor(ip,image,message,viewer){Object.assign(this,{ip,image,message,viewer});}open(){active.add(this);}close(){active.delete(this);}};
 const camera=context.window.kobraCamera,tick=()=>new Promise(resolve=>setImmediate(resolve));
