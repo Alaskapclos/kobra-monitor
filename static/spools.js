@@ -2,7 +2,7 @@
 'use strict';
 window.kobraSpools=(()=>{
   const $=id=>document.getElementById(id);
-  let state=null,printers=[],selected=null,busy=false,signature='',shownFresh=null;
+  let state=null,printers=[],selected=null,busy=false,signature='',shownFresh=null,loaded=false;
   function caption(spool){
     const weight=typeof spool.remaining_weight==='number'&&Number.isFinite(spool.remaining_weight)?Math.round(spool.remaining_weight)+' g Rest in Spoolman':'Restgewicht unbekannt';
     return '#'+spool.id+' · '+[spool.vendor,spool.name,spool.material].filter(Boolean).join(' · ')+' · '+weight;
@@ -10,6 +10,8 @@ window.kobraSpools=(()=>{
   function draw(){
     const target=$('spools-assignments');target.replaceChildren();if(!state)return;
     $('spools-refresh').disabled=busy||!state.configured;
+    const visit=$('spools-visit');visit.hidden=true;visit.removeAttribute('href');
+    try{const url=new URL(state.url);if(state.configured&&['http:','https:'].includes(url.protocol)&&!url.username&&!url.password){visit.href=url.href;visit.hidden=false;}}catch{}
     const current=state.inventory_current&&state.checked_at!==null&&(Date.now()/1000-state.checked_at)<=60;shownFresh=current;
     $('spools-updated').textContent=state.checked_at?'Bestand gelesen: '+new Date(state.checked_at*1000).toLocaleString()+(current?'':' · Nicht aktuell; bitte aktualisieren.'):'Noch kein Bestand gelesen.';
     const mappings=state.mappings||{},chosen=printers.find(p=>p.ip===selected);
@@ -71,6 +73,8 @@ window.kobraSpools=(()=>{
   $('spools-refresh').addEventListener('click',()=>request({action:'refresh'}));
   function setPrinters(values,ip){
     printers=values;selected=ip;
+    // Called only after the authenticated status response. Load the saved link once.
+    if(!loaded){loaded=true;request();}
     const fresh=!!(state?.inventory_current&&state.checked_at!==null&&Date.now()/1000-state.checked_at<=60);
     const next=JSON.stringify([ip,fresh,values.map(p=>[p.ip,p.connection,typeof p.section_age_s?.ace==='number'&&p.section_age_s.ace<=60,(p.data?.ace_slots||[]).map(s=>[s.global_index??s.index,s.sku,s.edit_status])])]);
     if(next!==signature||fresh!==shownFresh){signature=next;if(!$('spools-content').hidden){draw();if(state&&!busy)request();}}

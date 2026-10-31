@@ -23,3 +23,7 @@ Im ausgewählten ACE-Slot zeigt der Monitor die lokal gemeldete SKU. Für eine e
 Die bestätigte Verbindung wird im Monitor gespeichert und mitgesichert. Nach Steckplatzwechsel zeigt **wiedererkannt** die passende Spoolman-Spule. Eine vorherige manuelle Zuordnung derselben Spule an diesem Slot wird dabei durch die bewegliche Kennungsverknüpfung ersetzt. Andere widersprüchliche manuelle Zuordnungen zuerst lösen. Mehrfach gemeldete Kennungen und Konflikte bleiben ohne Erkennung; offline, älter als 60 Sekunden, leerer Slot oder veralteter/fehlender Spoolman-Bestand ebenso. **Kennung lösen** funktioniert auch ohne Drucker oder Spoolman. Vor Serverwechsel auch gespeicherte Kennungen lösen.
 
 Kein Beschreiben von NFC-Tags, keine Druckersteuerung und keine Spoolman-Bestandsänderung. SKU-Verknüpfungen sind noch keine Verbrauchsautomation oder Synchronisierung der ReSpool-Handybibliothek. Erst mit einer vorhandenen gekennzeichneten Spule praktisch prüfen; keine laufende Spule entnehmen.
+
+## Spoolman öffnen
+
+Nach der Anmeldung steht bei eingerichteter Verbindung direkt neben „Einrichten“ der Link „Spoolman öffnen“. Er öffnet die gespeicherte Adresse in einem neuen Tab. Auf dem Handy muss diese Adresse im Heimnetz oder über das eigene VPN erreichbar sein. Der Monitor richtet damit keine zusätzliche öffentliche Freigabe ein.

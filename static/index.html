@@ -58,7 +58,7 @@
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
     <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.18 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.18.1 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
@@ -99,7 +99,7 @@
     </section>
     <section class="card filament-card" aria-labelledby="filament-title"><div class="section-head"><div><div class="eyebrow muted">DEIN MATERIAL</div><h2 id="filament-title">Filament & ACE</h2></div><div class="ace-header"><span id="ace-present" class="subtle-pill">Warte auf ACE</span><span id="ace-freshness" class="freshness-text">—</span></div></div><div id="slots" class="slots-grid"><div class="empty-state">Die Filamentdaten werden geladen.</div></div><div class="filament-note"><span class="note-mark">i</span>Restmengen sind Angaben des Druckers und können vom tatsächlichen Spulengewicht abweichen.</div></section>
     <section class="card notification-card" aria-labelledby="spools-title">
-      <div class="section-head"><div><div class="eyebrow muted">DEINE SPULEN ZUORDNEN</div><h2 id="spools-title">Spulenverwaltung</h2></div><button id="spools-open" class="timeline-button" type="button" aria-expanded="false" aria-controls="spools-content">Einrichten</button></div>
+      <div class="section-head"><div><div class="eyebrow muted">DEINE SPULEN ZUORDNEN</div><h2 id="spools-title">Spulenverwaltung</h2></div><div class="notify-actions spools-actions"><a id="spools-visit" class="timeline-button" target="_blank" rel="noopener noreferrer" hidden>Spoolman öffnen ↗</a><button id="spools-open" class="timeline-button" type="button" aria-expanded="false" aria-controls="spools-content">Einrichten</button></div></div>
       <p>Verbinde Spoolman und ordne deine Spulen zu. Mit einer eindeutigen Kennung, etwa aus ReSpool, erkennt der Monitor eine Spule auch nach einem Steckplatzwechsel wieder.</p>
       <div id="spools-content" hidden>
         <form id="spools-form"><label for="spools-url">Spoolman-Adresse im Heimnetz</label><input id="spools-url" type="url" maxlength="256" placeholder="http://192.168.1.20:7912" autocomplete="off"><div class="notify-actions"><button class="timeline-button" id="spools-connect" type="submit">Speichern &amp; prüfen</button><button class="timeline-button" id="spools-refresh" type="button">Spulen aktualisieren</button></div></form>

@@ -1,3 +1,7 @@
+# 0.18.1-alpha.1
+
+- Direkter Link „Spoolman öffnen“ in der Spulenverwaltung, auch bei geschlossener Einrichtung. Nutzt die gespeicherte HTTP(S)-Adresse und öffnet einen getrennten Tab ohne Weitergabe der Herkunftsseite.
+
 # 0.18.0-alpha.1
 
 - Lokale ACE-SKU lesen und eindeutige Spulenkennungen nach Bestätigung dauerhaft mit Spoolman-Spulen verknüpfen.
