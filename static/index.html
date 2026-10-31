@@ -33,15 +33,25 @@
       <label for="account-confirm">Passwort wiederholen</label><input id="account-confirm" type="password" autocomplete="new-password" minlength="15" maxlength="128" required>
       <div class="setup-actions"><button id="account-save" class="setup-primary" type="submit">Konto anlegen</button><button id="account-cancel" class="timeline-button" type="button" hidden>Abbrechen</button></div>
     </form></div>
-    <div id="setup-printers" hidden><p>Aktiviere den LAN-Modus am Drucker. Die IP-Adresse findest du in seinen Netzwerkeinstellungen oder im Router. Rechner oder Server müssen den Drucker erreichen können.</p><form id="setup-printer-form"><label for="setup-ips">Druckeradressen · eine pro Zeile</label><textarea id="setup-ips" placeholder="192.168.1.100" required spellcheck="false"></textarea><p>Du kannst bis zu 16 Adressen eintragen. Der Monitor liest ausschließlich den Status; er steuert keinen Druck.</p><div class="setup-actions"><button id="setup-save" class="setup-primary" type="submit">Speichern und verbinden</button><button id="setup-cancel" class="timeline-button" type="button">Zur Übersicht</button></div></form></div>
-    <div id="setup-done" hidden><h3>Deine Drucker sind eingerichtet.</h3><p>Die Statuswerte erscheinen nach dem Verbindungsaufbau. Falls ein Gerät offline bleibt, prüfe LAN-Modus und IP-Adresse. Über „Einrichten“ kannst du die Adressen jederzeit ändern.</p><p>Von unterwegs nutzt du diese Installation über Tailscale oder dein VPN. Der Rechner bzw. Server muss dafür eingeschaltet bleiben.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
+    <div id="setup-printers" hidden>
+      <p>Trage die Adresse jedes Druckers ein. Du findest sie am Drucker unter Netzwerk oder in deinem Router.</p>
+      <form id="setup-printer-form">
+        <div id="setup-printer-list"></div>
+        <button id="setup-add-printer" class="timeline-button setup-add" type="button">+ Drucker hinzufügen</button>
+        <p id="setup-printer-limit" class="setup-small">Bis zu 16 Drucker. Die Reihenfolge kannst du später in der Übersicht durch Ziehen ändern.</p>
+        <details class="setup-help"><summary>Mein Drucker verbindet sich nicht</summary><p>Aktiviere den LAN-Modus am Drucker und prüfe seine IP-Adresse. Dein Rechner oder NAS muss ihn im Heimnetz erreichen können. Wenn dein Router die Adresse häufig ändert, reserviere sie dort dauerhaft für den Drucker.</p></details>
+        <p class="setup-small">Entfernen beendet nur die Überwachung dieses Druckers. Bisherige Druckdaten bleiben gespeichert. Der Monitor steuert keinen Druck.</p>
+        <div class="setup-actions"><button id="setup-save" class="setup-primary" type="submit">Speichern und verbinden</button><button id="setup-cancel" class="timeline-button" type="button">Zur Übersicht</button></div>
+      </form>
+    </div>
+    <div id="setup-done" hidden><h3>Deine Druckerliste ist gespeichert.</h3><p>Hier siehst du, welche Drucker bereits Daten liefern. Du kannst die Übersicht auch öffnen, während die Verbindung noch aufgebaut wird.</p><div id="setup-connections" aria-live="polite"></div><p>Bleibt ein Drucker offline, prüfe LAN-Modus und Adresse unter „Einrichten“.</p><p>Von unterwegs öffnest du dieselbe Installation über Tailscale oder dein VPN. Dein Rechner bzw. NAS muss eingeschaltet bleiben.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
     <p id="setup-error" class="setup-error" role="alert"></p>
   </section></div>
   <aside class="sidebar">
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
     <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.10 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Alles bleibt lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.11 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>

@@ -168,7 +168,7 @@ function bindPrinterDrag(button,ip){
 
 function render(snapshot) {
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
-  window.kobraAuth?.setPrinters(snapshot.ips||[]);
+  window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
   const order=pendingOrder||snapshot.ips||source.map(p=>p.ip);
   const printers=[...source].sort((a,b)=>order.indexOf(a.ip)-order.indexOf(b.ip));

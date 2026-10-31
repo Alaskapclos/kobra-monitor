@@ -38,8 +38,9 @@ existiert, keine vertraulichen Details in öffentlichen Issues posten.
 Keine echten Drucke als Sicherheitsnachweis starten oder unterbrechen; synthetische
 Fixtures und die vorhandenen Leseschutztests verwenden.
 
-Ein externer Sicherheitsaudit und die gesonderte Prüfung von HTTPS/Serve und
-VPN-Zugriffsregeln stehen aus. UGOS und der vom Nutzer bestätigte private
+Ein externer Sicherheitsaudit und eine vollständige Prüfung der bestehenden
+VPN-Zugriffsregeln stehen aus. HTTPS/Serve und der Mobilfunkzugriff mit/ohne VPN
+wurden am 31.10.2026 praktisch geprüft. UGOS und der vom Nutzer bestätigte private
 Mobilfunk-/Tailscale-Zugriff sind in docs/VALIDATION.md dokumentiert.
 
 Passwortparameter: [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Passwortberechnung: Python `hashlib.scrypt`. Die Anwendung stellt selbst kein HTTPS bereit; für geschützte Übertragung auch innerhalb des Heimnetzes einen privaten HTTPS-Proxy verwenden.

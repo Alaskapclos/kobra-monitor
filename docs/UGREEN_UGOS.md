@@ -4,9 +4,9 @@ Erster NAS-Praxistest am 30.10.2026 bestanden. Der DXP4800GT gehört laut UGREEN
 Docker-fähigen DXP-Modellen mit x86-64/AMD64. Die Menübezeichnungen können je nach
 UGOS-Version leicht abweichen. Auf einem echten DXP4800GT wurden Import des CI-Abbilds, Compose-Start,
 Browser-Einrichtung, zwei laufende Kobra S1 und ein Containerneustart geprüft.
-Die genaue UGOS-Version wurde nicht erfasst. Image-Update, NAS-Neustart und
-HTTPS/Serve sind noch nicht praktisch geprüft; ein späterer Zugriffstest
-über vorhandenes Tailscale wurde vom Nutzer bestätigt.
+Die genaue UGOS-Version wurde nicht erfasst. Image-Updates und HTTPS/Serve
+wurden danach geprüft; der Nutzer bestätigte Mobilfunkzugriff über Tailscale
+und Nichterreichbarkeit ohne VPN. Ein NAS-Neustart wurde nicht geprüft.
 
 ## Ziel
 
@@ -38,7 +38,7 @@ Container-Test das Artefakt **kobra-monitor-linux-amd64** bereitstellen:
 3. Das ZIP entpacken. Es enthält `kobra-monitor-linux-amd64.tar`.
 4. Diese TAR-Datei in UGOS unter **Docker → Image → Import** importieren.
 
-Erwarteter Image-Name: `kobra-monitor:0.10.0-alpha.1`. Das Abbild enthält den
+Erwarteter Image-Name: `kobra-monitor:0.11.0-alpha.1`. Das Abbild enthält den
 Quellcode und seine Bibliotheken; persönliche Datenvolumes und Zugangscodes
 werden nicht in das Abbild exportiert. Das Artefakt ist privat und wird sieben
 Tage aufbewahrt. Ein neuer erfolgreicher Workflow kann es erneut erzeugen.

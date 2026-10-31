@@ -85,3 +85,7 @@ und seine bestehende Tailscale-Verbindung die erfolgreiche Anmeldung und Nutzung
 der NAS-Oberfläche. Dabei wurde die vorhandene VPN-Konfiguration nicht verändert.
 Dieser Test bestätigt nicht zusätzlich Tailscale Serve, HTTPS oder eine
 Überprüfung der Tailnet-Zugriffsregeln; diese Punkte bleiben gesondert zu prüfen.
+
+## HTTPS-Praxistest vom 31.10.2026
+
+Auf UGREEN mit vorhandenem Tailscale im Host-Netzwerk: Serve auf HTTPS-Port 443, Weiterleitung zum lokalen Monitorport. Öffentlich gültiges Zertifikat ohne Ausnahme geprüft; Statuszugriff ohne Sitzung abgewiesen. Bestehendes Benutzerkonto und Historie blieben beim Ergänzen der Loopback-Bindung erhalten. Der Nutzer bestätigte Anmeldung und Betrieb sowie den Handytest über Mobilfunk: mit Tailscale erreichbar, ohne Tailscale im neuen privaten Tab gesperrt. Keine Funnel-Freigabe und keine Änderung der Tailnet-Zugriffsregeln. Dies ist keine vollständige Prüfung der vorhandenen ACLs. Bei Zertifikatsausstellung wird der Gerätename in öffentlichen Certificate-Transparency-Protokollen sichtbar; vorher Zustimmung einholen.

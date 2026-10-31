@@ -3,9 +3,9 @@
 | Bereich | Status |
 | --- | --- |
 | Frische Python-Installation, macOS / Python 3.14.6 | Bestanden; eigener neuer venv aus Lockdatei |
-| Eigene Python-Tests | 65 bestanden |
+| Eigene Python-Tests | 81 bestanden; aktueller lokaler Prüflauf 31.10.2026 |
 | Zusätzliche Leseschutztests der Bridge | 14 bestanden |
-| JavaScript-Darstellung | 6 Prüffälle bestanden; Syntax geprüft |
+| JavaScript-Darstellung | Elf Prüffälle bestanden; Syntax geprüft |
 | Browser-Ersteinrichtung | Anmeldung, ungültige Adresse, zwei Adressen und Abschluss geprüft; Drucker-I/O in der Testansicht abgeschaltet |
 | Geschützter lokaler Dienst nach dem Update | Anmeldung im Browser, zwei Geräte online, bestehende Historie übernommen; aktiver Auftrag blieb erhalten |
 | Reale Hardware vor der Einrichtungserweiterung | Zwei Kobra S1 mit Firmware 2.7.2.7; ein vollständiger Druck einschließlich Vorbereitung/Ende |
@@ -15,9 +15,9 @@
 | UGREEN DXP4800GT / UGOS, amd64 | Zwei Kobra S1 live: Status, Temperaturen und ACE; Containerneustart erhält Einrichtung, Zugangscode und beide aktiven Auftrags-IDs |
 | Andere NAS / arm64 / Image-Update | Noch nicht praktisch geprüft |
 | Bestehendes Tailscale, Mobilfunkzugriff | Nutzer bestätigte erfolgreiche Anmeldung und Zugriff; keine Änderung der VPN-Konfiguration |
-| Tailscale Serve / HTTPS / VPN-Zugriffsregeln | Noch nicht praktisch geprüft |
+| Tailscale Serve / HTTPS | Gültiges Zertifikat, Zugriff ohne Sitzung gesperrt; Nutzer bestätigt Mobilfunkzugriff mit VPN und Nichterreichbarkeit ohne VPN. Keine vollständige ACL-Prüfung |
 | Historienumzug Mac → UGOS | Einmalig betreut geprüft: vier geschlossene Aufträge importiert, zwei überlappende Aufträge um frühere Beobachtung ergänzt, aktuelle NAS-Zustände erhalten |
-| Historienbackup / Wiederherstellung | SQLite-Backup vor/nach Import; tatsächliche NAS-Sicherung in separater Kopie geöffnet, alle sechs Berichte und Zeitverläufe lesbar; vollständiges Installationsbackup noch offen |
+| Historienbackup / Wiederherstellung | SQLite-Backup vor/nach Import; tatsächliche NAS-Sicherung in separater Kopie geöffnet, alle sechs Berichte und Zeitverläufe lesbar; vollständige Installationsbackups einschließlich Konto isoliert wiederhergestellt (siehe spätere Abschnitte) |
 | Brokerzertifikatsprüfung | Deaktiviert; bekannte Sicherheitsgrenze der Alpha |
 | Physischer WLAN-Ausfall während eines Drucks | Noch kein gezielt ausgelöster Hardwaretest |
 
@@ -174,3 +174,9 @@ erhalten; beide Geräte waren verbunden. Tastatur zusätzlich auf Fixture geprü
 Eine Prüfung auf einem physischen Touchgerät steht noch aus.
 
 [GitHub-Prüflauf 41135356856](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41135356856) für Code-Commit `0e8d9552525edbf848ebe079e9a2e4414f0f9f10`: alle sieben Jobs erfolgreich.
+
+## HTTPS und Einrichtung 0.11
+
+HTTPS auf dem NAS mit bestehendem Tailscale Serve aktiviert. Zertifikat vom Mac ohne Ausnahme gültig. Startseite und Healthcheck 200, Status ohne Sitzung 401. Nutzer bestätigt Anmeldung, Betrieb und Mobilfunk-Gegenprobe: mit Tailscale erreichbar, ohne gesperrt. Konto/Einrichtung und sieben bestehende Aufträge nach kurzer Monitor-Neubereitstellung unverändert; vollständiges Folgearchiv isoliert wiederhergestellt. Beobachtungslücke rund zehn Sekunden. Keine Druckersteuerung oder Änderung von VPN-Zugriffsregeln.
+
+Neuer Einrichtungsdialog: einzelne Druckeradressfelder, Hinzufügen/Entfernen, Duplicate-Meldung, Grenze 16 und Rückkehr ohne Speichern in isolierter Browser-Fixture ohne Druckerkommunikation geprüft. Verbindungsübersicht unterscheidet gespeicherte Einrichtung und tatsächliche Verbindung. Lokale Python-Prüfungen: 81 bestanden. Deployment von 0.11 und CI-Prüflauf werden separat nachgetragen.
