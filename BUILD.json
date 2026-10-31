@@ -23,7 +23,7 @@
     "history_backup_restore": "passed: merged history and full installation snapshots restored in isolated copies; seven jobs after update",
     "backup": "passed: 10 unit tests, container CI with read-only source, real UGOS full backup and isolated restore on NAS and Mac",
     "backup_schedule": "daily/keep7 verified with controlled clock; actual NAS due recheck skips duplicate; first real 24h interval pending",
-    "nas_version_update": "0.14 to 0.15 passed: account/config/seven jobs/two real push devices and private push key preserved and restored; 7.05 second gap",
+    "nas_version_update": "0.15 to 0.16 passed: account/config/seven jobs/two real push devices and private push key preserved and restored; 11.53 second gap",
     "accounts": "passed local + CI + browser fixture; user created real NAS account; full account backup restored on NAS and Mac",
     "printer_order": "passed local/CI/fixture drag+keyboard/persistence; live NAS drag both directions, selection preserved, reload persistence and both connected verified; backup order verified",
     "setup_rows": "passed fixture add/remove, duplicate, max16, cancel and pending connections; live NAS LAN browser showed both connected and unchanged save passed; HTTPS assets served",
@@ -33,7 +33,7 @@
     "camera_availability": "5 regressions passed for timeout/error/missing/unsupported retries and recovery reported by same running service; physical NAS ffmpeg help succeeded in 0.648s before fix; old process negative-cache origin inferred, not logged; deployed NAS live service camera_available=true; user matrix recheck pending",
     "notifications": "115 Python/34 JS and 14 read-only tests passed; all seven CI jobs passed; encryption/decryption, durable events, retry/expiry, access and synthetic full push restore passed; 390px UI fixture passed; NAS assets/protection/full installation restore passed before device enrollment; user confirmed actual test-message receipt on both iPhone and Android on 2026-10-31; delivery from real printer events remains unverified",
     "diagnostics": "7 Python and 8 JS cases passed; privacy, freshness, counts, access, errors, authenticated 390px fixture and clipboard; all seven CI jobs passed; NAS HTTPS asset/protection and full restore passed; user confirmed operational view on 2026-10-31",
-    "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; CI/NAS pending"
+    "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; all seven CI jobs and NAS HTTPS asset checks/full isolated restore passed; real user view pending"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -75,7 +75,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "905545a5c283a8d7393e04b8271f999dafdd5b92f46460c2f8a31916a2fb7ab2",
+    "docs/VALIDATION.md": "2d573a9941fd0749bbdc50367c7d35fabf2e017759c078fc714f3422f5aa101d",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "623bbc0781a5d72a17ceace04229548c380f38d8c66a28010d2f6122dfe8e076",
@@ -189,8 +189,10 @@
     "vendor/kobra-connect/kobra_connect/handshake.py": "63c7c140640725b3c7dd54eab13bef92fdbd2fbc062388fc675e6e0495bdf0b4",
     "vendor/kobra-connect/kobra_connect/models.py": "b2345ae06907278a050cc75f145f5c2d049a2e09bca3f1d0f0b803a04f0a6ed8"
   },
-  "deployment_target": "UGREEN DXP4800GT / UGOS: monitor and separate network-disabled backup service 0.15.0-alpha.1",
+  "deployment_target": "UGREEN DXP4800GT / UGOS: monitor and separate network-disabled backup service 0.16.0-alpha.1",
   "ci_evidence": {
-    "status": "0.16 pending"
+    "code_commit": "75ad547651a89b8e3dbf1b6663b27a450fceebc9",
+    "run": 41212154939,
+    "status": "7_jobs_passed"
   }
 }
