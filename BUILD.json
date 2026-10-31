@@ -35,7 +35,7 @@
     "diagnostics": "7 Python and 8 JS cases passed; privacy, freshness, counts, access, errors, authenticated 390px fixture and clipboard; all seven CI jobs passed; NAS HTTPS asset/protection and full restore passed; user confirmed operational view on 2026-10-31",
     "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; all seven CI jobs and NAS HTTPS asset checks/full isolated restore passed; real user view pending",
     "spools": "134 Python/14 read-only/62 JS passed; fixture assignment/reload/duplicate and 390px; seven CI jobs passed; authenticated real NAS inventory read (0 spools, 4 slots) and full isolated restore passed; no real assignment yet",
-    "sku_recognition": "Local automated checks passed; real tag/spool, browser, CI and NAS pending"
+    "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated browser fixture linked a synthetic SKU and recognized the spool; CI/NAS/real ReSpool pending"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -90,7 +90,7 @@
     "static/app-icon.svg": "8460b576ef0d211867f6023573de5d74701fd44dc9e4bd0057616411bb6d40b4",
     "static/camera.js": "533e15940e7486955b8f6c78b4f6b1a805813466c510fbf3e75a7c46c25a216d",
     "static/diagnostics.js": "06bb1dc74e465f1548a7abb15429275b9588270f04038d6dcabd1a3d95e4d2dc",
-    "static/index.html": "8981088193b98c5f0a11aba05550635601c67277b3d641eddf871728c511fb83",
+    "static/index.html": "5e54a7fdf5ccda2d07ca8aa957f38a160169993cb24abd355620831e64078ff5",
     "static/manifest.webmanifest": "e660b903f2f4f891bcaff3cacca29443fd6dc1e21e1cde374df9518a706c2832",
     "static/monitor.css": "d37071c1fc92dd5ccfcb50071e50f3684d087e1e75e397c75058eccd46c96ccf",
     "static/monitor.js": "797a5353299dd3ab33fb6a47207e8bb08ee134ff4f06d3c02b117efa5c7ac65b",
