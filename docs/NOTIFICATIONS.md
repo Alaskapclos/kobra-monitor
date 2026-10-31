@@ -29,6 +29,6 @@ Zieladressen sind auf HTTPS-Endpunkte der bekannten Browser-Push-Dienste beschr�
 - Die Meldung kann über den Push-Dienst ankommen, während Tailscale aus ist; zum Öffnen der privaten Monitorseite bleibt VPN/Tailscale erforderlich.
 - Kein Service-Worker-Cache: Konto, Status und Kamerabilder werden nicht für Offline-Anzeige gespeichert.
 
-Physischer Empfang auf iPhone und Android muss mit einer Testmeldung bestätigt werden; synthetische Prüfungen ersetzen das nicht.
+Der Nutzer hat am 31.10.2026 den tatsächlichen Empfang einer Testmeldung auf iPhone und Android bestätigt. Zustellung aus realen Druckereignissen bleibt separat zu prüfen; synthetische Prüfungen ersetzen das nicht.
 
 Quellen: [Apple Web Push](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers), [pywebpush](https://github.com/web-push-libs/pywebpush).

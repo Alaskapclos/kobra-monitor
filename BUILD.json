@@ -31,7 +31,7 @@
     "camera_flicker": "6 rendering regressions and 17 JS cases passed; real camera preview passed; HTTPS serves exact corrected asset; physical mobile recheck pending",
     "camera_grid": "7 JS grid scenarios, shared-viewer cleanup tests, 7-printer browser fixture and two real S1 cameras in parallel preview passed; physical mobile matrix and four real cameras untested",
     "camera_availability": "5 regressions passed for timeout/error/missing/unsupported retries and recovery reported by same running service; physical NAS ffmpeg help succeeded in 0.648s before fix; old process negative-cache origin inferred, not logged; deployed NAS live service camera_available=true; user matrix recheck pending",
-    "notifications": "115 Python/34 JS and 14 read-only tests passed; all seven CI jobs passed; real encryption/decryption, durable events, retry/expiry, access and synthetic full push restore passed; 390px UI fixture passed; deployed NAS assets/protection/full installation restore passed; zero enrolled devices at NAS restore, physical device delivery pending; user confirmed real iPhone test-message receipt on 2026-10-31; Android and live printer-event delivery remain unverified"
+    "notifications": "115 Python/34 JS and 14 read-only tests passed; all seven CI jobs passed; encryption/decryption, durable events, retry/expiry, access and synthetic full push restore passed; 390px UI fixture passed; NAS assets/protection/full installation restore passed before device enrollment; user confirmed actual test-message receipt on both iPhone and Android on 2026-10-31; delivery from real printer events remains unverified"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -67,11 +67,11 @@
     "docs/BACKUPS.md": "692c2350487b2225aa7283a141d66ce6d0c264ed070fb8d933a936f9deaabe94",
     "docs/CAMERA.md": "ceb0fd5bffa9fa3c550497dd0ad258839fe3072e02dde48c6289cab9f11daf4d",
     "docs/INSTALLATION.md": "c02874a2d9d5ea45e651b267d5344c79e34e7188e0d1ead96ef7db2085e6ea88",
-    "docs/NOTIFICATIONS.md": "fd087f03329b7ddd4bf3dc2aaddb8f2430c03748d95c9d3286d819209b76b092",
+    "docs/NOTIFICATIONS.md": "89bdd85b8df5b2a88c110e0fba00e0dfe7fbac0b7558384336405692c4651b79",
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "be8f795b37edba0c600d5a2a958e10d906c33e011b1bc2d8d9434412d0a3e0bc",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "539497a54c9ca193cab4981704d80743bc3f82a8197d5232d43e161ce24f3f54",
+    "docs/VALIDATION.md": "3a9d8c974921ec488ade808c4b73a136366604715bad23c1e14652044ef770f5",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "3051a4eacb09547736bf29039a51e0f93c4b07d0350aae88b2f1c05fa002e0eb",
