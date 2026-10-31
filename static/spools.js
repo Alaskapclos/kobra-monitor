@@ -35,6 +35,27 @@ window.kobraSpools=(()=>{
       button.addEventListener('click',()=>request({action:'assign',ip:row.ip,slot:row.slot,spool_id:select.value?Number(select.value):null}));
       label.append(select);detail.textContent=assigned?(state.spools.find(s=>s.id===assigned)?caption(state.spools.find(s=>s.id===assigned)):'Zugeordnete Spule #'+assigned+' derzeit nicht verfügbar.'):'Zuordnung wird nur im Monitor gespeichert.';
       card.append(label,button,detail);target.append(card);
+      const detected=state.detections?.find(d=>d.ip===row.ip&&d.slot===row.slot);
+      const age=chosen?.section_age_s?.ace;
+      const fresh=chosen?.connection==='online'&&typeof age==='number'&&age>=0&&age<=60;
+      const messages={stale:'Kennung derzeit nicht aktuell.',empty:'Steckplatz leer.',no_sku:'Keine nutzbare Spulenkennung gemeldet.',unknown:'Kennung noch nicht verknüpft.',duplicate:'Kennung mehrfach erkannt. Keine eindeutige Spule.',conflict:'Kennung und manuelle Zuordnung widersprechen sich. Bitte Zuordnung prüfen.',inventory_unavailable:'Verknüpfter Bestand nicht aktuell oder Spule nicht verfügbar.',recognized:'Spule anhand ihrer Kennung wiedererkannt.'};
+      const note=document.createElement('p');note.className='spool-identity';
+      note.textContent=detected?((detected.sku?'Kennung: '+detected.sku+' · ':'')+(messages[fresh?detected.status:'stale']||'Kennung prüfen.')):'Spulenkennung wird beim Aktualisieren geprüft.';
+      if(detected?.status==='recognized'&&fresh&&current){const spool=state.spools.find(s=>s.id===detected.spool_id);if(spool)note.textContent+=' '+caption(spool);}
+      card.append(note);
+      if(detected?.status==='unknown'&&fresh&&detected.sku){
+        const confirm=document.createElement('label'),check=document.createElement('input'),link=document.createElement('button');
+        check.type='checkbox';confirm.append(check,document.createTextNode(' Diese Kennung gehört nur zu dieser Spule, z. B. durch ReSpool. Eine normale Herstellerkennung kann für mehrere Spulen gleich sein.'));
+        link.type='button';link.className='timeline-button';link.textContent='Kennung mit ausgewählter Spule verknüpfen';link.disabled=busy||!current;
+        link.addEventListener('click',()=>{if(!check.checked||!select.value){$('spools-message').textContent='Bitte eine Spule auswählen und die eindeutige Kennung bestätigen.';return;}request({action:'link_sku',ip:row.ip,slot:row.slot,sku:detected.sku,spool_id:Number(select.value),unique_confirmed:true});});
+        card.append(confirm,link);
+      }
+    }
+    for(const [sku,id] of Object.entries(state.sku_links||{})){
+      const card=document.createElement('div'),text=document.createElement('p'),remove=document.createElement('button');card.className='spool-assignment';
+      text.textContent='Gespeicherte Kennung: '+sku+' → Spule #'+id;
+      remove.type='button';remove.className='timeline-button';remove.textContent='Kennung lösen';remove.disabled=busy;
+      remove.addEventListener('click',()=>request({action:'link_sku',sku,spool_id:null}));card.append(text,remove);target.append(card);
     }
   }
   async function request(body){
@@ -51,8 +72,8 @@ window.kobraSpools=(()=>{
   function setPrinters(values,ip){
     printers=values;selected=ip;
     const fresh=!!(state?.inventory_current&&state.checked_at!==null&&Date.now()/1000-state.checked_at<=60);
-    const next=JSON.stringify([ip,fresh,values.map(p=>[p.ip,(p.data?.ace_slots||[]).map(s=>s.global_index??s.index)])]);
-    if(next!==signature||fresh!==shownFresh){signature=next;if(!$('spools-content').hidden)draw();}
+    const next=JSON.stringify([ip,fresh,values.map(p=>[p.ip,p.connection,typeof p.section_age_s?.ace==='number'&&p.section_age_s.ace<=60,(p.data?.ace_slots||[]).map(s=>[s.global_index??s.index,s.sku,s.edit_status])])]);
+    if(next!==signature||fresh!==shownFresh){signature=next;if(!$('spools-content').hidden){draw();if(state&&!busy)request();}}
   }
   return {setPrinters,caption};
 })();

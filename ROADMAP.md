@@ -32,3 +32,7 @@ Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 
 ## Abweichungen von der ursprünglichen Architektur
 
 Der frühe Spike führte zunächst zu einem bewährten lesenden Monitor. Cloud-Ersatz, Inventar und Druckmanagement bleiben das größere Ziel. Die dokumentierten GPL-/Apache-Anpassungen an vorhandenen Komponenten sind ein Zwischenstand; eine spätere saubere Upstream-/Adapter-Aufteilung bleibt zu prüfen. Ein Upstream-Kontakt oder Pull Request wurde noch nicht versendet. Öffentliche Kommunikation erfolgt nur nach ausdrücklichem Auftrag.
+
+## Stand 0.18
+
+Lokale ACE-SKU wird übernommen; explizit bestätigte eindeutige Kennungen sind dauerhaft mit Spoolman-IDs verknüpfbar. Wiedererkennung bei Slotwechsel mit Frische-/Duplikat-/Konfliktprüfung implementiert. Praktischer ReSpool-Einzelspulentest bleibt offen. Kein Tag-Schreiben, keine Spoolman-Verbrauchsbuchung. Nächster Schritt nach dem Einzeltest: optionaler Slicer-Bedarfsimport und danach belegte einmalige Verbrauchsbuchung. Monatliche App-Abos sind keine Voraussetzung.

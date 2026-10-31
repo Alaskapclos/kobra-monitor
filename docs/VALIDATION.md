@@ -231,3 +231,7 @@ Monitor und separater Sicherungsdienst auf UGOS auf 0.17 aktualisiert. HTTPS-Dat
 Offizieller unveränderter Spoolman 0.27.0 auf UGOS mit eigenem Datenvolume: native Oberfläche und leere Bibliothek geprüft. Native Backup-Funktion erzeugte SQLite-Stand; frische isolierte Kopie mit integrity_check=ok geöffnet, null Spulen. Nächtliche Sicherung aktiviert, erster nächtlicher Zyklus noch nicht nachgewiesen. Keine externe Kopie dieses Spoolman-Stands. Keine automatische Verbrauchsbuchung oder NFC-Zuordnung.
 
 Nutzer bestätigt am 31.10.2026 während der Spoolman-Einrichtung den Handyempfang einer Meldung zum realen Druckabschluss. Plattform nicht angegeben; damit kein pauschaler Nachweis realer Ereignisse auf beiden Plattformen. Neue Spulen sollen gewogen und frisch erfasst werden, kein Import des bisherigen Bestands.
+
+## SKU-Erkennung 0.18
+
+141 Python-, 14 Leseschutz- und 66 JS-Prüffälle lokal erfolgreich. SKU-Feldbegrenzung, explizite Bestätigung, zwischenzeitlicher Slotwechsel, Wiedererkennung am anderen Slot nach Neustart, Duplikate, Offline-/Leer-/Altdaten, Bestandsausfall, Konflikte, Speicherfehler-Rollback sowie Sicherung/Wiederherstellung der Kennungsverknüpfungen geprüft. Keine echten Spulen angelegt. Browser-, CI- und NAS-Nachweise folgen getrennt; noch keine praktische ReSpool-Wiedererkennung behauptet.

@@ -39,9 +39,10 @@ class BackupTests(unittest.TestCase):
     def test_spoolman_endpoint_and_mapping_restore_without_inventory_database(self):
         from spools import Spools
         service=Spools(self.data)
-        service.url='http://spoolman:8000';service.mappings={'192.168.1.20':{'0':42}};service.save()
+        service.sku_links={'TEST-UNIQUE-0001':43};service.url='http://spoolman:8000';service.mappings={'192.168.1.20':{'0':42}};service.save()
         archive=self.make();target=self.root/'inventory-restored';restore(archive,target)
         other=Spools(target)
+        self.assertEqual(other.sku_links,service.sku_links)
         self.assertEqual(other.url,service.url);self.assertEqual(other.mappings,service.mappings)
         self.assertIsNone(other.items) # Upstream database belongs to a separate service/backup.
 

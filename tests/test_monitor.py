@@ -85,6 +85,14 @@ class TelemetryTests(unittest.TestCase):
         self.assertEqual(snap['section_age_s']['temperature'],100)
         self.assertEqual(snap['section_age_s']['ace'],0)
 
+    def test_sku_is_bounded_and_full_suffix_preserved(self):
+        self.bridge._ams_slots[0]['sku']='TEST-UNIQUE-0001'
+        self.state.receive('multiColorBox',{'data':{'multi_color_box':[{'id':0}]}},self.bridge)
+        self.assertEqual(self.state.snapshot()['data']['ace_slots'][0]['sku'],'TEST-UNIQUE-0001')
+        self.bridge._ams_slots[0]['sku']='x'*500
+        self.state.receive('multiColorBox',{'data':{'multi_color_box':[{'id':0}]}},self.bridge)
+        self.assertIsNone(self.state.snapshot()['data']['ace_slots'][0]['sku'])
+
     def test_explicit_empty_ace_report_clears_cached_slots(self):
         self.state.receive('multiColorBox',{'code':200,'data':{'multi_color_box':[{'id':0}]}},self.bridge)
         self.assertEqual(len(self.state.snapshot()['data']['ace_slots']),1)

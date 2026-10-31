@@ -1,3 +1,9 @@
+# 0.18.0-alpha.1
+
+- Lokale ACE-SKU lesen und eindeutige Spulenkennungen nach Bestätigung dauerhaft mit Spoolman-Spulen verknüpfen.
+- Wiedererkennung nach Slotwechsel; mehrfache Kennungen, Konflikte und veraltete Daten sperren die Erkennung.
+- Verknüpfungen lösen und sichern; keine Verbrauchsbuchung oder Tag-/Druckeränderungen.
+
 ## 0.16.0-alpha.1
 
 ## 0.17.0-alpha.1

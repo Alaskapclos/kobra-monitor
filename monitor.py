@@ -91,6 +91,9 @@ class Telemetry:
                 slot_fields = ('index','global_index','box_id','type','color','status','edit_status','consumables_percent')
                 has_boxes = bool(raw['multi_color_box'])
                 self.data['ace_slots'] = [{k:copy.deepcopy(slot.get(k)) for k in slot_fields} for slot in bridge._ams_slots] if has_boxes else []
+                for result, slot in zip(self.data['ace_slots'], bridge._ams_slots):
+                    from spools import spool_sku
+                    result['sku'] = spool_sku(slot.get('sku'))
                 self.data['loaded_slot'] = bridge._ams_loaded_slot if has_boxes else -1
                 self.data['ace_drying'] = copy.deepcopy(state.get('ace_drying', {})) if has_boxes else {}
                 self.data['ace_units'] = list(bridge._ace_box_ids) if has_boxes else []
@@ -391,12 +394,23 @@ def build_app(monitor,access=None):
     async def spools(request):
         service=getattr(monitor,'spools',None)
         if service is None:return web.json_response({'error':'Spulenverwaltung hier nicht verfügbar.'},status=503)
+        def snapshots():
+            return [p.telemetry.snapshot() for ip,p in getattr(monitor,'monitors',{}).items()
+                    if ip in getattr(monitor,'ips',[])]
+        def with_detections(result):
+            return {**result, 'detections': service.detections(snapshots())}
         try:
-            if request.method=='GET':return web.json_response(service.state())
+            if request.method=='GET':return web.json_response(with_detections(service.state()))
             if request.content_type!='application/json':raise ValueError('Ungültiges Datenformat.')
             body=await request.json()
             if body.get('action')=='configure':result=await service.configure(body.get('url'))
             elif body.get('action')=='refresh':result=await service.refresh()
+            elif body.get('action')=='link_sku':
+                if body.get('spool_id') is not None and body.get('unique_confirmed') is not True:
+                    raise ValueError('Bitte bestätigen, dass diese Kennung nur zu dieser Spule gehört.')
+                if body.get('spool_id') is not None and (not isinstance(body.get('ip'),str) or type(body.get('slot')) is not int):
+                    raise ValueError('Bitte den gemeldeten Steckplatz auswählen.')
+                result=await service.link_sku(body.get('sku'),body.get('spool_id'),snapshots(),(body.get('ip'),body.get('slot')))
             elif body.get('action')=='assign':
                 ip=body.get('ip')
                 printer=monitor.monitors.get(ip) if isinstance(ip,str) else None
@@ -410,7 +424,7 @@ def build_app(monitor,access=None):
                 if body.get('spool_id') is None and ip in service.mappings:ips.append(ip)
                 result=await service.assign(ip,body.get('slot'),body.get('spool_id'),ips,reported)
             else:raise ValueError('Unbekannte Aktion.')
-            return web.json_response(result)
+            return web.json_response(with_detections(result))
         except ValueError as exc:
             return web.json_response({'error':str(exc)[:350] or 'Bitte die Angaben prüfen.'},status=400)
         except (TypeError,AttributeError):

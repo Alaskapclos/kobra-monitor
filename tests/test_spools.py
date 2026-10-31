@@ -84,3 +84,73 @@ class SpoolAccess(unittest.IsolatedAsyncioTestCase):
         for action in ['consume','delete','measure','print','upload']:
             self.assertEqual((await self.call('POST','/api/spools',{'action':action},h)).status,400)
         self.assertEqual((await self.call('PATCH','/api/spools',{},h)).status,403)
+
+
+def printer(sku='TEST-UNIQUE-0001',slot=0,age=0,connection='online',empty=False,ip=IP):
+    return {'ip':ip,'connection':connection,'section_age_s':{'ace':age},'data':{'ace_slots':[
+        {'global_index':slot,'sku':sku,'edit_status':2 if empty else 0}]}}
+
+class IdentityService(unittest.IsolatedAsyncioTestCase):
+    asyncSetUp = SpoolService.asyncSetUp
+    asyncTearDown = SpoolService.asyncTearDown
+    async def test_link_follows_spool_between_slots_and_survives_restart(self):
+        await self.s.assign(IP,0,42,[IP],{0})
+        await self.s.link_sku('TEST-UNIQUE-0001',42,[printer()])
+        self.assertEqual(self.s.mappings[IP],{})
+        restored=Spools(self.tmp.name,clock=lambda:self.now)
+        self.assertEqual(restored.sku_links,{'TEST-UNIQUE-0001':42})
+        self.assertEqual(restored.detections([printer(slot=2)])[0]['status'],'inventory_unavailable')
+        restored.items=self.s.items;restored.checked=self.now
+        found=restored.detections([printer(slot=2)])[0]
+        self.assertEqual((found['slot'],found['spool_id'],found['status']),(2,42,'recognized'))
+    async def test_duplicate_stale_offline_empty_and_invalid_skus_never_bind(self):
+        for values in [[printer(),printer(slot=1)],[printer(age=61)],[printer(connection='offline')],[printer(empty=True)],[printer(sku='')]]:
+            with self.subTest(values=values),self.assertRaises(ValueError):await self.s.link_sku('TEST-UNIQUE-0001',42,values)
+        for sku in ['',None,'x'*97,'<script>','a\nb']:
+            with self.assertRaises(ValueError):await self.s.link_sku(sku,42,[printer(sku=sku)])
+    async def test_observed_duplicates_and_inventory_expiry_disable_recognition(self):
+        await self.s.link_sku('TEST-UNIQUE-0001',42,[printer()])
+        self.assertEqual([r['status'] for r in self.s.detections([printer(),printer(slot=1)])],['duplicate','duplicate'])
+        self.assertEqual(self.s.detections([printer(empty=True)])[0]['status'],'empty')
+        self.now+=61
+        self.assertEqual(self.s.detections([printer()])[0]['status'],'inventory_unavailable')
+        await self.s.link_sku('TEST-UNIQUE-0001',None,[])
+        self.assertFalse(self.s.sku_links)
+    async def test_server_switch_conflict_rebind_and_save_failure_are_safe(self):
+        await self.s.link_sku('TEST-UNIQUE-0001',42,[printer()])
+        with self.assertRaises(ValueError):await self.s.configure('http://192.168.1.50:7912')
+        with self.assertRaises(ValueError):await self.s.link_sku('OTHER-0001',42,[printer(sku='OTHER-0001')])
+        with patch.object(self.s,'save',side_effect=OSError()):
+            with self.assertRaises(ValueError):await self.s.link_sku('TEST-UNIQUE-0001',None,[])
+        self.assertEqual(self.s.sku_links,{'TEST-UNIQUE-0001':42})
+        self.s.mappings={IP:{'2':42}}
+        self.assertEqual(self.s.detections([printer()])[0]['status'],'conflict')
+    async def test_unknown_product_sku_never_auto_creates_inventory_or_links(self):
+        self.assertEqual(self.s.detections([printer(sku='PRODUCT-001')])[0]['status'],'unknown')
+        self.assertEqual(self.s.sku_links,{})
+        self.assertFalse(self.s.path.exists())
+
+class IdentityAccess(unittest.IsolatedAsyncioTestCase):
+    asyncSetUp = fixtures.AccessTests.asyncSetUp
+    asyncTearDown = fixtures.AccessTests.asyncTearDown
+    call = fixtures.AccessTests.call
+    signin = fixtures.AccessTests.signin
+    async def test_link_requires_explicit_identity_confirmation_and_live_report(self):
+        self.service.spools=Spools(self.tmp.name)
+        self.service.spools.url='http://127.0.0.1:8000'
+        self.service.spools.items=normalize(SPOOLS);self.service.spools.checked=self.service.spools.clock()
+        self.service.ips=[IP]
+        self.service.monitors={IP:SimpleNamespace(telemetry=SimpleNamespace(snapshot=lambda:printer()))}
+        headers=await self.signin()
+        body={'action':'link_sku','ip':IP,'slot':0,'sku':'TEST-UNIQUE-0001','spool_id':42}
+        self.assertEqual((await self.call('POST','/api/spools',body,headers)).status,400)
+        body['unique_confirmed']=True
+        body['slot']=1
+        self.assertEqual((await self.call('POST','/api/spools',body,headers)).status,400)
+        body['slot']=0
+        response=await self.call('POST','/api/spools',body,headers)
+        self.assertEqual(response.status,200)
+        self.assertEqual(json.loads(response.text)['detections'][0]['status'],'recognized')
+        self.service.monitors={}
+        body['spool_id']=None
+        self.assertEqual((await self.call('POST','/api/spools',body,headers)).status,200)
