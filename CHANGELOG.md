@@ -1,3 +1,9 @@
+## 0.15.0-alpha.1
+
+- Betriebsstatus mit Druckerfrische, Kameraaufbereitung, Verlauf und Benachrichtigungsdienst.
+- Verständliche Hinweise zu HTTPS, fehlender Browser-Unterstützung und blockierter Benachrichtigungserlaubnis.
+- Kopierbarer Prüfbericht mit ausdrücklich begrenzten technischen Feldern, ohne IP-Adressen, Drucker-/Dateinamen, Zugangsdaten oder Zustellschlüssel.
+
 ## 0.14.0-alpha.1
 
 - Optionale verschlüsselte Web-Push-Meldungen pro Gerät für bestätigtes Druckende/Abbruch, Druckerstörungen und längere Verbindungsabbrüche.

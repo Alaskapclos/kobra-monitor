@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.14.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.15.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -174,3 +174,7 @@ und Tailscale sind Marken ihrer jeweiligen Rechteinhaber; dies ist ein unabhäng
 Unter Kamera die Ansicht **Kameraübersicht** wählen, zwei oder vier Bilder pro Seite einstellen und **Kameras anzeigen** öffnen. Bei mehr Druckern mit Zurück/Weiter blättern. Auf dem Handy stehen die Bilder untereinander. Nur die sichtbare Seite wird geladen; maximal vier verschiedene Kameras gleichzeitig auf dem Monitorserver, auch über mehrere Browser hinweg. Gleiche Kameras teilen sich einen Decoder.
 
 Optionale Meldungen auf iPhone, Android und unterstützten Desktop-Browsern: [Einrichtung und Grenzen](docs/NOTIFICATIONS.md). Erst nach Aktivierung je Gerät; verschlüsselte Zustellung über den Browser-Push-Dienst.
+
+## Betriebsstatus und Hilfe
+
+Unter **Betriebsstatus → Öffnen** prüfst du Verbindungsfrische, Kameraaufbereitung, Verlauf und Benachrichtigungsdienst. Hinweise auf diesem Gerät erklären unter anderem gesperrte Benachrichtigungen. **Prüfbericht kopieren** enthält begrenzte technische Ergebnisse ohne IP-Adressen, Namen, Zugangsdaten oder Push-Schlüssel. [Einzelheiten](docs/DIAGNOSTICS.md).

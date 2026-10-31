@@ -38,7 +38,7 @@ Container-Test das Artefakt **kobra-monitor-linux-amd64** bereitstellen:
 3. Das ZIP entpacken. Es enthält `kobra-monitor-linux-amd64.tar`.
 4. Diese TAR-Datei in UGOS unter **Docker → Image → Import** importieren.
 
-Erwarteter Image-Name: `kobra-monitor:0.14.0-alpha.1`. Das Abbild enthält den
+Erwarteter Image-Name: `kobra-monitor:0.15.0-alpha.1`. Das Abbild enthält den
 Quellcode und seine Bibliotheken; persönliche Datenvolumes und Zugangscodes
 werden nicht in das Abbild exportiert. Das Artefakt ist privat und wird sieben
 Tage aufbewahrt. Ein neuer erfolgreicher Workflow kann es erneut erzeugen.

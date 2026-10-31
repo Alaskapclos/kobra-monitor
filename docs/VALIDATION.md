@@ -211,3 +211,7 @@ Monitor und Sicherungsdienst auf UGOS aktualisiert. Der laufende NAS-Dienst meld
 Nutzer bestätigt am 31.10.2026 den tatsächlichen Empfang einer Testmeldung auf dem iPhone nach eigener Einrichtung. Android und Benachrichtigungen aus realen Druckereignissen sind noch nicht bestätigt. Die zuletzt beschriebene NAS-Wiederherstellung lag zeitlich vor der ersten Geräteanmeldung.
 
 Nutzer bestätigt am 31.10.2026 ausdrücklich den Empfang der Testmeldung auf Android und iPhone. Android funktionierte nach Neustart und erneuter Einrichtung; Ursache der vorherigen Sperre nicht ermittelt. Zustellung aus realen Druckereignissen bleibt separat zu prüfen.
+
+## Betriebsstatus 0.15
+
+Sieben neue Python-Tests prüfen die Feldbegrenzung ohne private Daten, getrennte Temperaturfrische, ungültige Alterswerte, lesende Geräte-/Queue-Abfragen, inaktiven Dienst, Reihenfolge und Besitzerzugriff ohne Schreibroute. Acht JS-Fälle prüfen Darstellung, Export, Warnhinweise, Zwischenablage-Fallback sowie Verbindungsfehler und abgelaufene Sitzung. CI, Browserprüfung und NAS-Update noch offen.

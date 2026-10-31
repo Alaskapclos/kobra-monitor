@@ -13,6 +13,7 @@
   <script defer src="/assets/setup.js"></script>
   <script defer src="/assets/camera.js"></script>
   <script defer src="/assets/notifications.js"></script>
+  <script defer src="/assets/diagnostics.js"></script>
   <script defer src="/assets/monitor.js"></script>
 </head>
 <body>
@@ -56,7 +57,7 @@
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
     <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.14 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.15 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
@@ -107,6 +108,11 @@
       <div class="section-head"><div><div class="eyebrow muted">DEIN DRUCK IM VERLAUF</div><h2 id="timeline-title">Temperaturverlauf</h2></div><button id="timeline-close" class="timeline-button" type="button" aria-label="Temperaturverlauf schließen">Schließen</button></div>
       <p id="timeline-file" class="timeline-file"></p>
       <div id="timeline-content" aria-live="polite"></div>
+    </section>
+    <section class="card notification-card" aria-labelledby="check-title">
+      <div class="section-head"><div><div class="eyebrow muted">VERBINDUNG & HILFE</div><h2 id="check-title">Betriebsstatus</h2></div><button id="check-open" class="timeline-button" type="button" aria-expanded="false" aria-controls="check-content">Öffnen</button></div>
+      <p>Prüfe Druckerverbindungen, Kameraaufbereitung und Benachrichtigungen.</p>
+      <div id="check-content" hidden><div class="notify-actions"><button id="check-run" class="timeline-button" type="button">Erneut prüfen</button><button id="check-copy" class="timeline-button" type="button" disabled>Prüfbericht kopieren</button></div><p id="check-message" role="status" aria-live="polite"></p><div id="check-results"></div><label for="check-report" class="notification-privacy">Der Prüfbericht enthält nur technische Prüfergebnisse, keine Zugangsdaten, Dateinamen, Druckernamen oder IP-Adressen.</label><textarea id="check-report" class="check-report" rows="10" readonly hidden aria-label="Prüfbericht zum Kopieren"></textarea></div>
     </section>
     <footer class="footer"><span><i class="footer-dot"></i>Drucker lokal verbunden · Push optional.</span><span><a href="/about">Info &amp; Lizenzen</a> <span class="footer-separator">/</span> Status ohne Eingriff</span></footer>
   </main>
