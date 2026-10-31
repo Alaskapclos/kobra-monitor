@@ -36,11 +36,24 @@ class CameraViewTests(unittest.IsolatedAsyncioTestCase):
         reader=Reader();reader.latest_jpeg_ts=time.time()-11;self.views._reader=lambda ip:reader
         self.assertEqual((await self.views.frame('192.168.1.20',['192.168.1.20'])).status,503)
     async def test_limit_and_removed_printer_cleanup(self):
-        ips=['192.168.1.20','192.168.1.21','192.168.1.22']
-        for ip in ips[:2]:self.assertEqual((await self.views.frame(ip,ips)).status,200)
-        self.assertEqual((await self.views.frame(ips[2],ips)).status,503)
+        ips=['192.168.1.20','192.168.1.21','192.168.1.22','192.168.1.23','192.168.1.24']
+        for ip in ips[:4]:self.assertEqual((await self.views.frame(ip,ips)).status,200)
+        self.assertEqual((await self.views.frame(ips[4],ips)).status,503)
         await self.views.prune(ips[1:]);self.assertNotIn(ips[0],self.views.readers)
-        self.assertEqual((await self.views.frame(ips[2],ips[1:])).status,200)
+        self.assertEqual((await self.views.frame(ips[4],ips[1:])).status,200)
+    async def test_releasing_one_viewer_preserves_other_browsers(self):
+        ips=['192.168.1.20','192.168.1.21','192.168.1.22','192.168.1.23','192.168.1.24']
+        for ip in ips[:4]:await self.views.frame(ip,ips,'a'*32)
+        await self.views.frame(ips[0],ips,'b'*32)
+        shared=self.views.readers[ips[0]];await asyncio.sleep(0)
+        await self.views.release('a'*32)
+        self.assertEqual(list(self.views.readers),ips[:1]);self.assertFalse(shared.stopped)
+        self.assertEqual((await self.views.frame(ips[4],ips,'c'*32)).status,200)
+        await self.views.release('b'*32);self.assertTrue(shared.stopped)
+    async def test_inactive_viewer_expires_without_dropping_active_viewer(self):
+        ips=['192.168.1.20'];await self.views.frame(ips[0],ips,'a'*32)
+        self.now+=10;await self.views.frame(ips[0],ips,'b'*32)
+        self.now+=6;await self.views.prune();self.assertEqual(set(self.views.viewers[ips[0]]),{'b'*32})
     async def test_missing_decoder_returns_actionable_error(self):
         self.views.available=lambda:False
         response=await self.views.frame('192.168.1.20',['192.168.1.20'])
@@ -57,7 +70,7 @@ class CameraAccessTests(unittest.IsolatedAsyncioTestCase):
     async def test_camera_requires_owner_session_and_cannot_be_started_by_post(self):
         with tempfile.TemporaryDirectory() as directory:
             write_account(directory,'Fixture','Camera fixture passphrase!');access=Access(directory)
-            cameras=SimpleNamespace(frame=AsyncMock(return_value=web.Response(body=b'jpeg',content_type='image/jpeg')),start=AsyncMock(),stop=AsyncMock())
+            cameras=SimpleNamespace(release=AsyncMock(),frame=AsyncMock(return_value=web.Response(body=b'jpeg',content_type='image/jpeg')),start=AsyncMock(),stop=AsyncMock())
             service=SimpleNamespace(cameras=cameras,start=AsyncMock(),stop=AsyncMock(),ips=['192.168.1.20'])
             app=build_app(service,access)
             async def call(method,path,headers=None,body=None):
@@ -69,5 +82,12 @@ class CameraAccessTests(unittest.IsolatedAsyncioTestCase):
             headers={'Cookie':'kobra_session='+login.cookies['kobra_session'].value}
             self.assertEqual((await call('GET','/api/camera/frame?ip=192.168.1.20',headers)).status,200)
             cameras.frame.assert_awaited_once_with('192.168.1.20',['192.168.1.20'])
+            viewer='a'*32
+            self.assertEqual((await call('POST','/api/camera/release',body={'viewer':viewer})).status,401)
+            self.assertEqual((await call('POST','/api/camera/release',headers,{'viewer':viewer})).status,403)
+            csrf=json.loads(login.text)['csrf'];write_headers={**headers,'Origin':'https://localhost','X-Kobra-CSRF':csrf}
+            self.assertEqual((await call('POST','/api/camera/release',write_headers,{'viewer':viewer})).status,200)
+            cameras.release.assert_awaited_once_with(viewer)
+            self.assertEqual((await call('POST','/api/camera/release',write_headers,{'viewer':'../wrong'})).status,400)
             for path in ('/api/camera/start','/api/camera/stop','/api/camera/frame','/printer/print/start'):
                 self.assertEqual((await call('POST',path,headers)).status,403)

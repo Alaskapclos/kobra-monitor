@@ -127,6 +127,11 @@ window.kobraAuth=(()=>{
     const result=await response.json();if(!response.ok)throw new Error(result.error||'Reihenfolge konnte nicht gespeichert werden.');
     printers=result.ips;return result.ips;
   }
-  return {reorder,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
+  async function releaseCameras(viewer){
+    if(!authenticated||!accountConfigured)return;
+    const response=await fetch('/api/camera/release',{method:'POST',headers:{'Content-Type':'application/json','X-Kobra-CSRF':csrf},body:JSON.stringify({viewer}),signal:AbortSignal.timeout(5000)});
+    if(!response.ok)throw new Error('Die vorige Kameraansicht wird automatisch freigegeben.');
+  }
+  return {reorder,releaseCameras,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
     setPrinters(ips,states=[]){printers=ips||[];printerStates=states;renderConnections();if(authenticated&&accountConfigured&&!printers.length&&panel.hidden)configure();}};
 })();

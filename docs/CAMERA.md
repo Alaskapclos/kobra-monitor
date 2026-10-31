@@ -10,7 +10,7 @@ Getestetes Ziel: Stock-Kobra-S1 mit bereits erreichbarem FLV-Stream an Port 1808
 
 Das Docker-/NAS-Paket installiert FFmpeg aus Debian. Native Installationen benötigen aktuelles FFmpeg mit HTTP-Option `max_redirects` im Suchpfad; anschließend den Monitor neu starten. Ohne passenden Decoder bleibt die Schaltfläche deaktiviert. Der Kamerapfad lehnt HTTP-Weiterleitungen und andere Eingabeprotokolle ab. Er akzeptiert ausschließlich eingerichtete Drucker, keine frei eingegebenen Stream-URLs.
 
-Maximal zwei Drucker werden gleichzeitig dekodiert. Mehrere Browser mit demselben Drucker teilen sich einen Decoder. Dies begrenzt Last und Verbindungen zum Drucker. Aufnahmen, Ton, Kameraaktivierung, Bewegungs- und Drucksteuerung gehören nicht zu dieser Funktion.
+Maximal vier Drucker werden gleichzeitig dekodiert. Mehrere Browser mit demselben Drucker teilen sich einen Decoder. Dies begrenzt Last und Verbindungen zum Drucker. Aufnahmen, Ton, Kameraaktivierung, Bewegungs- und Drucksteuerung gehören nicht zu dieser Funktion.
 
 ## Herkunft
 
@@ -25,3 +25,9 @@ Auf beiden vorhandenen S1 ohne MQTT-Kamerabefehle FLV gelesen und echte 1280×72
 ### Bildwechsel 0.12.1
 
 Neue Bilder werden vor dem Wechsel vollständig dekodiert. Das vorige Bild bleibt während des Nachladens sichtbar. Bei kurzen Fehlern erscheint „Letztes Kamerabild – aktuell keine Live-Aktualisierung“; nach zehn Sekunden ohne neues Bild wird es beim nächsten fehlgeschlagenen Abruf entfernt. Der Nutzer hat die Kameraansicht auf dem Handy bestätigt; die Korrektur des gemeldeten Flackerns wird getrennt geprüft.
+
+## Kameraübersicht ab 0.13
+
+Ansicht „Kameraübersicht“ wählen, zwei oder vier Bilder pro Seite einstellen, „Kameras anzeigen“ öffnen. Mehr Drucker erscheinen auf weiteren Seiten. Gespeicherte Druckerreihenfolge und Namen werden übernommen. Jedes Bild meldet Verbindungsfehler getrennt. Auf kleinen Bildschirmen stehen Bilder untereinander. Ein Wechsel der Statusauswahl verändert die Matrix nicht.
+
+Beim Seitenwechsel werden die lokalen Leser dieser Ansicht freigegeben, bevor neue beginnen. Andere Browser behalten ihre noch verwendeten Leser. Die Freigabe ist nur eine lokale Ressourcenverwaltung; sie sendet keinen Befehl an den Drucker und verlangt dieselbe Anmeldung, CSRF- und Origin-Prüfung wie die Einrichtung. Vergessene Leser laufen nach 15–18 Sekunden aus. Serverweit maximal vier verschiedene Kameras; wenn andere Browser die Grenze bereits belegen, erscheint ein Hinweis. Vier reale Kameras und große Druckerflotten wurden bisher nicht mit Hardware erprobt.

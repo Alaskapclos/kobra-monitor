@@ -283,7 +283,7 @@ def build_app(monitor,access=None):
     async def boundary(request, handler):
         public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order')
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
@@ -354,7 +354,19 @@ def build_app(monitor,access=None):
         if result is None:return web.json_response({'error':'Auftrag nicht gefunden.'},status=404)
         return web.json_response(result)
     async def camera_frame(request):
-        return await monitor.cameras.frame(request.query.get('ip',''),monitor.ips)
+        viewer=request.query.get('viewer','legacy')
+        if viewer!='legacy' and (len(viewer)!=32 or any(c not in '0123456789abcdef' for c in viewer)):
+            return web.json_response({'error':'Ungültige Kameraansicht.'},status=400)
+        if viewer=='legacy':return await monitor.cameras.frame(request.query.get('ip',''),monitor.ips)
+        return await monitor.cameras.frame(request.query.get('ip',''),monitor.ips,viewer)
+    async def camera_release(request):
+        try:body=await request.json()
+        except (ValueError,TypeError):body={}
+        viewer=body.get('viewer','') if isinstance(body,dict) else ''
+        if not isinstance(viewer,str) or len(viewer)!=32 or any(c not in '0123456789abcdef' for c in viewer):
+            return web.json_response({'error':'Ungültige Kameraansicht.'},status=400)
+        await monitor.cameras.release(viewer)
+        return web.json_response({'released':True,'read_only':True})
     async def favicon(request): return web.Response(status=204)
     async def jobs(request):
         ip=request.query.get('ip','')
@@ -393,6 +405,7 @@ def build_app(monitor,access=None):
     app.router.add_get('/api/jobs',jobs)
     app.router.add_get('/health',health)
     app.router.add_get('/api/camera/frame',camera_frame)
+    if access is not None:app.router.add_post('/api/camera/release',camera_release)
     app.router.add_get('/favicon.ico',favicon)
     app.router.add_route('*','/{path:.*}',blocked)
     if getattr(monitor,'cameras',None) is not None:

@@ -1,5 +1,12 @@
 ## 0.12.0-alpha.1
 
+## 0.13.0-alpha.1
+
+- Optionale Kameraübersicht mit zwei oder vier Bildern pro Seite, Druckernamen und eigener Fehlermeldung je Bild.
+- Seitennavigation folgt der gespeicherten Druckerreihenfolge; nur die sichtbare Seite wird geladen.
+- Ansichten geben ihre lokalen Leser beim Wechsel frei, ohne andere Browser desselben Druckers zu unterbrechen. Vier gemeinsame Decoder als Obergrenze.
+
+
 ## 0.12.1-alpha.1
 
 - Kamerabild erst nach vollständiger Decodierung austauschen; vorheriges Bild bleibt beim Nachladen sichtbar.

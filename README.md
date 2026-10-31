@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.12.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.13.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -168,3 +168,7 @@ mitgelieferten Bibliotheken bleiben erhalten. Verwendet werden:
 [NOTICE](NOTICE.md), [SOURCES.json](SOURCES.json), [Änderungen an Fremdcode](docs/UPSTREAM.md).
 Keine Slicer-Zertifikate oder privaten Schlüssel werden ausgeliefert. Anycubic
 und Tailscale sind Marken ihrer jeweiligen Rechteinhaber; dies ist ein unabhängiges Projekt.
+
+### Kameraübersicht
+
+Unter Kamera die Ansicht **Kameraübersicht** wählen, zwei oder vier Bilder pro Seite einstellen und **Kameras anzeigen** öffnen. Bei mehr Druckern mit Zurück/Weiter blättern. Auf dem Handy stehen die Bilder untereinander. Nur die sichtbare Seite wird geladen; maximal vier verschiedene Kameras gleichzeitig auf dem Monitorserver, auch über mehrere Browser hinweg. Gleiche Kameras teilen sich einen Decoder.

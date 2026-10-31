@@ -21,9 +21,9 @@ def decoder_available():
 
 class CameraViews:
     """One shared JPEG decoder per viewed printer; idle readers are stopped."""
-    def __init__(self, clock=time.monotonic, idle_seconds=15, limit=2):
+    def __init__(self, clock=time.monotonic, idle_seconds=15, limit=4):
         self.clock=clock; self.idle_seconds=idle_seconds; self.limit=limit
-        self.readers={}; self.touched={}; self.janitor=None
+        self.readers={}; self.touched={}; self.viewers={}; self.janitor=None
 
     def available(self):
         return decoder_available()
@@ -44,7 +44,7 @@ class CameraViews:
         self.janitor=asyncio.create_task(self._cleanup_loop())
 
     async def _stop_reader(self, ip):
-        reader=self.readers.pop(ip, None); self.touched.pop(ip, None)
+        reader=self.readers.pop(ip, None); self.touched.pop(ip, None); self.viewers.pop(ip,None)
         if reader is None:return
         task=reader._task_jpeg
         if task is not None:
@@ -55,8 +55,10 @@ class CameraViews:
     async def prune(self, configured=None):
         now=self.clock()
         for ip in list(self.readers):
+            leases=self.viewers.get(ip,{})
+            self.viewers[ip]={key:at for key,at in leases.items() if now-at<=self.idle_seconds}
             if ((configured is not None and ip not in configured) or
-                    now-self.touched.get(ip,0)>self.idle_seconds):
+                    not self.viewers[ip]):
                 await self._stop_reader(ip)
 
     async def _cleanup_loop(self):
@@ -70,7 +72,13 @@ class CameraViews:
             with contextlib.suppress(asyncio.CancelledError):await self.janitor
         for ip in list(self.readers):await self._stop_reader(ip)
 
-    async def frame(self, ip, configured):
+    async def release(self, viewer):
+        for ip in list(self.readers):
+            leases=self.viewers.get(ip,{})
+            leases.pop(viewer,None)
+            if not leases:await self._stop_reader(ip)
+
+    async def frame(self, ip, configured, viewer="legacy"):
         # Only configured literal printer IPs may become an input. Never accept a
         # stream URL from a browser or printer payload, and never follow redirects
         # to another protocol (ffmpeg's protocol/format allowlist is above).
@@ -82,9 +90,10 @@ class CameraViews:
         reader=self.readers.get(ip)
         if reader is None:
             if len(self.readers)>=self.limit:
-                return web.json_response({'error':'Gerade werden bereits zwei Kameras angesehen. Schließe eine andere Kamera und versuche es gleich erneut.'},status=503)
+                return web.json_response({'error':'Gerade werden bereits vier Kameras angesehen. Schließe eine andere Ansicht und versuche es gleich erneut.'},status=503)
             reader=self._reader(ip);self.readers[ip]=reader
         self.touched[ip]=self.clock()
+        self.viewers.setdefault(ip,{})[viewer]=self.clock()
         if reader._task_jpeg is None or reader._task_jpeg.done():
             reader._task_jpeg=asyncio.create_task(reader._run_jpeg_loop())
         deadline=self.clock()+6
