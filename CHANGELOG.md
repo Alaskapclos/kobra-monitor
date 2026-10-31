@@ -1,3 +1,9 @@
+## 0.16.0-alpha.1
+
+- Druckerkarten zeigen unabhängig voneinander Druckstatus, Fortschritt, geschätzte Restzeit und Ist-Temperaturen.
+- Druck- und Temperaturdaten werden getrennt auf Aktualität geprüft. Bei Verbindungsverlust werden Livewerte ausgeblendet.
+- Vorbereitung zeigt keinen möglicherweise alten Fortschritt oder Restzeitwert. Details und gespeicherte Sortierung bleiben erhalten.
+
 ## 0.15.0-alpha.1
 
 - Betriebsstatus mit Druckerfrische, Kameraaufbereitung, Verlauf und Benachrichtigungsdienst.

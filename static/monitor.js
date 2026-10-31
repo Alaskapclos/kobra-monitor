@@ -166,6 +166,45 @@ function bindPrinterDrag(button,ip){
   button.addEventListener('lostpointercapture',()=>{pointerStart=null;moved=false;if(draggedPrinter===ip)clearPrinterDrag();});
 }
 
+// A card only calls values current when that section has fresh observations.
+function printerOverview(printer,extraAge=0,unavailable=false){
+  const limit=number(printer.stale_after_s)?printer.stale_after_s:90;
+  const ages=printer.section_age_s||{},data=printer.data||{};
+  let connection=printer.connection;
+  if(connection==='online'&&number(printer.age_s)&&printer.age_s+extraAge>limit)connection='stale';
+  if(unavailable||extraAge>10)connection='offline';
+  const fresh=section=>connection==='online'&&number(ages[section])&&ages[section]>=0&&ages[section]+extraAge<=limit;
+  const printFresh=fresh('print'),temperatureFresh=fresh('temperature');
+  const phase=data.print_state;
+  const advancing=printFresh&&['printing','paused'].includes(phase);
+  const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?Math.round(data.progress*100):null;
+  const remaining=advancing?duration(data.remain_time):'—';
+  const nozzle=temperatureFresh?value(data.nozzle_temp,' °C'):'—';
+  const bed=temperatureFresh?value(data.bed_temp,' °C'):'—';
+  const state=printFresh?(stateNames[phase]||'Status unbekannt'):connection==='connecting'?'Warte auf Druckerdaten':'Keine aktuellen Druckdaten';
+  const detail=state+(progress!==null?` · ${progress} %`:'');
+  const note=connection==='offline'?'Verbindung unterbrochen · Messwerte ausgeblendet':connection==='connecting'?'Warte auf erste Messwerte':!printFresh?'Druckstatus fehlt oder ist veraltet':!temperatureFresh?'Temperaturwerte fehlen oder sind veraltet':ageText(ages.print+extraAge);
+  return {connection,state,detail,progress,remaining,nozzle,bed,note,
+    attention:connection!=='online'||!printFresh||!temperatureFresh};
+}
+function createPickerOverview(button){
+  const overview=document.createElement('span');overview.className='picker-overview';
+  const track=document.createElement('span'),fill=document.createElement('span');track.className='picker-progress-track';fill.className='picker-progress-fill';track.setAttribute('aria-hidden','true');track.append(fill);
+  const metrics=document.createElement('span');metrics.className='picker-metrics';
+  for(const [key,label] of [['remaining','Restzeit ca.'],['nozzle','Düse'],['bed','Druckbett']]){
+    const item=document.createElement('span'),caption=document.createElement('span'),reading=document.createElement('strong');
+    item.className='picker-metric';caption.textContent=label;reading.className='picker-'+key;item.append(caption,reading);metrics.append(item);
+  }
+  const note=document.createElement('span');note.className='picker-freshness';overview.append(track,metrics,note);button.append(overview);
+}
+function renderPickerOverview(button,view){
+  const fill=button.querySelector('.picker-progress-fill');fill.style.width=`${view.progress??0}%`;
+  button.querySelector('.picker-progress-track').hidden=view.progress===null;
+  for(const key of ['remaining','nozzle','bed'])button.querySelector('.picker-'+key).textContent=view[key];
+  button.querySelector('.picker-freshness').textContent=view.note;
+  button.classList.toggle('picker-needs-attention',view.attention);
+}
+
 function render(snapshot) {
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
@@ -188,24 +227,23 @@ function render(snapshot) {
       const info=document.createElement('span');info.className='picker-info';
       const state=document.createElement('span');state.className='picker-state';
       const detail=document.createElement('span');detail.className='picker-detail';
-      info.append(state,detail);button.append(grip,identity,info);
+      info.append(state,detail);button.append(grip,identity,info);createPickerOverview(button);
       bindPrinterDrag(button,printer.ip);
       button.addEventListener('click',()=>{if(Date.now()<suppressPickerClickUntil)return;selectedIp=printer.ip;if(lastResponse)render(lastResponse);});
       printerButtons.set(printer.ip,button);area.append(button);
     }
     const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
-    let connection=printer.connection;
-    if(connection==='online'&&number(printer.age_s)&&printer.age_s+extraAge>printer.stale_after_s)connection='stale';
-    if(requestFailed||extraAge>10)connection='offline';
+    const view=printerOverview(printer,extraAge,requestFailed);
     const labels={online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Veraltet'};
+    const name=printer.data?.printer_name||printer.data?.model_name||'Drucker';
     button.classList.toggle('selected',printer.ip===selectedIp);
     button.setAttribute('aria-pressed',String(printer.ip===selectedIp));
-    button.querySelector('.picker-name').textContent=printer.data?.printer_name||printer.data?.model_name||'Drucker';
+    button.querySelector('.picker-name').textContent=name;
     button.querySelector('.picker-ip').textContent=printer.ip;
-    const status=button.querySelector('.picker-state');status.className=`picker-state ${connection}`;status.textContent=labels[connection]||'Verbinden';
-    const print=printer.data?.print_state;
-    const progress=printer.data?.progress;
-    button.querySelector('.picker-detail').textContent=connection==='online'?(stateNames[print]||'Status wird geladen')+(print==='printing'&&number(progress)?` · ${Math.round(progress*100)} %`:''):'Letzte Daten getrennt gespeichert';
+    const status=button.querySelector('.picker-state');status.className=`picker-state ${view.connection}`;status.textContent=labels[view.connection]||'Verbinden';
+    button.querySelector('.picker-detail').textContent=view.detail;
+    renderPickerOverview(button,view);
+    button.setAttribute('aria-label',`${name}, ${labels[view.connection]||'Verbinden'}, ${view.detail}, Restzeit circa ${view.remaining}, Düse ${view.nozzle}, Druckbett ${view.bed}. Details anzeigen.`);
   }
   for(const [ip,button] of printerButtons) {
     if(!printers.some(p=>p.ip===ip)){button.remove();printerButtons.delete(ip);}

@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.15.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Stand: 0.16.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -178,3 +178,7 @@ Optionale Meldungen auf iPhone, Android und unterstützten Desktop-Browsern: [Ei
 ## Betriebsstatus und Hilfe
 
 Unter **Betriebsstatus → Öffnen** prüfst du Verbindungsfrische, Kameraaufbereitung, Verlauf und Benachrichtigungsdienst. Hinweise auf diesem Gerät erklären unter anderem gesperrte Benachrichtigungen. **Prüfbericht kopieren** enthält begrenzte technische Ergebnisse ohne IP-Adressen, Namen, Zugangsdaten oder Push-Schlüssel. [Einzelheiten](docs/DIAGNOSTICS.md).
+
+## Mehrere Drucker vergleichen
+
+Jede Druckerkarte zeigt Druckstatus, Fortschritt, geschätzte Restzeit sowie Düse und Druckbett. Eine Karte auswählen öffnet die vertrauten Details darunter. Karten bleiben per Ziehen oder Tastatur sortierbar. Fortschritt und Restzeit erscheinen nur bei aktuellen Druck-/Pausendaten; während der Vorbereitung werden möglicherweise zwischengespeicherte Werte ausgeblendet. Veraltete Druckdaten und Temperaturen werden getrennt behandelt. Bei Verbindungsverlust werden die Livewerte in der Karte ausgeblendet.
