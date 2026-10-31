@@ -235,3 +235,9 @@ Nutzer bestätigt am 31.10.2026 während der Spoolman-Einrichtung den Handyempfa
 ## SKU-Erkennung 0.18
 
 141 Python-, 14 Leseschutz- und 66 JS-Prüffälle lokal erfolgreich. SKU-Feldbegrenzung, explizite Bestätigung, zwischenzeitlicher Slotwechsel, Wiedererkennung am anderen Slot nach Neustart, Duplikate, Offline-/Leer-/Altdaten, Bestandsausfall, Konflikte, Speicherfehler-Rollback sowie Sicherung/Wiederherstellung der Kennungsverknüpfungen geprüft. Keine echten Spulen angelegt. Browser-, CI- und NAS-Nachweise folgen getrennt; noch keine praktische ReSpool-Wiedererkennung behauptet.
+
+## 0.18 – CI und NAS-Nachweis
+
+Alle sieben Jobs für Commit 2895f384b850aa312a5d56163120070494879bf0 erfolgreich: [Prüflauf 41226007720](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41226007720). Angemeldete isolierte Browser-Fixture: eindeutige Kennung mit erfundener Spule verknüpft und Wiedererkennung angezeigt. Keine Verbindung zu einem Drucker in der Fixture.
+
+Monitor und separater Sicherungsdienst auf UGOS auf 0.18 aktualisiert. Acht Aufträge und alle abgeschlossenen Zustände unverändert; Konto, Druckereinrichtung, Spoolman-Konfiguration und privater Push-Schlüssel vor/nach Update identisch. Vollsicherung mit Prüfsummen isoliert unter /tmp wiederhergestellt, SQLite integrity_check=ok, acht Aufträge und zwei Push-Geräte erhalten, private Dateien bytegleich. Beide echten Drucker online, jeweils vier Slots und drei nichtleere SKU-Felder im neuen lokalen Verlauf nachgewiesen. HTTPS liefert neue Assets bytegleich, Spulen-/Status-/System-/Geräte-APIs ohne Sitzung weiterhin 401. Beobachtungslücke 7,65 Sekunden, kein aktiver Druck. Tagesplan unverändert; Sonderstand ist kein Nachweis des regulären Tageszyklus. Noch kein echter Spoolman-Bestand angelegt/verknüpft, kein praktischer ReSpool-Wechseltest. Produktive angemeldete Browserprüfung wartet auf Nutzeranmeldung; physisches Handy-Layout offen.
