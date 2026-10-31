@@ -219,6 +219,7 @@ function render(snapshot) {
   $('printer-order-status').hidden=printers.length<2;
   const chosen=printers.find(p=>p.ip===selectedIp);
   if(chosen)renderPrinter(chosen);
+  window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();
   if(archiveIp!==selectedIp) {
     archiveIp=selectedIp;archivePage=0;historySignature=null;

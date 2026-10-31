@@ -4,8 +4,8 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.11.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
-der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung, Kamera und
+**Stand: 0.12.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
 UGREEN DXP4800GT mit UGOS läuft der amd64-Container mit zwei Druckern;
@@ -96,6 +96,7 @@ beim Umsortieren erhalten. Dies ändert keine Druckereinstellung.
 - Unabhängige Status- und Verbindungsanzeige pro Drucker; veraltete Werte sind markiert.
 - Druckdatei, Fortschritt, Layer, verbleibende Zeit und Ist-/Solltemperaturen.
 - ACE-Slots, Material, Farben und gemeldete Restmengen.
+- Kameraansicht des ausgewählten Druckers auf Wunsch, ungefähr zwei Bilder pro Sekunde.
 - Dauerhafte, nach Dateiname und Status durchsuchbare Druckhistorie.
 - Herunterladbare Markdown-Berichte und Temperaturkurven mit Zustandsereignissen.
 
@@ -103,6 +104,18 @@ Restprozente, Feuchtigkeit und Firmware-Zeitangaben sind nicht unabhängig
 validiert. Nullwerte bedeuten nicht zuverlässig leere Spulen oder echte 0 % Feuchte.
 Ein bestätigter Druckabschluss ist kein visueller Qualitätsnachweis des Bauteils.
 Verbindungsverlust bedeutet niemals automatisch Druckende.
+
+## Kamera ansehen
+
+Wähle einen Drucker und öffne **Kamera anzeigen**. Die Bilder kommen über dieselbe
+angemeldete Oberfläche, auch über HTTPS und VPN. Es gibt keine Kamera-Aufzeichnung.
+Mit **Ansicht schließen**, beim Druckerwechsel oder beim Verlassen des Tabs endet
+die Ansicht; ungenutzte Leserverbindungen werden nach kurzer Nachlaufzeit beendet.
+
+Das NAS-Paket enthält FFmpeg. Bei nativer Installation muss aktuelles FFmpeg im
+Suchpfad liegen. Der Monitor liest nur den bereits verfügbaren lokalen Kamerastream.
+Er aktiviert oder deaktiviert die Kamera am Drucker nicht. Ist der Stream dort
+nicht verfügbar, erscheint eine verständliche Meldung. [Einzelheiten und Grenzen](docs/CAMERA.md).
 
 ## Zugang und Daten
 

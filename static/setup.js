@@ -3,7 +3,7 @@ window.kobraAuth=(()=>{
   let authenticated=false,csrf='',printers=[],accountConfigured=false,accountName='',printerStates=[],rowCounter=0,setupSaving=false;
   const $=id=>document.getElementById(id);
   const panel=$('setup-panel');
-  function showPanel(show){panel.hidden=!show;for(const node of document.querySelectorAll('main,aside'))node.inert=show;}
+  function showPanel(show){if(show)window.kobraCamera?.close();panel.hidden=!show;for(const node of document.querySelectorAll('main,aside'))node.inert=show;}
   function step(name){
     showPanel(true);for(const part of ['login','account','printers','done'])$('setup-'+part).hidden=part!==name;
     $('setup-heading').textContent={login:'Willkommen bei Kobra Monitor.',account:accountConfigured?'Dein Benutzerkonto.':'Lege dein Benutzerkonto an.',printers:'Verbinde deine Drucker.',done:'Drucker gespeichert.'}[name];
@@ -12,7 +12,7 @@ window.kobraAuth=(()=>{
     const first=$('setup-'+name).querySelector('input:not([hidden]),textarea,button');if(first)first.focus();
   }
   function controls(){for(const id of ['account-open','logout'])$(id).hidden=!(authenticated&&accountConfigured);}
-  function login(){authenticated=false;csrf='';controls();step('login');}
+  function login(){window.kobraCamera?.close();authenticated=false;csrf='';controls();step('login');}
   function account(){
     if(!authenticated){login();return;}
     $('account-name').value=accountName;$('account-password').value='';$('account-confirm').value='';$('account-current').value='';

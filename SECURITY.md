@@ -44,3 +44,5 @@ wurden am 31.10.2026 praktisch geprüft. UGOS und der vom Nutzer bestätigte pri
 Mobilfunk-/Tailscale-Zugriff sind in docs/VALIDATION.md dokumentiert.
 
 Passwortparameter: [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Passwortberechnung: Python `hashlib.scrypt`. Die Anwendung stellt selbst kein HTTPS bereit; für geschützte Übertragung auch innerhalb des Heimnetzes einen privaten HTTPS-Proxy verwenden.
+
+Kamera ab 0.12: ausschließlich GET auf den vorhandenen Stock-FLV-Stream eingerichteter Drucker. Keine startCapture-/stopCapture-Publishes, keine Freigabe zusätzlicher MQTT-Kommandos. Kamera-Bildroute benötigt dieselbe Kontositzung. Decoder akzeptiert nur HTTP/TCP, festes FLV-Format und keine Redirects. Maximal zwei geteilte JPEG-Decoder, inaktive Leser werden beendet; alte Bilder werden nicht als live ausgegeben. Der Browser lädt Bilddaten vom angemeldeten Monitor, einschließlich HTTPS. Keine Aufzeichnung auf Datenträger. FFmpeg verarbeitet Druckerdaten innerhalb desselben eingeschränkten Containers; nur in vertrauenswürdigem Druckernetz betreiben.

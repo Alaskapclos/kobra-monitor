@@ -15,3 +15,5 @@ Die gepinnten Quellen stehen in SOURCES.json. Änderungen vom 30.10.2026:
 Keine eigenen MQTT-/Handshake-Protokollimplementierungen. Keine mitgelieferten
 Slicer-Zugangsdaten. Ein unveränderter Upstream-Bridge-Start ist nicht mit dem
 hier abgesicherten Monitorstart gleichzusetzen.
+
+Änderung vom 31.10.2026 für Kameraansicht: CameraCache wird für den vorhandenen FLV-Stream wiederverwendet, ausschließlich dessen JPEG-Worker. In `_run_jpeg_loop` wird voller JPEG-Farbbereich explizit gewählt und ein Encoder-Thread verwendet. MQTT-Whitelist und Kamera-Steuerpfade bleiben unverändert gesperrt. Die eigene Anbindung akzeptiert nur konfigurierte IP-Adressen und lässt den Decoder keine Redirects verfolgen.

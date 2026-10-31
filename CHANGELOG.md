@@ -1,3 +1,15 @@
+## 0.12.0-alpha.1
+
+- Geschützte Kameraansicht aus vorhandenen Stock-FLV-Streams, etwa zwei Bilder pro Sekunde.
+- Bestehenden CameraCache und FFmpeg wiederverwendet; keine Kamera- oder Drucksteuerbefehle.
+- Decoder geteilt und begrenzt; alte Bilder abgewiesen, Leerlauf und Druckerwechsel beenden Ansicht.
+
+## 0.11.0-alpha.1
+
+- Drucker einzeln hinzufügen/entfernen, doppelte Adressen und Grenze 16 sichtbar.
+- Verbindungsstatus in Einrichtung und Abschlussanzeige; vorhandene Daten erhalten.
+- HTTPS über vorhandenes Tailscale Serve mit Nutzer-Gegenprobe erfolgreich geprüft.
+
 ## 0.10.0-alpha.1
 
 - Druckerkarten per Drag-and-drop dauerhaft anordnen; auf Touchgeräten am Punktgriff.

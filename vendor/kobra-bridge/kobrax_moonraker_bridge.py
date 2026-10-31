@@ -1239,9 +1239,9 @@ class CameraCache:
                 self._proc_jpeg = await asyncio.create_subprocess_exec(
                     _find_ffmpeg(), "-loglevel", "warning",
                     *self._input_args(url), "-i", url,
-                    "-vf", "fps=2",
+                    "-vf", "fps=2,format=yuvj420p",
                     "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "3",
-                    "-flush_packets", "1", "pipe:1",
+                    "-threads", "1", "-flush_packets", "1", "pipe:1",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )

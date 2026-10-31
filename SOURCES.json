@@ -3,12 +3,19 @@
     "repository": "https://github.com/cluzl/kobra-bridge",
     "commit": "25c36815f5e2cab394fc83c73fca447367253fca",
     "license": "GPL-3.0",
-    "local_changes": "explicit read-only mode; see vendor/kobra-bridge/READ_ONLY_BUILD.json; per-client certificate/key paths for independent printer sessions; upstream deployment files and nested workflow omitted from monitor distribution"
+    "local_changes": "explicit read-only mode; see vendor/kobra-bridge/READ_ONLY_BUILD.json; per-client certificate/key paths for independent printer sessions; upstream deployment files and nested workflow omitted from monitor distribution; CameraCache JPEG output full-range format and single encoder thread; snapshot-only adapter with no camera MQTT commands"
   },
   "kobra-connect": {
     "repository": "https://github.com/rvanderp3/kobra-connect",
     "commit": "3edba24606d7122c4a68accd09af937ba4fdbd08",
     "license": "Apache-2.0",
     "local_changes": "TLS certfile parameter corrected; only handshake used by monitor"
+  },
+  "ffmpeg": {
+    "repository": "https://git.ffmpeg.org/ffmpeg.git",
+    "distribution": "Debian package installed in Docker image; exact version available via dpkg-query -W ffmpeg",
+    "license": "component-specific LGPL/GPL; /usr/share/doc/ffmpeg/copyright in image",
+    "source_packages": "https://sources.debian.org/src/ffmpeg/",
+    "local_changes": "none; invoked as independent decoder process"
   }
 }

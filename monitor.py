@@ -28,6 +28,7 @@ from kobra_connect import do_handshake, CloudModeError
 from history import History
 from access import Access
 from configuration import printer_ips, load_config, save_config
+from camera_view import CameraViews
 
 STALE_AFTER = 90
 RETRY_AFTER = 15
@@ -236,10 +237,11 @@ class Fleet:
             private.mkdir(mode=0o700)
             self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history)
         self.telemetry = self
+        self.cameras = CameraViews()
 
     def snapshot(self):
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
-        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs()}
+        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs(), 'camera_available':self.cameras.available()}
 
     async def reorder(self,ips):
         async with self.config_lock:
@@ -264,6 +266,7 @@ class Fleet:
                     self.monitors[ip]=item
                     await item.start(None)
             self.ips=ips;self.ip=ips[0]
+            await self.cameras.prune(ips)
 
     async def start(self, app):
         for item in self.monitors.values():
@@ -275,10 +278,10 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/favicon.ico','/api/session'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/favicon.ico','/api/session'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
         is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
@@ -295,7 +298,7 @@ def build_app(monitor,access=None):
             response = await handler(request)
         response.headers.update({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
             'Referrer-Policy':'no-referrer', 'Content-Security-Policy':
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'"})
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'"})
         return response
     app = web.Application(middlewares=[boundary], client_max_size=8192)
     async def index(request): return web.FileResponse(BASE/'static/index.html')
@@ -303,6 +306,7 @@ def build_app(monitor,access=None):
     async def license_text(request):return web.FileResponse(BASE/'LICENSE',headers={'Content-Type':'text/plain; charset=utf-8'})
     async def notice_text(request):return web.FileResponse(BASE/'NOTICE.md',headers={'Content-Type':'text/plain; charset=utf-8'})
     async def setup_js(request):return web.FileResponse(BASE/'static/setup.js')
+    async def camera_js(request):return web.FileResponse(BASE/'static/camera.js')
     async def setup_css(request):return web.FileResponse(BASE/'static/setup.css')
     async def session(request):
         if access is None:return web.json_response({'authenticated':True,'csrf':'','read_only':True})
@@ -349,6 +353,8 @@ def build_app(monitor,access=None):
         result=await asyncio.to_thread(history.timeline,job_id) if history else None
         if result is None:return web.json_response({'error':'Auftrag nicht gefunden.'},status=404)
         return web.json_response(result)
+    async def camera_frame(request):
+        return await monitor.cameras.frame(request.query.get('ip',''),monitor.ips)
     async def favicon(request): return web.Response(status=204)
     async def jobs(request):
         ip=request.query.get('ip','')
@@ -371,6 +377,7 @@ def build_app(monitor,access=None):
     app.router.add_get('/', index)
     app.router.add_get('/assets/setup.js',setup_js)
     app.router.add_get('/assets/setup.css',setup_css)
+    app.router.add_get('/assets/camera.js',camera_js)
     app.router.add_get('/api/session',session)
     app.router.add_post('/api/session',session)
     if access is not None:
@@ -385,8 +392,12 @@ def build_app(monitor,access=None):
     app.router.add_get('/api/timeline',timeline)
     app.router.add_get('/api/jobs',jobs)
     app.router.add_get('/health',health)
+    app.router.add_get('/api/camera/frame',camera_frame)
     app.router.add_get('/favicon.ico',favicon)
     app.router.add_route('*','/{path:.*}',blocked)
+    if getattr(monitor,'cameras',None) is not None:
+        app.on_startup.append(monitor.cameras.start)
+        app.on_cleanup.append(monitor.cameras.stop)
     app.on_startup.append(monitor.start)
     app.on_cleanup.append(monitor.stop)
     return app
