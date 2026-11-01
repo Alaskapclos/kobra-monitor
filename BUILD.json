@@ -38,7 +38,7 @@
     "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; authenticated production UI verified on both printer selections, zero-spool inventory read and duplicate manufacturer SKU warning; physical ReSpool test pending",
     "spool_identity_ui": "142 Python/14 read-only/73 JS; seven CI jobs, isolated authenticated fixture and real NAS authenticated recognition passed; full isolated restore passed",
     "spoolman_native_backup": "Native real-inventory snapshot and isolated NAS restore verified 2026-11-01; nine tables/schema/integrity/foreign keys match; prior snapshot retained; one-time private Mac copy byte-identical and local SQLite/FK checks passed; actual nightly cycle pending; no continuous external copying",
-    "read_only_outage_ui": "Local 142 Python/14 read-only/87 JS passed; new detail/age/identity/camera recovery regression tests; isolated browser and CI evidence pending"
+    "read_only_outage_ui": "Local 142 Python/14 read-only/87 JS passed; isolated authenticated two-printer loss/status-service loss/recovery with spool identity passed; current CI evidence in PR #1; not deployed to NAS"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -80,7 +80,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "54f8a216496111ee5b470840afcd2814a782f7cac48cfcfce621e82d3b15ac36",
+    "docs/VALIDATION.md": "74404c98160980cc0140a207b4d2901013e47d081c4ea96d38ac982de223276a",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "f51f5ee1e1912a20be172307a310877efba6e246f999e9c0c325c957badaf1e8",
@@ -96,7 +96,7 @@
     "static/index.html": "97bbe26e8f44200aa53dfdc3f6858f96cc51e257ee8f3d132dc36727f1fc02a4",
     "static/manifest.webmanifest": "e660b903f2f4f891bcaff3cacca29443fd6dc1e21e1cde374df9518a706c2832",
     "static/monitor.css": "6e903383d0d05d51df1463700ba5dda37d3c116465610807065ab3a64898da3f",
-    "static/monitor.js": "32d571f5196a1bbaac25978bf8be27de50cbe22869d480a456c792f93d8588f3",
+    "static/monitor.js": "f6fcd5601eb412057ca2c0afde13254946fd9357178503031e261d8d8775782b",
     "static/notifications.js": "d92b3fdedd835161d0d4904f8968f5dd3d2c33bbc3948347e00c775bc17ab0a9",
     "static/service-worker.js": "b016b2a80431e7c185f7bf6e1380aeb3c3ff6f46605c46c816e3b015736766dd",
     "static/setup.css": "0c5a7579cc53e02329ca66248ab8d1fc089f46e8fc551c2d4d02793b7decbb48",
@@ -199,11 +199,12 @@
     "static/spools.js": "92878f456d6a46c72ee1893cd9cd5fc735de6e22c48cb8a01e820695559dfba8",
     "tests/test_spools.js": "c34d224d22ea929b0486406efb1ee66f509daa8c9786b3bc6e77189700e2f31a",
     "tests/test_spools.py": "a9314304936cbd2e2bd2b1995439858b4c8a30204017ab8c94a32f11e13b970c",
-    "tests/test_detail_freshness.js": "d1da56211d7a946ba89196dc3a1227bddf159ac85d1bdcd1959b6a5d7325c740"
+    "tests/test_detail_freshness.js": "4715b6796be82ea3bb4a031ceadfbd1efa54aeafefe929f339e0e340fa52d5fb"
   },
   "deployment_target": "Prepared development version 0.18.3; production NAS monitor and backup remain 0.18.2 during current print",
   "ci_evidence": {
-    "status": "0.18.3 pending"
+    "status": "Current development checks are linked from the pull request",
+    "pull_request": "https://github.com/Alaskapclos/kobra-monitor/pull/1"
   },
   "spoolman_link_validation": "Authenticated isolated browser link visible with closed setup; URL guards, 141 Python/14 read-only/68 JS and seven CI jobs passed; NAS monitor/backup deployed, HTTPS assets equal, full isolated restore valid; authenticated production click test pending"
 }

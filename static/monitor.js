@@ -76,8 +76,8 @@ function renderPrinter(snapshot) {
   const knownPrint=seen('print');
   const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init'].includes(data.print_state);
   const advancing=!stale('print')&&['printing','paused'].includes(data.print_state);
-  $('print-state').textContent=knownPrint?(stateNames[data.print_state]||'Status unbekannt'):'Wird verbunden…';
-  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')||connection==='offline'?'Letzter bekannter Druckerstatus.':active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
+  $('print-state').textContent=!knownPrint?'Wird verbunden…':stale('print')?'Status veraltet':stateNames[data.print_state]||'Status unbekannt';
+  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')?`Letzter bekannter Druckerstatus: ${stateNames[data.print_state]||'unbekannt'}.`:active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
   $('remaining').textContent=advancing?duration(data.remain_time):'—';
   $('layer').textContent=advancing&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
   const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?data.progress:null;
