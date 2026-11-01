@@ -1,5 +1,7 @@
 # 0.18.3-alpha.1 (vorbereitet)
 
+- Lokale Bedienhilfe über „Hilfe“ erreichbar: Drucker, Kameraübersicht, Spulen, Handy-Meldungen, Verbindungsprobleme und Sicherungsgrundlagen. Ohne zusätzliche Verbindung oder neue Skripte.
+
 - Detailansicht kennzeichnet letzte Temperatur-/ACE-Werte auch unmittelbar nach Verbindungsabbruch und blendet veralteten Fortschritt, Schichten und Restzeit aus.
 - Vorbereitung verwendet keine zwischengespeicherten Fortschritts-/Restzeitwerte.
 - Spulenerkennung übernimmt den Alterungs- und Ausfallzustand des Browsers; Rückkehr frischer Daten stellt die Erkennung wieder her.

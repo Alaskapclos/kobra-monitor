@@ -1,44 +1,15 @@
 {
   "version": "0.18.3-alpha.1",
   "read_only": true,
-  "hardware_verified": [
-    "Anycubic Kobra S1 stock firmware 2.7.2.7, two devices"
-  ],
-  "platform_verified": [
-    "macOS, Python 3.14.6",
-    "GitHub CI: macOS/Linux/Windows, Python 3.11 and 3.14",
-    "UGREEN DXP4800GT / UGOS, linux/amd64 container"
-  ],
   "tests": {
     "python": 142,
     "bridge_read_only": 14,
-    "javascript_cases": 87,
-    "fresh_install": "passed on macOS",
-    "browser_setup": "passed with printer I/O disabled",
-    "authenticated_live_monitor": "passed, two devices online and history retained",
-    "container": "passed: all seven CI jobs including full backup/restore",
-    "vpn_and_nas": "HTTPS Serve passed; valid certificate and unauthenticated denial checked; user confirmed mobile access with Tailscale, blocked without; no full ACL audit",
-    "nas_container_restart": "passed: configuration, access code and both active job IDs retained; brief observation gap",
-    "history_migration": "passed: four closed jobs imported, two existing jobs extended with earlier samples; live NAS state preserved",
-    "history_backup_restore": "passed: full installation isolated restore; eight jobs after 0.17 update",
-    "backup": "passed: 10 unit tests, container CI with read-only source, real UGOS full backup and isolated restore on NAS and Mac",
-    "backup_schedule": "First real 24h archive verified 2026-11-01 with full isolated restore; daily NAS schedule unchanged",
-    "nas_version_update": "0.18.1 to 0.18.2: 12 jobs/account/config/Spoolman links/two push devices/key preserved; full isolated restore; 7.31s gap",
-    "accounts": "passed local + CI + browser fixture; user created real NAS account; full account backup restored on NAS and Mac",
-    "printer_order": "passed local/CI/fixture drag+keyboard/persistence; live NAS drag both directions, selection preserved, reload persistence and both connected verified; backup order verified",
-    "setup_rows": "passed fixture add/remove, duplicate, max16, cancel and pending connections; live NAS LAN browser showed both connected and unchanged save passed; HTTPS assets served",
-    "camera": "Two real stock S1 streams decoded at 1280x720; isolated authenticated browser displayed both and closed old image on switch; decoder localhost FLV + redirect denial passed; NAS and mobile pending",
-    "camera_flicker": "6 rendering regressions and 17 JS cases passed; real camera preview passed; HTTPS serves exact corrected asset; physical mobile recheck pending",
-    "camera_grid": "7 JS grid scenarios, shared-viewer cleanup tests, 7-printer browser fixture and two real S1 cameras in parallel preview passed; physical mobile matrix and four real cameras untested",
-    "camera_availability": "5 regressions passed for timeout/error/missing/unsupported retries and recovery reported by same running service; physical NAS ffmpeg help succeeded in 0.648s before fix; old process negative-cache origin inferred, not logged; deployed NAS live service camera_available=true; user matrix recheck pending",
-    "notifications": "Test receipt confirmed by user on iPhone and Android; real print-completion receipt confirmed on one unspecified phone on 2026-10-31; other real event/platform combinations pending",
-    "diagnostics": "7 Python and 8 JS cases passed; privacy, freshness, counts, access, errors, authenticated 390px fixture and clipboard; all seven CI jobs passed; NAS HTTPS asset/protection and full restore passed; user confirmed operational view on 2026-10-31",
-    "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; all seven CI jobs and NAS HTTPS asset checks/full isolated restore passed; real user view pending",
-    "spools": "134 Python/14 read-only/62 JS passed; fixture assignment/reload/duplicate and 390px; seven CI jobs passed; authenticated real NAS inventory read (0 spools, 4 slots) and full isolated restore passed; no real assignment yet",
-    "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; authenticated production UI verified on both printer selections, zero-spool inventory read and duplicate manufacturer SKU warning; physical ReSpool test pending",
-    "spool_identity_ui": "142 Python/14 read-only/73 JS; seven CI jobs, isolated authenticated fixture and real NAS authenticated recognition passed; full isolated restore passed",
-    "spoolman_native_backup": "Native real-inventory snapshot and isolated NAS restore verified 2026-11-01; nine tables/schema/integrity/foreign keys match; prior snapshot retained; one-time private Mac copy byte-identical and local SQLite/FK checks passed; actual nightly cycle pending; no continuous external copying",
-    "read_only_outage_ui": "Local 142 Python/14 read-only/87 JS passed; isolated authenticated two-printer loss/status-service loss/recovery with spool identity passed; current CI evidence in PR #1; not deployed to NAS"
+    "javascript_cases": 87
+  },
+  "ci_evidence": {
+    "commit": "1ae998d1135f7a2d9851e769fff3c344de708b71",
+    "run": 41347364968,
+    "result": "Seven jobs passed: Windows, macOS, Linux on Python 3.11 and 3.14; container build, decoder readiness and isolated backup/restore."
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -48,7 +19,7 @@
     ".github/pull_request_template.md": "1ada4a2b1bd30963434792a4fd20eed3f67f3f1019b80729ce061be7a149211a",
     ".github/workflows/ci.yml": "e29bb8eec4e8c8053f8799d93b00bcef9b742420b19b884158b7f1557a3c9b6f",
     ".gitignore": "fafa04f623fc3f35970ae254f8e441a19709fac07dd0e1f375e6dcddf71f1569",
-    "CHANGELOG.md": "4b38359c83a97a65342e393bb0f784e2412f50167bced58b1f93c1feba8a0d89",
+    "CHANGELOG.md": "47e7696a8bf8e07d268090da3e36f6a67c9cdf609f71fc155475be76e26afeed",
     "CONTRIBUTING.md": "7c2f75819c58dd9c70ba2166382cf2ad8ad64b10a0e8e4169aa5823fdcdef5a2",
     "Dockerfile": "4a85957a371b142bad8278fd23fe07d761370288d38304fde1a57e205a462c6a",
     "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -93,9 +64,9 @@
     "static/app-icon.svg": "8460b576ef0d211867f6023573de5d74701fd44dc9e4bd0057616411bb6d40b4",
     "static/camera.js": "533e15940e7486955b8f6c78b4f6b1a805813466c510fbf3e75a7c46c25a216d",
     "static/diagnostics.js": "06bb1dc74e465f1548a7abb15429275b9588270f04038d6dcabd1a3d95e4d2dc",
-    "static/index.html": "97bbe26e8f44200aa53dfdc3f6858f96cc51e257ee8f3d132dc36727f1fc02a4",
+    "static/index.html": "7cc21284a282288052c99cde0febe4d3f265f39dee41ece3373cb643b8d30694",
     "static/manifest.webmanifest": "e660b903f2f4f891bcaff3cacca29443fd6dc1e21e1cde374df9518a706c2832",
-    "static/monitor.css": "6e903383d0d05d51df1463700ba5dda37d3c116465610807065ab3a64898da3f",
+    "static/monitor.css": "ac252e8b4145da7f1b8e10b81c5c2fcc40053d276486ec3a533384e8470030d3",
     "static/monitor.js": "f6fcd5601eb412057ca2c0afde13254946fd9357178503031e261d8d8775782b",
     "static/notifications.js": "d92b3fdedd835161d0d4904f8968f5dd3d2c33bbc3948347e00c775bc17ab0a9",
     "static/service-worker.js": "b016b2a80431e7c185f7bf6e1380aeb3c3ff6f46605c46c816e3b015736766dd",
@@ -200,12 +171,9 @@
     "tests/test_spools.js": "c34d224d22ea929b0486406efb1ee66f509daa8c9786b3bc6e77189700e2f31a",
     "tests/test_spools.py": "a9314304936cbd2e2bd2b1995439858b4c8a30204017ab8c94a32f11e13b970c",
     "tests/test_detail_freshness.js": "4715b6796be82ea3bb4a031ceadfbd1efa54aeafefe929f339e0e340fa52d5fb",
-    "docs/BEDIENUNG.md": "73b572a0e8dc2c98065875504cdb486339ce521acdbdb863b9b103f017529126"
-  },
-  "deployment_target": "Prepared development version 0.18.3; production NAS monitor and backup remain 0.18.2 during current print",
-  "ci_evidence": {
-    "status": "Current development checks are linked from the pull request",
-    "pull_request": "https://github.com/Alaskapclos/kobra-monitor/pull/1"
-  },
-  "spoolman_link_validation": "Productive click test confirmed by user on 2026-10-31; current development validation linked from pull request."
+    "docs/BEDIENUNG.md": "d322e79c6a0df5178f165b808751bbd114f6c6bc7385f0b4deb4016dcbcce0c8",
+    "docs/CAMERA_MULTICLIENT_VALIDATION.md": "9b37905cd71a31c3b2c805855b7792ae98d058149bf12f41d4a4f59489357e13",
+    "docs/READ_ONLY_ACCEPTANCE.md": "0caa2c23f7196391f0e3f6662f03d8ad13e5fdc22170bda3639de42a2fe90fc5",
+    "docs/UPDATE_RECOVERY.md": "d5c431575b2a1b6d346e87b4fbc4d484e18541f8a7b191f77b92a181d48a1bb1"
+  }
 }
