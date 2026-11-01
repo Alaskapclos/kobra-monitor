@@ -40,7 +40,7 @@ function renderSlots(data, seen, stale) {
     const card = document.createElement('div'); card.className = `slot${active?' active':''}${stale?' stale':''}`;
     const top = document.createElement('div'); top.className = 'slot-top';
     const label = document.createElement('span'); label.className = 'slot-number'; label.textContent = `SLOT ${Number(slot.global_index??slot.index)+1}`; top.append(label);
-    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent='Geladen'; top.append(tag); }
+    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent=stale?'Zuletzt geladen':'Geladen'; top.append(tag); }
     const spool = document.createElement('div'); spool.className='spool';
     const rgb = Array.isArray(slot.color) && slot.color.length>=3 && slot.color.slice(0,3).every(x=>number(x)&&x>=0&&x<=255) ? slot.color.slice(0,3) : [180,190,166];
     spool.style.borderColor = `rgb(${rgb.join(',')})`;
@@ -57,13 +57,14 @@ function renderSlots(data, seen, stale) {
 function renderPrinter(snapshot) {
   const extraAge = Math.max(0,(Date.now()-lastFetchAt)/1000);
   const ages = snapshot.section_age_s || {};
-  const sectionAge = name => number(ages[name]) ? ages[name]+extraAge : null;
+  const limit=number(snapshot.stale_after_s)&&snapshot.stale_after_s>=0?snapshot.stale_after_s:90;
+  const sectionAge = name => number(ages[name])&&ages[name]>=0 ? ages[name]+extraAge : null;
   const seen = name => number(sectionAge(name));
-  const stale = name => !seen(name) || sectionAge(name)>snapshot.stale_after_s;
+  const stale = name => connection!=='online' || !seen(name) || sectionAge(name)>limit;
   const data = snapshot.data || {};
   const age = number(snapshot.age_s)?snapshot.age_s+extraAge:null;
   let connection = snapshot.connection;
-  if (connection==='online' && number(age) && age>snapshot.stale_after_s) connection='stale';
+  if (connection==='online' && number(age) && age>limit) connection='stale';
   if (requestFailed || extraAge>10) connection='offline';
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
@@ -74,23 +75,24 @@ function renderPrinter(snapshot) {
   banner.textContent=requestFailed||extraAge>10 ? 'Der lokale Monitor ist nicht erreichbar. Letzte bekannte Werte werden angezeigt. Starte den Monitor bei Bedarf erneut.' : connection==='stale' ? 'Die Verbindung liefert keine frischen Daten. Angezeigte Werte sind veraltet; die Verbindung wird automatisch erneuert.' : snapshot.message || 'Verbindung zum Drucker wird aufgebaut. Messwerte erscheinen, sobald sie eintreffen.';
   const knownPrint=seen('print');
   const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init'].includes(data.print_state);
+  const advancing=!stale('print')&&['printing','paused'].includes(data.print_state);
   $('print-state').textContent=knownPrint?(stateNames[data.print_state]||'Status unbekannt'):'Wird verbunden…';
   $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')||connection==='offline'?'Letzter bekannter Druckerstatus.':active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
-  $('remaining').textContent=active?duration(data.remain_time):'—';
-  $('layer').textContent=active&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
-  const progress=active&&number(data.progress)?Math.max(0,Math.min(1,data.progress)):null;
+  $('remaining').textContent=advancing?duration(data.remain_time):'—';
+  $('layer').textContent=advancing&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
+  const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?data.progress:null;
   $('progress-value').textContent=progress===null?'—':`${Math.round(progress*100)}%`;
-  $('progress-caption').textContent=active?'Fortschritt':knownPrint?'Kein aktiver Druck':'Kein Messwert';
+  $('progress-caption').textContent=stale('print')?'Keine aktuellen Druckdaten':advancing?'Fortschritt':active?'Vorbereitung':knownPrint?'Kein aktiver Druck':'Kein Messwert';
   $('progress-circle').setAttribute('stroke-dashoffset',String(414.69*(1-(progress??0))));
   const previous=snapshot.last_project;
-  $('file-label').textContent=active?'AKTUELLE DRUCKDATEI':previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
+  $('file-label').textContent=active?(stale('print')?'ZULETZT GEMELDETE DRUCKDATEI':'AKTUELLE DRUCKDATEI'):previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
   $('filename').textContent=active?fileName(data.filename):previous?fileName(previous.filename):'Kein aktiver Druckauftrag.';
   $('print-freshness').textContent=seen('print')?`${stale('print')?'Veraltet · ':''}${ageText(sectionAge('print'))}`:'Warte auf Druckerstatus';
   for (const [prefix,max] of [['nozzle',320],['bed',120]]) {
     const current=seen('temperature')?data[`${prefix}_temp`]:null;
     const target=seen('temperature')?data[`${prefix}_target`]:null;
     $(prefix+'-temp').textContent=value(current); $(prefix+'-target').textContent=value(target);
-    $(prefix+'-mode').textContent=!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
+    $(prefix+'-mode').textContent=!seen('temperature')?'—':stale('temperature')?'Letzter bekannter Wert':!number(current)||!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
     $(prefix+'-bar').style.width=`${number(current)?Math.max(0,Math.min(100,current/max*100)):0}%`;
   }
   $('temp-freshness').textContent=seen('temperature')?`${stale('temperature')?'Veraltet · ':''}${ageText(sectionAge('temperature'))}`:'Warte auf Temperaturen';
@@ -257,7 +259,12 @@ function render(snapshot) {
   $('printer-order-status').hidden=printers.length<2;
   const chosen=printers.find(p=>p.ip===selectedIp);
   if(chosen)renderPrinter(chosen);
-  window.kobraSpools?.setPrinters(printers,chosen?.ip);
+  // Cached status keeps aging even while no new response arrives.
+  const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
+  const spoolPrinters=printers.map(p=>({...p,
+    connection:requestFailed||extraAge>10?'offline':p.connection,
+    section_age_s:Object.fromEntries(Object.entries(p.section_age_s||{}).map(([key,age])=>[key,number(age)?age+extraAge:age]))}));
+  window.kobraSpools?.setPrinters(spoolPrinters,chosen?.ip);
   window.kobraCamera?.setPrinters?.(printers);
   window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available,snapshot.camera_message);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();

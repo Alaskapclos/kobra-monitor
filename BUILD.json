@@ -1,5 +1,5 @@
 {
-  "version": "0.18.2-alpha.1",
+  "version": "0.18.3-alpha.1",
   "read_only": true,
   "hardware_verified": [
     "Anycubic Kobra S1 stock firmware 2.7.2.7, two devices"
@@ -12,7 +12,7 @@
   "tests": {
     "python": 142,
     "bridge_read_only": 14,
-    "javascript_cases": 73,
+    "javascript_cases": 87,
     "fresh_install": "passed on macOS",
     "browser_setup": "passed with printer I/O disabled",
     "authenticated_live_monitor": "passed, two devices online and history retained",
@@ -37,7 +37,8 @@
     "spools": "134 Python/14 read-only/62 JS passed; fixture assignment/reload/duplicate and 390px; seven CI jobs passed; authenticated real NAS inventory read (0 spools, 4 slots) and full isolated restore passed; no real assignment yet",
     "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; authenticated production UI verified on both printer selections, zero-spool inventory read and duplicate manufacturer SKU warning; physical ReSpool test pending",
     "spool_identity_ui": "142 Python/14 read-only/73 JS; seven CI jobs, isolated authenticated fixture and real NAS authenticated recognition passed; full isolated restore passed",
-    "spoolman_native_backup": "Native real-inventory snapshot and isolated NAS restore verified 2026-11-01; nine tables/schema/integrity/foreign keys match; prior snapshot retained; one-time private Mac copy byte-identical and local SQLite/FK checks passed; actual nightly cycle pending; no continuous external copying"
+    "spoolman_native_backup": "Native real-inventory snapshot and isolated NAS restore verified 2026-11-01; nine tables/schema/integrity/foreign keys match; prior snapshot retained; one-time private Mac copy byte-identical and local SQLite/FK checks passed; actual nightly cycle pending; no continuous external copying",
+    "read_only_outage_ui": "Local 142 Python/14 read-only/87 JS passed; new detail/age/identity/camera recovery regression tests; isolated browser and CI evidence pending"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -45,9 +46,9 @@
     ".github/ISSUE_TEMPLATE/bug_report.md": "42ba9c4f4d157854401ec7e37ae4aba9805700e4f77ce9b9bec458d9e28a1276",
     ".github/ISSUE_TEMPLATE/feature_request.md": "724db83506be1fb3cfffc43b9e3b3200357930218aac5afc7bb82a1e4c8106a2",
     ".github/pull_request_template.md": "1ada4a2b1bd30963434792a4fd20eed3f67f3f1019b80729ce061be7a149211a",
-    ".github/workflows/ci.yml": "9903150d26db11f9efe3fc036c4c687697a06cf3d9fa170588e490ed4ea45ba6",
+    ".github/workflows/ci.yml": "e29bb8eec4e8c8053f8799d93b00bcef9b742420b19b884158b7f1557a3c9b6f",
     ".gitignore": "fafa04f623fc3f35970ae254f8e441a19709fac07dd0e1f375e6dcddf71f1569",
-    "CHANGELOG.md": "65dd70cec6ca2b24538c155407d7dd0ccbc0adb156f3bdda3a782f1bf58475c1",
+    "CHANGELOG.md": "4b38359c83a97a65342e393bb0f784e2412f50167bced58b1f93c1feba8a0d89",
     "CONTRIBUTING.md": "7c2f75819c58dd9c70ba2166382cf2ad8ad64b10a0e8e4169aa5823fdcdef5a2",
     "Dockerfile": "4a85957a371b142bad8278fd23fe07d761370288d38304fde1a57e205a462c6a",
     "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -58,18 +59,18 @@
     "Start-Kobra-Monitor.cmd": "9d1fb163fad265920a846b8e333a88925a4f169580c28dddb8a17e6f2d358e99",
     "Start-Kobra-Monitor.command": "f06293b1f5a0ce217678031ff9d111c60294d2748c782652fb2631d76a4bda3c",
     "Start-Kobra-Monitor.sh": "2365a9c3124b91a94ad59fc285975d576dda766869eac193a82a65b00ba34e5c",
-    "VERSION": "f198a2d4e5e5d2f026c17cf9af453d069ae796a8f22e2df4c748aacb12a2274a",
+    "VERSION": "7fd63bb44bc373bd07e036419abaefd50538ebeca5780b8915edb8b4b2a2534c",
     "access.py": "9666791ff93e4a8763cad6c05defad160f6a40f59ecf13c03587da5e052f3886",
     "account_admin.py": "479b346a8a21452654ce8c550b80717d8099331c08e880a9179178406c2fb78b",
     "accounts.py": "e58617e7b04ec675af5af74e5422e67e44b8fbaf59fe5e8e099d7af66b6eb455",
     "backup.py": "b3dbfa36c8b9f7c31aafb5a38932f70b7077665249d9b5a27db0e049c5668e18",
     "bootstrap.py": "cadbd97c3dab6d15b2806b76522d7c697f4e7d3997832a2356316fbada99f2f9",
     "camera_view.py": "bb35e08d1fd9ff4ffdb18f079a4065687f2d978e086245658d8646e6e6353929",
-    "compose.yaml": "15f9729743162b2e7798c8c5fc3042164469ea7bdd274fe73704a9695aa7079e",
+    "compose.yaml": "ada031b3439870da7819af3d9009b79ce74dc2b5a2f208747ab1231f589eb1c3",
     "configuration.py": "e5e9177354dc2a7d6f3abc4e0a591f9e0f3ee7d818abdbec4bbff488011f2c63",
     "deploy/ugos/.env.example": "190924c1d05c5b0d8dcbf791f0957d19d1230e394cfddb84838a4ab4cc1be0ef",
-    "deploy/ugos/backups.compose.yaml": "f5b9aa0c0d8c9c90292bd47f03f1956d9d1831d338bec4a508cb449a73741835",
-    "deploy/ugos/compose.yaml": "eff850e71bd249ed56ff31211f7073f04faa053d804a463c82f301e6bec4c966",
+    "deploy/ugos/backups.compose.yaml": "4807cab73241c6297dfae377d7a6ee3df30719bf1cf90e0016860ce6f75d1db4",
+    "deploy/ugos/compose.yaml": "9350d7a55c578e1d5dfb1867db050bb58a69810b4fdb5268280a0c2a46a55923",
     "diagnostics.py": "1e80119519394189f54d09ebbb48024d779d7c4e7a0a0ab45eea42360fa87618",
     "docs/BACKUPS.md": "692c2350487b2225aa7283a141d66ce6d0c264ed070fb8d933a936f9deaabe94",
     "docs/CAMERA.md": "ceb0fd5bffa9fa3c550497dd0ad258839fe3072e02dde48c6289cab9f11daf4d",
@@ -79,7 +80,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "e0d0a21a9c2eb6c40dfa8e19d75a64a8a06f47e187ac97401d0ec208cac619f6",
+    "docs/VALIDATION.md": "54f8a216496111ee5b470840afcd2814a782f7cac48cfcfce621e82d3b15ac36",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "f51f5ee1e1912a20be172307a310877efba6e246f999e9c0c325c957badaf1e8",
@@ -92,10 +93,10 @@
     "static/app-icon.svg": "8460b576ef0d211867f6023573de5d74701fd44dc9e4bd0057616411bb6d40b4",
     "static/camera.js": "533e15940e7486955b8f6c78b4f6b1a805813466c510fbf3e75a7c46c25a216d",
     "static/diagnostics.js": "06bb1dc74e465f1548a7abb15429275b9588270f04038d6dcabd1a3d95e4d2dc",
-    "static/index.html": "d98b00a4a139f1a295a8c4dbde95820fceca621ea060fdb4d855de7691b97045",
+    "static/index.html": "97bbe26e8f44200aa53dfdc3f6858f96cc51e257ee8f3d132dc36727f1fc02a4",
     "static/manifest.webmanifest": "e660b903f2f4f891bcaff3cacca29443fd6dc1e21e1cde374df9518a706c2832",
     "static/monitor.css": "6e903383d0d05d51df1463700ba5dda37d3c116465610807065ab3a64898da3f",
-    "static/monitor.js": "797a5353299dd3ab33fb6a47207e8bb08ee134ff4f06d3c02b117efa5c7ac65b",
+    "static/monitor.js": "32d571f5196a1bbaac25978bf8be27de50cbe22869d480a456c792f93d8588f3",
     "static/notifications.js": "d92b3fdedd835161d0d4904f8968f5dd3d2c33bbc3948347e00c775bc17ab0a9",
     "static/service-worker.js": "b016b2a80431e7c185f7bf6e1380aeb3c3ff6f46605c46c816e3b015736766dd",
     "static/setup.css": "0c5a7579cc53e02329ca66248ab8d1fc089f46e8fc551c2d4d02793b7decbb48",
@@ -107,7 +108,7 @@
     "tests/test_camera_availability.py": "edea3eaccf72ba206557233835045c1e3d25066478f13fa47c54750960d574ae",
     "tests/test_camera_decoder.py": "cc6f54cf1d21fbf5fcb72330318129ca850ff5cc814d6ae45bae9263ed509bcc",
     "tests/test_camera_grid.js": "bee0acf299f4e45a4291ecb05b91f86300f142c173de9588fe76d97601adfde5",
-    "tests/test_camera_render.js": "1e845ff179c5dab79120d7e18acbb23672f2e7bf044bc801278dd016388ab15f",
+    "tests/test_camera_render.js": "aa92eba43bb8424c4c89f0335148d2ae842ba5b98f7e7c2a43798edfc19bda1f",
     "tests/test_camera_view.py": "4601a5c7b576d15c6fa5fa026a84c54c71500c1785e6a5ca6b37a31e23551187",
     "tests/test_diagnostics.js": "5d2cd431734ef744231eb2fc3d17753e28475a64bceb7e3dc9d3d1311e751e1c",
     "tests/test_diagnostics.py": "4bc24e869743338332a862d2cb3fb90fe91bbc951011f1be3012a0038eb2d93f",
@@ -117,7 +118,7 @@
     "tests/test_notifications.py": "47d6237515c089e6838193a93354c7baf3ac9bc9232a2d7d49384729c0f0d7e8",
     "tests/test_printer_order.js": "4e8ff35314af36b98c674fc505da0934d077781791faa0c891302442a77d0ea0",
     "tests/test_printer_order.py": "f0ae02e9ef5942e3bf327acee27b06bbafe9c50d40998117527e3ec2d20cc931",
-    "tests/test_printer_overview.js": "9a148ecbb57cd4805da4c57fdf72247f184420f3ace3b1ecb33e77ce105cd211",
+    "tests/test_printer_overview.js": "3f422d31c1b6d9ffd7531a1adcd227e6c12629b6fdf969d8867a260752055cfa",
     "tests/test_report.py": "0711751d0c0a08fdf48f607893767d225e84c7ca1b33dc173ad14e37a4132757",
     "tests/test_setup_access.py": "befaa486ea3662eeb4d7ada49789c444cb058b1c5e502b12047df4f9d268fd1e",
     "tests/test_timeline.py": "154500ae711687acdfebfa9691c8124da218f166a1d3ddcac6254ccd26530c53",
@@ -197,13 +198,12 @@
     "spools.py": "b3ec3500c86b58507de57f355848642c5459e73ed366f4861f03de9b271c4494",
     "static/spools.js": "92878f456d6a46c72ee1893cd9cd5fc735de6e22c48cb8a01e820695559dfba8",
     "tests/test_spools.js": "c34d224d22ea929b0486406efb1ee66f509daa8c9786b3bc6e77189700e2f31a",
-    "tests/test_spools.py": "a9314304936cbd2e2bd2b1995439858b4c8a30204017ab8c94a32f11e13b970c"
+    "tests/test_spools.py": "a9314304936cbd2e2bd2b1995439858b4c8a30204017ab8c94a32f11e13b970c",
+    "tests/test_detail_freshness.js": "d1da56211d7a946ba89196dc3a1227bddf159ac85d1bdcd1959b6a5d7325c740"
   },
-  "deployment_target": "UGREEN DXP4800GT / UGOS: monitor and separate network-disabled backup 0.18.2-alpha.1; unmodified Spoolman 0.27.0",
+  "deployment_target": "Prepared development version 0.18.3; production NAS monitor and backup remain 0.18.2 during current print",
   "ci_evidence": {
-    "code_commit": "951f52b88b48cb2f65891e8882f59d87c66d6c9a",
-    "run": 41323501547,
-    "status": "7_jobs_passed"
+    "status": "0.18.3 pending"
   },
   "spoolman_link_validation": "Authenticated isolated browser link visible with closed setup; URL guards, 141 Python/14 read-only/68 JS and seven CI jobs passed; NAS monitor/backup deployed, HTTPS assets equal, full isolated restore valid; authenticated production click test pending"
 }

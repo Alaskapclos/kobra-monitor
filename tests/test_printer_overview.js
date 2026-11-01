@@ -30,4 +30,9 @@ context.fixture={ips:['a','b'],printers:[printer('a'),second]};run('lastResponse
 const cards=node('printer-switcher').children;assert.equal(cards.length,2);assert.equal(cards[0].querySelector('.picker-nozzle').textContent,'220 °C');assert.equal(cards[1].querySelector('.picker-nozzle').textContent,'240 °C');assert.equal(run('selectedIp'),'b');
 context.fixture.ips=['b','a'];run('render(fixture)');assert.equal(node('printer-switcher').children[0],cards[1]);assert.equal(run('selectedIp'),'b');
 run('requestFailed=true;render(fixture)');for(const card of node('printer-switcher').children){assert.equal(card.querySelector('.picker-nozzle').textContent,'—');assert.equal(card.querySelector('.picker-progress-track').hidden,true);}
-console.log('12 overview cases passed: fresh metrics, independence, preparation cache, stale print, stale temperatures, disconnect, lost monitor, malformed data, zero readings, paused/completed, actual two-card rendering, reorder/selection and stale clearing');
+context.window.kobraSpools={setPrinters:values=>{context.spoolViews=values;}};
+run('render(fixture)');assert.ok(context.spoolViews.every(p=>p.connection==='offline'),'Spool identity cannot stay live after a failed monitor request');
+run('requestFailed=false;lastFetchAt=Date.now()-11000;render(fixture)');assert.ok(context.spoolViews.every(p=>p.connection==='offline'));
+run('lastFetchAt=Date.now()-5000;render(fixture)');assert.ok(context.spoolViews.every(p=>p.section_age_s.print>=7));assert.equal(context.fixture.printers[0].section_age_s.print,2,'Do not mutate cached response ages');
+run('lastFetchAt=Date.now();render(fixture)');assert.ok(context.spoolViews.every(p=>p.connection==='online'));assert.ok(context.spoolViews.every(p=>p.section_age_s.print<3));
+console.log('13 overview cases passed: card freshness plus spool-view outage, age propagation and recovery without mutating cached status');

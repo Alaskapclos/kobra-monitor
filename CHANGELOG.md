@@ -1,3 +1,10 @@
+# 0.18.3-alpha.1 (vorbereitet)
+
+- Detailansicht kennzeichnet letzte Temperatur-/ACE-Werte auch unmittelbar nach Verbindungsabbruch und blendet veralteten Fortschritt, Schichten und Restzeit aus.
+- Vorbereitung verwendet keine zwischengespeicherten Fortschritts-/Restzeitwerte.
+- Spulenerkennung übernimmt den Alterungs- und Ausfallzustand des Browsers; Rückkehr frischer Daten stellt die Erkennung wieder her.
+- Neue Ausfall-/Wiederverbindungsprüfungen der Detailansicht und Kamera; produktive NAS-Installation während eines laufenden Drucktests unverändert.
+
 # 0.18.2-alpha.1
 
 - Automatisch per Kennung erkannte Spulen stehen direkt in der Slotanzeige. Die feste Slotzuordnung wird dabei ausgeblendet.
