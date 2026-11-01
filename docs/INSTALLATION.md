@@ -10,7 +10,7 @@
   Keine Zusage für NAS ohne Container-Unterstützung oder bestimmte Modelle.
 
 macOS und ein amd64-Container auf UGREEN DXP4800GT wurden mit echten Druckern
-geprüft. Die vorherige Version bestand CI-Tests auf Windows, Linux und macOS.
+geprüft. Automatisierte Prüfungen laufen auf Windows, Linux und macOS; das ersetzt keinen Hardwaretest auf diesen Plattformen.
 ARM64 und weitere NAS-Modelle sind noch nicht praktisch geprüft.
 
 ## Docker / Compose
@@ -75,7 +75,9 @@ keine fremden Druckeradressen als Standard und keinen automatischen Netzwerkscan
 
 ## Sicherung und Update
 
-Sichere den vollständigen Datenordner bei gestopptem Monitor. Er enthält die
+Für den täglichen Betrieb empfiehlt sich der getrennte [Sicherungsdienst](BACKUPS.md), der ohne Unterbrechung konsistente Sicherungen erstellt. Spoolman benötigt eine eigene Sicherung.
+
+Für eine manuelle Dateikopie sichere den vollständigen Datenordner bei gestopptem Monitor. Er enthält die
 SQLite-Datenbanken, Druckerzuordnung, `account.json` mit dem Passwort-Prüfwert
 und den geheimen Einrichtungsschlüssel. Für eine
 Sicherung während des Betriebs ist die SQLite-Backup-API zu verwenden; eine

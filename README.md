@@ -4,7 +4,7 @@ Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.18.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Entwicklungsstand: 0.18.3-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
@@ -23,7 +23,7 @@ PyPI. Der Python-Installer für Windows sollte den Python Launcher mit installie
    - macOS: `Start-Kobra-Monitor.command`
    - Windows: `Start-Kobra-Monitor.cmd`
    - Linux: `sh Start-Kobra-Monitor.sh`
-3. Der Browser öffnet die lokale Oberfläche und meldet diesen Browser automatisch an.
+3. Der Browser öffnet die lokale Oberfläche. Beim ersten Start deinen Benutzernamen und dein Passwort festlegen; später mit diesem Konto anmelden.
 4. Im Assistenten pro Drucker eine IP-Adresse eingeben. Weitere Geräte mit **Drucker hinzufügen** ergänzen und **Speichern und verbinden** wählen. Der Assistent zeigt den Verbindungsstand pro Gerät.
 5. Unter **Einrichten** lassen sich die Adressen später ändern.
 
@@ -82,6 +82,8 @@ vorhandene VPN auf ihn zu. Es gibt keinen vorgeschriebenen VPN-Anbieter.
 
 [Anleitung und Grenzen des Fernzugriffs](docs/REMOTE_ACCESS.md).
 Kein Portforwarding aus dem öffentlichen Internet auf den Monitor.
+
+Für die ersten Schritte im Browser: [Kurzanleitung für den Alltag](docs/BEDIENUNG.md).
 
 ## Drucker anordnen
 

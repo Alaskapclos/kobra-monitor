@@ -53,7 +53,7 @@
     "Dockerfile": "4a85957a371b142bad8278fd23fe07d761370288d38304fde1a57e205a462c6a",
     "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
     "NOTICE.md": "fbd0e0fb491429efbade4a161efc61696cf6e76e5ac9b3e0594480ae80384e7f",
-    "README.md": "0842074d5e6f0695ae121714cb4e0def99122f084a057d179453415a179853a5",
+    "README.md": "4b51d098b07f1db9fbb23e80670ff39d1b6b9edb8d0375d2a600bd1d0abfa11c",
     "SECURITY.md": "40c6ea4555e13329d0269b85b977fb70cd46f86451407486a5210be8085276df",
     "SOURCES.json": "25d173bf8a0f2056522086a50af049fd87ae2db573d5a2349e448d512b4459bf",
     "Start-Kobra-Monitor.cmd": "9d1fb163fad265920a846b8e333a88925a4f169580c28dddb8a17e6f2d358e99",
@@ -72,12 +72,12 @@
     "deploy/ugos/backups.compose.yaml": "4807cab73241c6297dfae377d7a6ee3df30719bf1cf90e0016860ce6f75d1db4",
     "deploy/ugos/compose.yaml": "9350d7a55c578e1d5dfb1867db050bb58a69810b4fdb5268280a0c2a46a55923",
     "diagnostics.py": "1e80119519394189f54d09ebbb48024d779d7c4e7a0a0ab45eea42360fa87618",
-    "docs/BACKUPS.md": "692c2350487b2225aa7283a141d66ce6d0c264ed070fb8d933a936f9deaabe94",
+    "docs/BACKUPS.md": "e51de6591d3d8f6e7b2b78d6c9710d6b32a90c254e759784acd2222b8799b2dd",
     "docs/CAMERA.md": "ceb0fd5bffa9fa3c550497dd0ad258839fe3072e02dde48c6289cab9f11daf4d",
     "docs/DIAGNOSTICS.md": "00f2ebeddc27f4938bbdb8305caa6b9e6f1da56eb25aae58e687e894f39c5ae2",
-    "docs/INSTALLATION.md": "c02874a2d9d5ea45e651b267d5344c79e34e7188e0d1ead96ef7db2085e6ea88",
+    "docs/INSTALLATION.md": "fff39a7ea8715b69a57b7d713562f3ecaf834dde63508a37e574588032123d2a",
     "docs/NOTIFICATIONS.md": "89bdd85b8df5b2a88c110e0fba00e0dfe7fbac0b7558384336405692c4651b79",
-    "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
+    "docs/REMOTE_ACCESS.md": "b95c2fbd45e2b89ae1b6e2598608816d3f71a126358a0e130264fcc9b41846e4",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
     "docs/VALIDATION.md": "74404c98160980cc0140a207b4d2901013e47d081c4ea96d38ac982de223276a",
@@ -199,12 +199,13 @@
     "static/spools.js": "92878f456d6a46c72ee1893cd9cd5fc735de6e22c48cb8a01e820695559dfba8",
     "tests/test_spools.js": "c34d224d22ea929b0486406efb1ee66f509daa8c9786b3bc6e77189700e2f31a",
     "tests/test_spools.py": "a9314304936cbd2e2bd2b1995439858b4c8a30204017ab8c94a32f11e13b970c",
-    "tests/test_detail_freshness.js": "4715b6796be82ea3bb4a031ceadfbd1efa54aeafefe929f339e0e340fa52d5fb"
+    "tests/test_detail_freshness.js": "4715b6796be82ea3bb4a031ceadfbd1efa54aeafefe929f339e0e340fa52d5fb",
+    "docs/BEDIENUNG.md": "73b572a0e8dc2c98065875504cdb486339ce521acdbdb863b9b103f017529126"
   },
   "deployment_target": "Prepared development version 0.18.3; production NAS monitor and backup remain 0.18.2 during current print",
   "ci_evidence": {
     "status": "Current development checks are linked from the pull request",
     "pull_request": "https://github.com/Alaskapclos/kobra-monitor/pull/1"
   },
-  "spoolman_link_validation": "Authenticated isolated browser link visible with closed setup; URL guards, 141 Python/14 read-only/68 JS and seven CI jobs passed; NAS monitor/backup deployed, HTTPS assets equal, full isolated restore valid; authenticated production click test pending"
+  "spoolman_link_validation": "Productive click test confirmed by user on 2026-10-31; current development validation linked from pull request."
 }

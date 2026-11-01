@@ -61,16 +61,18 @@ schützt diesen Weg ebenfalls. Host-Header beibehalten. Die Anwendung unterstüt
 keinen Betrieb unter einem URL-Unterpfad; eine eigene Hostadresse verwenden.
 
 Firewall-Regeln auf dem Host und VPN-Zugriffsregeln auf das gewünschte Netz
-beschränken. Keine öffentliche Router-Portweiterleitung einrichten. Der
+beschränken. Keine öffentliche Router-Portweiterleitung einrichten. Das
 Benutzerkonto ergänzt das VPN, ersetzt es aber nicht.
 
 ## Reichweite des Cloud-Ersatzes
 
-Aktuell: Status, Temperaturen, ACE-Daten, Historie, Berichte und Verlauf.
+Aktuell: Status, Temperaturen, ACE-Daten, Historie, Berichte, Verlauf,
+optionale Kameraübersicht, Web-Push und lesende Spoolman-Anbindung.
 Später separat zu entwerfen: Upload und Drucksteuerung, Berechtigungen,
 Bestätigungen und Wiederholschutz. Die aktuelle Lesebeschränkung wird dafür
-nicht stillschweigend aufgehoben. Kamera, Filamentbuchung und Benachrichtigungen
-sind ebenfalls eigene spätere Funktionen.
+nicht stillschweigend aufgehoben. Automatische Filamentbuchungen sind noch
+nicht enthalten. Spoolman läuft als eigener Dienst; sein Zugang muss separat
+über das private Netz erreichbar sein. Der Monitor-Link erzeugt keine Freigabe.
 
 ## Primärquellen
 
