@@ -36,7 +36,8 @@
     "printer_overview": "12 new JS scenarios passed; seven-printer authenticated fixture, desktop drag and Alt+Arrow reorder with selection retained, 390px layout and per-section stale suppression passed; all seven CI jobs and NAS HTTPS asset checks/full isolated restore passed; real user view pending",
     "spools": "134 Python/14 read-only/62 JS passed; fixture assignment/reload/duplicate and 390px; seven CI jobs passed; authenticated real NAS inventory read (0 spools, 4 slots) and full isolated restore passed; no real assignment yet",
     "sku_recognition": "141 Python/14 read-only/66 JS passed; authenticated synthetic browser link/recognition; seven CI jobs passed; both real printers report 3 SKUs in 4 slots each; authenticated production UI verified on both printer selections, zero-spool inventory read and duplicate manufacturer SKU warning; physical ReSpool test pending",
-    "spool_identity_ui": "142 Python/14 read-only/73 JS; seven CI jobs, isolated authenticated fixture and real NAS authenticated recognition passed; full isolated restore passed"
+    "spool_identity_ui": "142 Python/14 read-only/73 JS; seven CI jobs, isolated authenticated fixture and real NAS authenticated recognition passed; full isolated restore passed",
+    "spoolman_native_backup": "Native real-inventory snapshot and isolated restore verified 2026-11-01; nine tables, schema, integrity and foreign keys match; previous snapshot retained; actual nightly cycle and off-NAS copy still pending"
   },
   "source_sha256": {
     ".dockerignore": "bfb0242b5b592461378866c90f5c4b5b6db92d46c7db5fdc897db36e3e37f0dd",
@@ -78,7 +79,7 @@
     "docs/REMOTE_ACCESS.md": "00fc5705e96811246dda3be005ebaba3603662b0b6ef228f3128739299750d51",
     "docs/UGREEN_UGOS.md": "0bc6ad6b7b4919b1370459fb932a20424a5d9ec0e9ecca233168102851e1891e",
     "docs/UPSTREAM.md": "768637b1a7cfd088b8c5e8d472d2c4714da3d359288c84e88c21aa2711508086",
-    "docs/VALIDATION.md": "c03a9323a956d3e19284a4287abc67e599a08139ceb32e3468c24fbf320d036a",
+    "docs/VALIDATION.md": "47d6bc45958227c43b20aa549cdaea251f76b84c7fb2e1904d5e70efd3a0ae8e",
     "docs/images/setup.jpg": "8232b0f8dfb19bff0ebb897941067a1c92edf858d6771f2df1cbcc8853506ffc",
     "history.py": "22dd2ffcfacabd43e9a7c0e107f688d5bf89d1d082bf48459ba3e368b570445e",
     "monitor.py": "f51f5ee1e1912a20be172307a310877efba6e246f999e9c0c325c957badaf1e8",
@@ -191,8 +192,8 @@
     "vendor/kobra-connect/kobra_connect/client.py": "284cfdafe77ec402e47225e54a2a6b532e2d02274e507beb79e6dfd1cd0601e5",
     "vendor/kobra-connect/kobra_connect/handshake.py": "63c7c140640725b3c7dd54eab13bef92fdbd2fbc062388fc675e6e0495bdf0b4",
     "vendor/kobra-connect/kobra_connect/models.py": "b2345ae06907278a050cc75f145f5c2d049a2e09bca3f1d0f0b803a04f0a6ed8",
-    "ROADMAP.md": "0a213ffc74b534e6efc9eec16836952d3f7d9609c3510f05a567b1e1eb15fc84",
-    "docs/SPOOLMAN.md": "4c30f520cba47d30612137f1fdc0b2ef5d9992e47f20ac7e56d00f3c35922252",
+    "ROADMAP.md": "3063ecbc1aff0cfcbf53cf06cc6cf41af5adc97c9385df7fa4a840fd1c27b0de",
+    "docs/SPOOLMAN.md": "8d0025b9ab902653a3e814719395a33830c4be0da29541a25298234f23568e9a",
     "spools.py": "b3ec3500c86b58507de57f355848642c5459e73ed366f4861f03de9b271c4494",
     "static/spools.js": "92878f456d6a46c72ee1893cd9cd5fc735de6e22c48cb8a01e820695559dfba8",
     "tests/test_spools.js": "c34d224d22ea929b0486406efb1ee66f509daa8c9786b3bc6e77189700e2f31a",
