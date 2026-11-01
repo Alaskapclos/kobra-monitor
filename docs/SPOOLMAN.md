@@ -6,7 +6,7 @@ Im Monitor unter **Spulenverwaltung → Einrichten** die lokale Basisadresse ohn
 
 **Spulen aktualisieren** liest ausschließlich `GET /api/v1/spool`, begrenzt auf 1000 aktive Spulen und 4 MiB. Keine Weiterleitungen, Cookies, Umgebungs-Proxys oder Übernahme beliebiger API-Pfade. Eine leere Liste ist ein gültiger leerer Bestand. Fehler behalten frühere Daten als veraltet; neue Zuordnungen benötigen eine erfolgreiche Abfrage der letzten 60 Sekunden.
 
-Beim ausgewählten Drucker eine Spule für einen gemeldeten ACE-Slot auswählen und **Zuordnen**. Eine Spule kann nur einem Slot zugeordnet sein. Lösen einer Zuordnung bleibt bei ausgefallenem Spoolman und entfernten Druckern möglich. Vor einem Serverwechsel erst alle Zuordnungen lösen, damit gleiche numerische IDs verschiedener Server nicht verwechselt werden.
+Beim ausgewählten Drucker eine Spule für einen gemeldeten ACE-Slot auswählen und **Fest diesem Slot zuordnen**. Eine Spule kann nur einem Slot zugeordnet sein. Lösen einer Zuordnung bleibt bei ausgefallenem Spoolman und entfernten Druckern möglich. Vor einem Serverwechsel erst alle Zuordnungen lösen, damit gleiche numerische IDs verschiedener Server nicht verwechselt werden.
 
 Der Monitor ändert weder Spoolman-Spulen noch Druckereinstellungen. Spulen anlegen, wiegen und pflegen erfolgt zunächst in Spoolman selbst. Nach expliziter Verknüpfung einer eindeutigen SKU kann der Monitor die Spule wiedererkennen. Keine Verbrauchsbuchung oder Übernahme aus 3D Filament Profiles. Spoolman-Restgewicht ist ein Buchbestand, keine Live-Waage. ACE-Prozentwerte bleiben getrennt.
 
@@ -27,3 +27,11 @@ Kein Beschreiben von NFC-Tags, keine Druckersteuerung und keine Spoolman-Bestand
 ## Spoolman öffnen
 
 Nach der Anmeldung steht bei eingerichteter Verbindung direkt neben „Einrichten“ der Link „Spoolman öffnen“. Er öffnet die gespeicherte Adresse in einem neuen Tab. Auf dem Handy muss diese Adresse im Heimnetz oder über das eigene VPN erreichbar sein. Der Monitor richtet damit keine zusätzliche öffentliche Freigabe ein.
+
+## Klare Unterscheidung ab 0.18.2
+
+**Automatisch erkannt** zeigt bei aktuellen eindeutigen Daten die passende Spoolman-Spule direkt im Slot. Die Spule folgt ihrer Kennung; eine feste Slotbindung ist nicht nötig und wird auch serverseitig abgewiesen. In anderen Auswahllisten sind diese Spulen als „folgt ihrer Kennung“ markiert und nicht manuell wählbar.
+
+**Keine feste Slot-Zuordnung** bezieht sich ausschließlich auf manuelle Bindungen. Ohne eindeutige Kennung bleibt die manuelle Zuordnung möglich; sie folgt einem physischen Spulenwechsel nicht. Alte widersprüchliche Bindungen lassen sich mit **Alte feste Zuordnung lösen** entfernen, ohne den gespeicherten Kennungslink zu verlieren. Eine Kennungsverknüpfung muss zuerst gelöst werden, bevor diese Spule wieder manuell fest zugeordnet werden kann. Keine automatische Konfliktbereinigung oder Änderung bestehender Bestände.
+
+Ein realer Stock-S1/ACE-Test bestätigte am 01.11.2026 die vollständige selbst beschriebene ReSpool-Kennung und Wiedererkennung nach Slotwechsel. Beim ersten Wechsel musste eine alte manuelle Bindung gelöst werden; der anschließende Rückwechsel gelang ohne Zuordnungskorrektur. Dies ist kein Nachweis für jede Tag-/ACE-/Firmware-Kombination. Originale Hersteller-SKUs können produktgleich sein und bleiben manuell zuzuordnen.

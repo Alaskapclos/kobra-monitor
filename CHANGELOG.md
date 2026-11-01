@@ -1,3 +1,10 @@
+# 0.18.2-alpha.1
+
+- Automatisch per Kennung erkannte Spulen stehen direkt in der Slotanzeige. Die feste Slotzuordnung wird dabei ausgeblendet.
+- Kennungsverknüpfte Spulen können nicht zusätzlich manuell an einen Slot gebunden werden; Server prüft dies auch bei direkten oder veralteten Anfragen.
+- Alte feste Bindungen lassen sich gezielt lösen, ohne die Kennungsverknüpfung zu löschen. Veraltete Daten gelten weiterhin nicht als aktuelle Erkennung.
+- Reihenfolge bestätigt: erst Lesefunktionen abschließen; Steuerbereich anschließend separat.
+
 # 0.18.1-alpha.1
 
 - Direkter Link „Spoolman öffnen“ in der Spulenverwaltung, auch bei geschlossener Einrichtung. Nutzt die gespeicherte HTTP(S)-Adresse und öffnet einen getrennten Tab ohne Weitergabe der Herkunftsseite.

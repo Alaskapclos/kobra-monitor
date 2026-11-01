@@ -29,9 +29,14 @@ const rows=()=>node('spools-assignments').children;
  check.checked=true;await link.handlers.click();await tick();assert.equal(calls.at(-1).action,'link_sku');assert.equal(calls.at(-1).unique_confirmed,true);
  data.sku_links={'TEST-UNIQUE-0001':42};data.detections[0].status='recognized';data.detections[0].spool_id=42;
  await node('spools-refresh').handlers.click();assert.match(rows()[0].children[3].textContent,/wiedererkannt/);assert.equal(rows().length,2);
+ card=rows()[0];select=card.children[0].children[0];assert.equal(select.value,'42');assert.equal(select.disabled,true);assert.equal(card.children[1].hidden,true);assert.match(card.children[0].textContent,/Automatisch erkannt/);assert.match(card.children[2].textContent,/Slotwechsel/);
+ data.inventory_current=false;await node('spools-refresh').handlers.click();assert.doesNotMatch(rows()[0].children[0].textContent,/Automatisch erkannt/);assert.doesNotMatch(rows()[0].children[3].textContent,/wiedererkannt/);assert.equal(rows()[0].children[1].disabled,true);
+ data.inventory_current=true;data.mappings={'192.168.1.20':{'0':42}};await node('spools-refresh').handlers.click();assert.equal(rows()[0].children[1].textContent,'Alte feste Zuordnung lösen');assert.equal(rows()[0].children[0].children[0].value,'');await rows()[0].children[1].handlers.click();assert.equal(calls.at(-1).spool_id,null);
+ data.mappings={};await node('spools-refresh').handlers.click();
  await rows()[1].children[1].handlers.click();assert.equal(calls.at(-1).spool_id,null);
- data.detections[0].status='duplicate';await node('spools-refresh').handlers.click();assert.match(rows()[0].children[3].textContent,/mehrfach/);assert.equal(rows()[0].children.length,4);
+ data.detections[0].status='duplicate';await node('spools-refresh').handlers.click();assert.match(rows()[0].children[3].textContent,/mehrfach/);assert.equal(rows()[0].children.length,4);assert.equal(rows()[0].children[1].disabled,true);
+ data.detections[0].status='unknown';data.detections[0].sku='OTHER';await node('spools-refresh').handlers.click();assert.equal(rows()[0].children[0].children[0].children[1].disabled,true);assert.match(rows()[0].children[0].children[0].children[1].textContent,/folgt ihrer Kennung/);
  assert.equal(node('spools-visit').href,'http://spoolman:8000/');assert.equal(node('spools-visit').hidden,false);
  for(const url of ['javascript:alert(1)','https://user:secret@example.com','']){data.url=url;await node('spools-refresh').handlers.click();assert.equal(node('spools-visit').hidden,true);assert.equal(node('spools-visit').href,undefined);}
- console.log('14 spool UI cases passed: existing 8 plus explicit consent, SKU link, recognized/unlink, duplicate blocked');
+ console.log('19 spool UI cases passed: identity display, expiry, legacy cleanup, duplicate and fixed-mapping protection included');
 })().catch(error=>{console.error(error);process.exitCode=1;});

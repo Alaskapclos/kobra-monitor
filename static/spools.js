@@ -25,24 +25,41 @@ window.kobraSpools=(()=>{
       const card=document.createElement('div'),label=document.createElement('label'),select=document.createElement('select'),button=document.createElement('button'),detail=document.createElement('p');
       card.className='spool-assignment';label.textContent=(row.missing?'Nicht mehr gemeldeter Steckplatz':'Ausgewählter Drucker')+' · SLOT '+(row.slot+1);
       select.setAttribute('aria-label','Spule für Slot '+(row.slot+1));
-      const empty=document.createElement('option');empty.value='';empty.textContent='Keine Spule zugeordnet';select.append(empty);
+      const empty=document.createElement('option');empty.value='';empty.textContent='Keine feste Slot-Zuordnung';select.append(empty);
       const assigned=mappings[row.ip]?.[String(row.slot)];
-      for(const spool of state.spools){const option=document.createElement('option');option.value=String(spool.id);option.textContent=caption(spool);select.append(option);}
+      const linkedIds=new Set(Object.values(state.sku_links||{}));
+      for(const spool of state.spools){const option=document.createElement('option');option.value=String(spool.id);option.textContent=caption(spool)+(linkedIds.has(spool.id)?' · folgt ihrer Kennung':'');option.disabled=linkedIds.has(spool.id);select.append(option);}
       if(assigned&&!state.spools.some(s=>s.id===assigned)){const option=document.createElement('option');option.value=String(assigned);option.textContent='#'+assigned+' · Nicht im aktuellen Bestand';select.append(option);}
       select.value=assigned?String(assigned):'';
       // Clearing a mapping must work even if Spoolman is down or the printer is removed.
       if(!current||row.missing)for(const option of select.options)if(option.value&&Number(option.value)!==assigned)option.disabled=true;
       select.disabled=busy;
-      button.className='timeline-button';button.type='button';button.textContent='Zuordnen';button.disabled=busy;
+      button.className='timeline-button';button.type='button';button.textContent=assigned?'Feste Zuordnung ändern':'Fest diesem Slot zuordnen';button.disabled=busy;
       button.addEventListener('click',()=>request({action:'assign',ip:row.ip,slot:row.slot,spool_id:select.value?Number(select.value):null}));
-      label.append(select);detail.textContent=assigned?(state.spools.find(s=>s.id===assigned)?caption(state.spools.find(s=>s.id===assigned)):'Zugeordnete Spule #'+assigned+' derzeit nicht verfügbar.'):'Zuordnung wird nur im Monitor gespeichert.';
+      label.append(select);detail.textContent=assigned?'Fest diesem Slot zugeordnet · folgt einem Spulenwechsel nicht automatisch.':'Ohne eindeutige Kennung kannst du eine Spule fest diesem Slot zuordnen.';
       card.append(label,button,detail);target.append(card);
       const detected=state.detections?.find(d=>d.ip===row.ip&&d.slot===row.slot);
       const age=chosen?.section_age_s?.ace;
       const fresh=chosen?.connection==='online'&&typeof age==='number'&&age>=0&&age<=60;
+      const linkedHere=detected?.sku&&(state.sku_links||{})[detected.sku];
+      const recognized=detected?.status==='recognized'&&fresh&&current&&state.spools.some(s=>s.id===detected.spool_id);
+      if(recognized&&!assigned){
+        select.value=String(detected.spool_id);select.disabled=true;button.hidden=true;button.disabled=true;
+        label.textContent='Automatisch erkannt · SLOT '+(row.slot+1);label.append(select);
+        detail.textContent='Diese Spule folgt ihrer Kennung auch beim Slotwechsel. Keine feste Zuordnung nötig.';
+      }else if(linkedHere&&!assigned){
+        select.disabled=true;button.hidden=true;button.disabled=true;
+        detail.textContent='Kennung bereits verknüpft. Für die Erkennung müssen Drucker und Spulenbestand aktuell und ohne Konflikt sein.';
+      }
+      if(assigned&&linkedIds.has(assigned)){
+        select.value='';for(const option of select.options)if(option.value)option.disabled=true;
+        button.textContent='Alte feste Zuordnung lösen';
+        detail.textContent='Diese feste Bindung kann die Erkennung nach einem Slotwechsel blockieren. Die Kennungsverknüpfung bleibt beim Lösen erhalten.';
+      }
       const messages={stale:'Kennung derzeit nicht aktuell.',empty:'Steckplatz leer.',no_sku:'Keine nutzbare Spulenkennung gemeldet.',unknown:'Kennung noch nicht verknüpft.',duplicate:'Kennung mehrfach erkannt. Keine eindeutige Spule.',conflict:'Kennung und manuelle Zuordnung widersprechen sich. Bitte Zuordnung prüfen.',inventory_unavailable:'Verknüpfter Bestand nicht aktuell oder Spule nicht verfügbar.',recognized:'Spule anhand ihrer Kennung wiedererkannt.'};
       const note=document.createElement('p');note.className='spool-identity';
-      note.textContent=detected?((detected.sku?'Kennung: '+detected.sku+' · ':'')+(messages[fresh?detected.status:'stale']||'Kennung prüfen.')):'Spulenkennung wird beim Aktualisieren geprüft.';
+      const status=!fresh?'stale':(detected?.status==='recognized'&&!current?'inventory_unavailable':detected?.status);
+      note.textContent=detected?((detected.sku?'Kennung: '+detected.sku+' · ':'')+(messages[status]||'Kennung prüfen.')):'Spulenkennung wird beim Aktualisieren geprüft.';
       if(detected?.status==='recognized'&&fresh&&current){const spool=state.spools.find(s=>s.id===detected.spool_id);if(spool)note.textContent+=' '+caption(spool);}
       card.append(note);
       if(detected?.status==='unknown'&&fresh&&detected.sku){

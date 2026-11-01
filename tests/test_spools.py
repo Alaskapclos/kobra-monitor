@@ -93,6 +93,22 @@ def printer(sku='TEST-UNIQUE-0001',slot=0,age=0,connection='online',empty=False,
 class IdentityService(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = SpoolService.asyncSetUp
     asyncTearDown = SpoolService.asyncTearDown
+    async def test_identity_link_blocks_fixed_assignment_and_preserves_move_recognition(self):
+        await self.s.link_sku('TEST-UNIQUE-0001',42,[printer()])
+        for slot in (0,3):
+            with self.assertRaisesRegex(ValueError,'folgt bereits ihrer Kennung'):
+                await self.s.assign(IP,slot,42,[IP],{slot})
+        self.assertEqual(self.s.mappings,{})
+        self.assertEqual(self.s.detections([printer(slot=3)])[0]['spool_id'],42)
+        # Old conflicting configurations can still be repaired without inventory access.
+        self.s.mappings={IP:{'0':42}};self.s.error='offline'
+        await self.s.assign(IP,0,None,[IP],{0})
+        self.assertEqual(self.s.sku_links,{'TEST-UNIQUE-0001':42})
+        self.s.error=''
+        self.assertEqual(self.s.detections([printer(slot=3)])[0]['status'],'recognized')
+        await self.s.link_sku('TEST-UNIQUE-0001',None,[])
+        await self.s.assign(IP,3,42,[IP],{3})
+        self.assertEqual(self.s.mappings[IP],{'3':42})
     async def test_link_follows_spool_between_slots_and_survives_restart(self):
         await self.s.assign(IP,0,42,[IP],{0})
         await self.s.link_sku('TEST-UNIQUE-0001',42,[printer()])

@@ -254,6 +254,8 @@ class Spools:
             if ip not in configured_ips or type(slot) is not int or slot not in reported_slots:
                 raise ValueError('Dieser Steckplatz wird vom eingerichteten Drucker nicht gemeldet.')
             if spool is not None:
+                if spool in self.sku_links.values():
+                    raise ValueError('Diese Spule folgt bereits ihrer Kennung. Keine feste Slot-Zuordnung nötig. Zum manuellen Zuordnen zuerst die Kennung lösen.')
                 if not self.state()['inventory_current'] or type(spool) is not int or spool not in {v['id'] for v in self.items}:
                     raise ValueError('Spulen zuerst aktualisieren und eine vorhandene Spule auswählen.')
             candidate = {key: dict(value) for key, value in self.mappings.items()}
