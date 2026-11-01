@@ -1,5 +1,7 @@
 # Kobra Monitor im Alltag
 
+Ab Version 0.18.3 öffnet **Hilfe** oben in der Druckerübersicht die lokal gespeicherte Kurzhilfe. Die Themen lassen sich einzeln aufklappen.
+
 ## Einmal einrichten
 
 1. **Standort wählen:** Auf einem Rechner läuft die Aufzeichnung, solange er eingeschaltet und wach ist. Ein NAS oder Server mit Docker eignet sich für dauerhaften Betrieb. Der Monitor-Host muss die Drucker im Heimnetz erreichen können. [Installation](INSTALLATION.md) · [UGREEN/UGOS](UGREEN_UGOS.md)

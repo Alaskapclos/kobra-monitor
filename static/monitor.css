@@ -22,3 +22,5 @@
 .spool-assignment .spool-identity{color:var(--ink,#26332e)}.spool-assignment>label:not(:first-child){grid-column:1/-1;display:block;font-size:.9rem;line-height:1.5}.spool-assignment>label input[type=checkbox]{margin-right:6px}
 
 .spools-actions{width:auto;justify-content:flex-end}.spools-actions a{text-decoration:none;display:inline-flex;align-items:center;min-height:28px}.spools-actions a[hidden]{display:none}@media(max-width:650px){.spools-actions{justify-content:flex-start}.notification-card:has(#spools-title)>.section-head{flex-wrap:wrap}}
+
+.help-link{display:inline-flex;align-items:center;text-decoration:none;min-height:44px}.help-card{scroll-margin-top:20px}.help-card details{border-top:1px solid var(--line);padding:4px 0}.help-card summary{cursor:pointer;padding:14px 2px;font-weight:600;line-height:1.5}.help-card summary:focus-visible{outline:3px solid #86a254;outline-offset:2px;border-radius:4px}.help-card details p{line-height:1.7;color:var(--muted);overflow-wrap:anywhere}.help-card:target{outline:2px solid #9cb572;outline-offset:4px}.help-card a{line-height:1.7}
