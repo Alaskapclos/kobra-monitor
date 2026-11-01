@@ -41,17 +41,18 @@
       <div class="setup-actions"><button id="account-save" class="setup-primary" type="submit">Konto anlegen</button><button id="account-cancel" class="timeline-button" type="button" hidden>Abbrechen</button></div>
     </form></div>
     <div id="setup-printers" hidden>
-      <p>Trage die Adresse jedes Druckers ein. Du findest sie am Drucker unter Netzwerk oder in deinem Router.</p>
+      <p>Trage die IP-Adresse jedes Druckers ein – nur die Zahlen mit Punkten, ohne http:// oder Port. Du findest sie am Drucker unter Netzwerk oder in deinem Router. Die Adresse des NAS oder Handys gehört nicht in diese Liste.</p>
       <form id="setup-printer-form">
         <div id="setup-printer-list"></div>
         <button id="setup-add-printer" class="timeline-button setup-add" type="button">+ Drucker hinzufügen</button>
         <p id="setup-printer-limit" class="setup-small">Bis zu 16 Drucker. Die Reihenfolge kannst du später in der Übersicht durch Ziehen ändern.</p>
         <details class="setup-help"><summary>Mein Drucker verbindet sich nicht</summary><p>Aktiviere den LAN-Modus am Drucker und prüfe seine IP-Adresse. Dein Rechner oder NAS muss ihn im Heimnetz erreichen können. Wenn dein Router die Adresse häufig ändert, reserviere sie dort dauerhaft für den Drucker.</p></details>
+        <details class="setup-help"><summary>Was brauche ich für Kamera und Spulen?</summary><p>Die Kameraaufbereitung läuft auf dem Rechner oder NAS mit dem Monitor. FFmpeg ist im NAS-Paket enthalten; Handy und Anzeige-Browser benötigen es nicht. Spoolman ist optional und wird später unter „Spulenverwaltung“ verbunden. Für die reine Druckeranzeige musst du noch keine Spulen anlegen.</p></details>
         <p class="setup-small">Entfernen beendet nur die Überwachung dieses Druckers. Bisherige Druckdaten bleiben gespeichert. Der Monitor steuert keinen Druck.</p>
         <div class="setup-actions"><button id="setup-save" class="setup-primary" type="submit">Speichern und verbinden</button><button id="setup-cancel" class="timeline-button" type="button">Zur Übersicht</button></div>
       </form>
     </div>
-    <div id="setup-done" hidden><h3>Deine Druckerliste ist gespeichert.</h3><p>Hier siehst du, welche Drucker bereits Daten liefern. Du kannst die Übersicht auch öffnen, während die Verbindung noch aufgebaut wird.</p><div id="setup-connections" aria-live="polite"></div><p>Bleibt ein Drucker offline, prüfe LAN-Modus und Adresse unter „Einrichten“.</p><p>Von unterwegs öffnest du dieselbe Installation über Tailscale oder dein VPN. Dein Rechner bzw. NAS muss eingeschaltet bleiben.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
+    <div id="setup-done" hidden><h3>Deine Druckerliste ist gespeichert.</h3><p>Hier siehst du, welche Drucker bereits Daten liefern. Du kannst die Übersicht auch öffnen, während die Verbindung noch aufgebaut wird.</p><div id="setup-connections" aria-live="polite"></div><p>Bleibt ein Drucker offline, prüfe LAN-Modus und Adresse unter „Einrichten“.</p><p>Von unterwegs zuerst Tailscale oder dein VPN verbinden und dann die private HTTPS-Adresse des Monitors öffnen. Der Rechner bzw. das NAS mit dem Monitor muss eingeschaltet bleiben; auf dem Handy brauchst du keinen zweiten Monitor zu installieren.</p><button id="setup-done-button" class="setup-primary" type="button">Zur Druckerübersicht</button></div>
     <p id="setup-error" class="setup-error" role="alert"></p>
   </section></div>
   <aside class="sidebar">

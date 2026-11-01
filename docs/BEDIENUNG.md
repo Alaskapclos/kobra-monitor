@@ -51,6 +51,6 @@ Der kopierbare Betriebsbericht ist für eine gezielte Diagnose gedacht; private 
 
 ## Daten erhalten
 
-Der Monitor muss weiterlaufen, damit die Historie aufgezeichnet wird. Das Schließen des Browsers beendet den Dienst nicht. Vor Updates die Sicherung prüfen und das Datenvolume erhalten. Monitor und Spoolman getrennt sichern; eine zusätzliche Kopie außerhalb des NAS schützt gegen dessen Ausfall. [Sicherung und Wiederherstellung](BACKUPS.md)
+Der Monitor muss weiterlaufen, damit die Historie aufgezeichnet wird. Das Schließen des Browsers beendet den Dienst nicht. Vor Updates die Sicherung prüfen und das Datenvolume erhalten. Monitor und Spoolman getrennt sichern; eine zusätzliche Kopie außerhalb des NAS schützt gegen dessen Ausfall. [Sicherung und Wiederherstellung](BACKUPS.md) · [Update und Rückkehr zum bisherigen Stand](UPDATE_RECOVERY.md)
 
 Aktuelle Grenzen und noch offene Nachweise: [Prüfstand](VALIDATION.md) · [Projektplan](../ROADMAP.md). Upload, Druckstart, Pause/Stop, Heizung, Bewegung und Filamentsteuerung sind im Lesebetrieb nicht enthalten.
