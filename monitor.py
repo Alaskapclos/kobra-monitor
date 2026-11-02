@@ -103,6 +103,8 @@ class Telemetry:
                     val = temps.get(source)
                     if type(val) in (int,float) and math.isfinite(val) and int(val) == val and 0 <= val <= TEMP_LIMITS[target]:
                         candidates[target] = int(val)
+        if kind == 'print' and payload.get('state') not in (None,'done','printing'):
+            with self.lock:self.thermal_seen = float('-inf')
         if kind == 'info':
             with self.lock:
                 project = raw.get('project')

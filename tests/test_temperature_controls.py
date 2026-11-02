@@ -128,3 +128,8 @@ class TemperatureTelemetryTests(unittest.TestCase):
     def test_unknown_busy_phase_never_authorizes_heating(self):
         self.info(state='busy');self.assertGreater(self.m.temperature_snapshot('bed_target')['light_age_s'],15)
         self.info({'state':'auto_leveling'},state='busy');self.assertGreater(self.m.temperature_snapshot('bed_target')['light_age_s'],15)
+
+    def test_preparation_report_without_filename_immediately_invalidates_idle_intent(self):
+        self.info();self.assertTrue(self.m.temperature_snapshot('bed_target')['online'])
+        self.m.telemetry.receive('print',{'state':'auto_leveling','data':{}},self.bridge,'current')
+        self.assertGreater(self.m.temperature_snapshot('bed_target')['light_age_s'],15)
