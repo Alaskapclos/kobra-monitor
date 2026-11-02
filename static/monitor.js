@@ -233,7 +233,7 @@ function render(snapshot) {
   const lightEnabled=snapshot.controls?.chamber_light===true;
   if($('installation-mode'))$('installation-mode').textContent=lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
   if($('footer-mode'))$('footer-mode').textContent=lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
-  if($('sidebar-mode'))$('sidebar-mode').textContent=lightEnabled?'Kammerlicht mit Bestätigung schaltbar.':'Ausschließlich lesend.';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];

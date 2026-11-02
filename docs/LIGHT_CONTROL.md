@@ -10,9 +10,9 @@ Ein Starter übernimmt die Variable aus seiner Umgebung. Für eine Installation 
 
 ## Bedienung
 
-Mit dem lokalen Besitzerkonto anmelden, auf der Übersicht den Drucker auswählen und unter Steuerung das Kammerlicht betätigen. Die Bestätigung nennt den Drucker, seine Adresse und An oder Aus. „Abbrechen“ sendet nichts. Nach 20 Sekunden ist die Vorbereitung ungültig. Bei fehlenden oder mehr als 15 Sekunden alten Lichtdaten ist das Schalten gesperrt; auch alte Verbindungen werden zurückgewiesen.
+Mit dem lokalen Besitzerkonto anmelden, auf der Übersicht den Drucker auswählen und den Schalter direkt neben der Glühbirne betätigen. Ein Klick schaltet das Kammerlicht ohne zusätzlichen Bestätigungsdialog. Nur diese Lichtfunktion ist eine direkte Aktion; spätere Bewegungs-, Lüfter- und Temperaturbefehle benötigen weiterhin eine Bestätigung. Die interne, einmalige Vorbereitung verfällt nach 20 Sekunden und wird bei einem Drucker- oder Seitenwechsel vor dem Versand verworfen. Bei fehlenden oder mehr als 15 Sekunden alten Lichtdaten ist das Schalten gesperrt; auch alte Verbindungen werden zurückgewiesen.
 
-Die Anzeige folgt den tatsächlichen Rückmeldungen. Eine erfolgreiche Socket-Übertragung allein ist keine bestätigte Zustandsänderung. Bei einer unklaren Antwort den tatsächlichen Druckerzustand prüfen. Der Monitor wiederholt Befehle nicht automatisch. Ein Neustart verwirft vorbereitete Vorgänge und spielt keine alten Befehle ab. Ein absichtlich neu bestätigter Vorgang ist ein neuer Bedienauftrag.
+Die Anzeige folgt den tatsächlichen Rückmeldungen. Eine erfolgreiche Socket-Übertragung allein ist keine bestätigte Zustandsänderung. Bei einer unklaren Antwort den tatsächlichen Druckerzustand prüfen. Der Monitor wiederholt Befehle nicht automatisch. Ein Neustart verwirft vorbereitete Vorgänge und spielt keine alten Befehle ab. Ein absichtlicher neuer Klick ist ein neuer Bedienauftrag.
 
 ## Betrieb und Sicherung
 

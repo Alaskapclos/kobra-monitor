@@ -4,9 +4,9 @@ Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-Optional ist das Kammerlicht ausgewählter S1-Drucker direkt auf der Übersicht schaltbar. Jeder Wechsel benötigt eine Bestätigung und wird anhand neuer Druckerrückmeldungen geprüft. [Freigabe und Grenzen](docs/LIGHT_CONTROL.md).
+Optional ist das Kammerlicht ausgewählter S1-Drucker direkt auf der Übersicht schaltbar. Ein Klick schaltet das Licht ohne zusätzliche Bestätigung; neue Druckerrückmeldungen bestätigen den tatsächlichen Zustand. [Freigabe und Grenzen](docs/LIGHT_CONTROL.md).
 
-**Entwicklungsstand: 0.22.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Entwicklungsstand: 0.22.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem

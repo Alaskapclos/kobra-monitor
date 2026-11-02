@@ -47,11 +47,15 @@
 
 .device-light-reading{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px}.device-light-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#f0f2ed;color:#7c857e;border:1px solid #dfe4da}.device-light-icon svg{width:20px;height:20px;overflow:visible}.device-light-icon .bulb-rays,.device-light-icon .bulb-off-mark{display:none}.device-light-icon[data-state="on"]{color:#907023;background:#fff3c5;border-color:#e8d796}.device-light-icon[data-state="on"] .bulb-rays,.device-light-icon[data-state="off"] .bulb-off-mark{display:block}.device-light-icon[data-state="unknown"],.device-light-icon[data-state="stale"]{border-style:dashed}.device-light-icon[data-state="stale"]{color:#8b6735;background:#f7f2e8}
 
-/* Chamber-light controls, same stacked flow on phones. */
-.light-control-card[hidden]{display:none}
-.light-control-target{margin:16px 0;color:var(--muted,#68746a);overflow-wrap:anywhere}
-.light-control-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.light-control-message{font-size:13px;line-height:1.6;margin-top:16px}
-.light-control-action{font-weight:600;margin-bottom:20px}
-#light-control-dialog{padding:24px;max-width:min(440px,calc(100vw - 32px));border:0;border-radius:20px}
-#light-control-switch[aria-checked="true"]{background:#deead7;color:#233c2d}
+/* Direct chamber-light switch beside its reported bulb state. */
+.light-toggle{position:relative;flex:none;display:inline-flex;width:46px;height:28px;min-height:28px;padding:3px;border:1px solid #a4afa0;border-radius:18px;background:#dce1d8;cursor:pointer;vertical-align:middle;transition:background .15s}
+.light-toggle[hidden]{display:none}
+.light-toggle span{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transform:translateX(0);transition:transform .15s}
+.light-toggle[aria-checked="true"]{background:#77895d;border-color:#65784d}
+.light-toggle[aria-checked="true"] span{transform:translateX(18px)}
+.light-toggle:focus-visible{outline:3px solid #b8cd96;outline-offset:3px}
+.light-toggle:disabled{cursor:default;opacity:.55}
+.light-toggle[aria-busy="true"]{opacity:.7;cursor:wait}
+.light-control-message{font-size:12px;line-height:1.5;color:#68746a;max-width:28ch;text-align:right}
+.light-control-message[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.light-toggle,.light-toggle span{transition:none}}

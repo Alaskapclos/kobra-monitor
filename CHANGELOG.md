@@ -1,3 +1,10 @@
+# 0.22.1-alpha.1
+
+- Kammerlichtschalter direkt neben dem Glühbirnensymbol, mit visuellem An/Aus-Regler.
+- Lichtwechsel mit einem Klick ohne zusätzlichen Bestätigungsdialog. Sonstige künftige Steuerfunktionen behalten eine ausdrückliche Bestätigung.
+- Eindeutiges Ziel, frische Rückmeldungen, Anmeldung/CSRF, Einmalversand und Schutz vor unbeabsichtigtem Versand bei Drucker-/Seitenwechsel bleiben erhalten.
+- Separate Licht-Steuerungskarte entfällt; Status und Bedienung stehen an einer Stelle.
+
 # 0.22.0-alpha.1
 
 - Optionales Kammerlicht An/Aus auf der Übersicht für ausdrücklich freigegebene S1-Drucker; Standard bleibt Lesebetrieb.
