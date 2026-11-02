@@ -81,6 +81,24 @@ class ControlApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.headers['Cache-Control'],'no-store')
         self.assertIn("script-src 'self'",response.headers['Content-Security-Policy'])
 
+    async def test_fan_http_requires_owner_allowlist_and_explicit_confirmation(self):
+        fan_data=dict(online=True,connection_id='fake-epoch',light_on=0,light_age_s=0,light_revision=1)
+        async def send(ip,fan,value,epoch):
+            self.writes.append((fan,value));fan_data.update(light_on=value,light_revision=2)
+        self.controls.fan_snapshot=lambda ip,fan:dict(fan_data)
+        self.controls.fan_sender=send
+        self.item.fan_supported=lambda:True;self.item.refresh_fan=AsyncMock()
+        body=dict(action='prepare_fan',ip=self.ip,fan='part_fan',desired=40,request_id=str(uuid.uuid4()))
+        for headers in ({},{'Cookie':self.headers['Cookie']},{**self.headers,'Origin':'https://evil.invalid'}):
+            self.assertNotEqual((await self.call('/api/controls',body,headers)).status,200)
+        self.item.refresh_fan.assert_not_awaited()
+        for change in ({'fan':'arbitrary'},{'desired':True},{'desired':101},{'ip':'192.0.2.99'}):
+            self.assertEqual((await self.call('/api/controls',{**body,**change})).status,400)
+        prepared=json.loads((await self.call('/api/controls',body)).text)
+        self.assertFalse(self.writes)
+        result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
+        self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[('part_fan',40)])
+
 class ControlFleetTests(unittest.IsolatedAsyncioTestCase):
     async def test_default_read_only_and_configured_printer_allowlist(self):
         for enabled in (None,['192.168.250.10']):

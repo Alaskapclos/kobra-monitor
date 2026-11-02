@@ -1,10 +1,11 @@
 services:
   monitor:
     build: .
-    image: kobra-monitor:0.22.1-alpha.1
+    image: kobra-monitor:0.23.0-alpha.1
     restart: unless-stopped
     init: true
     environment:
+      KOBRA_FAN_CONTROL_IPS: "${KOBRA_FAN_CONTROL_IPS:-}"
       KOBRA_LIGHT_CONTROL_IPS: "${KOBRA_LIGHT_CONTROL_IPS:-}"
     ports:
       - "${KOBRA_BIND_ADDRESS:-127.0.0.1}:7125:7125"

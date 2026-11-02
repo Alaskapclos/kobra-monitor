@@ -1,3 +1,9 @@
+## 0.23.0-alpha.1
+
+- Lüftersteuerung bei Bauteil-, Zusatz- und Kammerlüfter: Stufendialog mit Schieberegler, Zahl, Abbrechen und OK.
+- Getrennte ausdrückliche Freigabe je Drucker; frische kanalbezogene Rückmeldungen, gemeinsamer Einmalversand und Schaltprotokoll mit abwärtsverträglicher Migration.
+- Keine automatischen Wiederholungen oder optimistischen Zustandswerte.
+
 # 0.22.1-alpha.1
 
 - Kammerlichtschalter direkt neben dem Glühbirnensymbol, mit visuellem An/Aus-Regler.

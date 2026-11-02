@@ -6,7 +6,9 @@ Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
 Optional ist das Kammerlicht ausgewählter S1-Drucker direkt auf der Übersicht schaltbar. Ein Klick schaltet das Licht ohne zusätzliche Bestätigung; neue Druckerrückmeldungen bestätigen den tatsächlichen Zustand. [Freigabe und Grenzen](docs/LIGHT_CONTROL.md).
 
-**Entwicklungsstand: 0.22.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+Optional lassen sich Bauteil-, Zusatz- und Kammerlüfter über „Einstellen“ mit Stufenauswahl und OK-Bestätigung steuern. [Freigabe und Grenzen](docs/FAN_CONTROL.md).
+
+**Entwicklungsstand: 0.23.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem

@@ -88,6 +88,7 @@ function renderPrinter(snapshot) {
   if (requestFailed || extraAge>10) connection='offline';
   renderDeviceStatus(snapshot,extraAge,connection);
   window.kobraLightControls?.render(snapshot,extraAge,connection);
+  window.kobraFanControls?.render(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';
@@ -231,9 +232,10 @@ function renderPickerOverview(button,view){
 
 function render(snapshot) {
   const lightEnabled=snapshot.controls?.chamber_light===true;
-  if($('installation-mode'))$('installation-mode').textContent=lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
-  if($('footer-mode'))$('footer-mode').textContent=lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
-  if($('sidebar-mode'))$('sidebar-mode').textContent=lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
+  const fanEnabled=snapshot.controls?.fans===true;
+  if($('installation-mode'))$('installation-mode').textContent=fanEnabled?'Licht-/Lüftersteuerung freigegeben':lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
+  if($('footer-mode'))$('footer-mode').textContent=fanEnabled?'Status, Licht und Lüfter':lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=fanEnabled?'Licht und Lüfter gezielt einstellbar.':lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
@@ -353,7 +355,7 @@ async function refresh() {
     if(response.status===401){window.kobraAuth?.login();return;}
     if (!response.ok) throw new Error('Keine Statusdaten');
     const result=await response.json();
-    if (result.read_only!==true && !(result.read_only===false&&result.controls?.chamber_light===true)) throw new Error('Unbekannter Betriebsmodus');
+    if (result.read_only!==true && !(result.read_only===false&&(result.controls?.chamber_light===true||result.controls?.fans===true))) throw new Error('Unbekannter Betriebsmodus');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
     if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {

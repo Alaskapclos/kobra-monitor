@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Explicit, single-use control intents. No transport is enabled by this module.
 
-The first action is chamber light on/off. A sender must be injected deliberately;
-the current production monitor does not inject one or expose these operations.
+Chamber light and three fan channels share a per-printer single-use intent lock.
+Senders and channel snapshots must be injected deliberately.
 """
 import asyncio
 import math
@@ -16,6 +16,9 @@ class ControlRefused(ValueError):
     pass
 
 
+FAN_FIELDS = {'part_fan': 'fan_speed', 'aux_fan': 'aux_fan_speed', 'chamber_fan': 'box_fan_level'}
+
+
 class LightControls:
     """Prepare an exact target, send once, then wait for observed telemetry.
 
@@ -27,12 +30,13 @@ class LightControls:
     """
     def __init__(self, database, snapshot, sender=None, *, enabled=False,
                  clock=time.time, monotonic=time.monotonic,
-                 token_lifetime=20, confirmation_timeout=8):
+                 token_lifetime=20, confirmation_timeout=8, fan_snapshot=None, fan_sender=None):
         if type(enabled) is not bool or (sender is not None and not callable(sender)):
             raise ValueError('Explicit boolean mode and a callable sender required')
         for value, maximum in ((token_lifetime, 60), (confirmation_timeout, 30)):
             if type(value) not in (int, float) or not math.isfinite(value) or not 0 < value <= maximum:
                 raise ValueError('Invalid control timeout')
+        self.fan_snapshot, self.fan_sender = fan_snapshot, fan_sender
         self.snapshot = snapshot
         self.sender = sender
         self.enabled = enabled
@@ -59,6 +63,9 @@ class LightControls:
             CREATE UNIQUE INDEX IF NOT EXISTS one_active_control_per_printer
             ON control_attempts(ip) WHERE state IN ('prepared','sending');
         ''')
+        columns = {r[1] for r in self.db.execute('PRAGMA table_info(control_attempts)')}
+        if 'control' not in columns:
+            self.db.execute("ALTER TABLE control_attempts ADD COLUMN control TEXT NOT NULL DEFAULT 'chamber_light'")
         # A restart cannot know whether a socket write reached the printer.
         self.db.execute("UPDATE control_attempts SET state='uncertain', token='', "
                         "detail='Dienst neu gestartet; nicht erneut gesendet.', updated=? "
@@ -80,26 +87,33 @@ class LightControls:
     @staticmethod
     def _public(row, include_token=False):
         result = {key: row[key] for key in ('id', 'ip', 'created', 'state', 'detail')}
-        result.update(action='chamber_light', desired=bool(row['desired']),
-                      previous=bool(row['before_value']))
+        cast = bool if row['control'] == 'chamber_light' else int
+        result.update(action=row['control'], desired=cast(row['desired']),
+                      previous=cast(row['before_value']))
         if include_token and row['state'] == 'prepared':
             result.update(token=row['token'], expires=row['expires'])
         return result
 
-    def _fresh(self, ip):
-        data = self.snapshot(ip)
+    def _fresh(self, ip, control='chamber_light'):
+        data = self.snapshot(ip) if control == 'chamber_light' else (
+            self.fan_snapshot(ip, control) if self.fan_snapshot else None)
         if not isinstance(data, dict):
             raise ControlRefused('Der ausgewählte Drucker ist nicht verfügbar.')
         age = data.get('light_age_s')
         revision = data.get('light_revision')
-        if (data.get('online') is not True or type(data.get('light_on')) is not bool
+        if (data.get('online') is not True or not self._valid_value(control, data.get('light_on'))
                 or not isinstance(data.get('connection_id'), str)
                 or not data['connection_id'] or len(data['connection_id']) > 128
                 or type(revision) is not int or revision < 0
                 or type(age) not in (int, float) or not math.isfinite(age)
                 or not 0 <= age <= 15):
-            raise ControlRefused('Frische Lichtdaten und eine aktuelle Verbindung fehlen.')
+            raise ControlRefused('Frische Zustandsdaten und eine aktuelle Verbindung fehlen.')
         return data
+
+    @staticmethod
+    def _valid_value(control, value):
+        return (type(value) is bool if control == 'chamber_light' else
+                control in FAN_FIELDS and type(value) is int and 0 <= value <= 100)
 
     def _expire(self):
         self.db.execute("UPDATE control_attempts SET state='expired', token='', "
@@ -116,11 +130,13 @@ class LightControls:
             "SELECT id FROM control_attempts WHERE state='prepared'")}
         self.deadlines = {key:value for key,value in self.deadlines.items() if key in active}
 
-    async def prepare(self, actor, ip, desired, request_id):
+    async def prepare(self, actor, ip, desired, request_id, control='chamber_light'):
         if not self.enabled or self.sender is None:
             raise ControlRefused('Die Druckersteuerung ist noch nicht freigegeben.')
         if (not isinstance(actor, str) or not 1 <= len(actor) <= 128
-                or not isinstance(ip, str) or len(ip) > 64 or type(desired) is not bool):
+                or not isinstance(ip, str) or len(ip) > 64
+                or not isinstance(control, str) or not self._valid_value(control, desired)
+                or (control != 'chamber_light' and self.fan_sender is None)):
             raise ControlRefused('Ungültiger Steuerauftrag.')
         try:
             if str(uuid.UUID(request_id)) != request_id:
@@ -132,21 +148,23 @@ class LightControls:
             old = self.db.execute('SELECT * FROM control_attempts WHERE actor=? AND request_id=?',
                                   (actor, request_id)).fetchone()
             if old:
-                if old['ip'] != ip or bool(old['desired']) != desired:
+                if old['ip'] != ip or old['control'] != control or old['desired'] != desired:
                     raise ControlRefused('Diese Vorgangskennung wurde bereits anders verwendet.')
                 return self._public(old, include_token=True)
-            data = self._fresh(ip)
+            data = self._fresh(ip, control)
             now, operation_id = self.clock(), uuid.uuid4().hex
             same = data['light_on'] == desired
             try:
-                self.db.execute('INSERT INTO control_attempts VALUES '
-                                '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (
+                self.db.execute('INSERT INTO control_attempts '
+                                '(id,actor,request_id,ip,desired,before_value,connection_id,before_revision,'
+                                'token,created,expires,state,updated,sent_revision,detail,control) VALUES '
+                                '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (
                     operation_id, actor, request_id, ip, int(desired), int(data['light_on']),
                     data['connection_id'], data['light_revision'],
                     '' if same else secrets.token_urlsafe(32), now,
                     now + self.token_lifetime, 'unchanged' if same else 'prepared', now, None,
                     'Bereits so gemeldet; kein Befehl gesendet.' if same else
-                    'Vorbereitet; noch kein Befehl gesendet.'))
+                    'Vorbereitet; noch kein Befehl gesendet.', control))
             except sqlite3.IntegrityError:
                 raise ControlRefused('Für diesen Drucker läuft bereits ein Steuervorgang.') from None
             if not same:
@@ -175,11 +193,11 @@ class LightControls:
             if not isinstance(token, str) or not secrets.compare_digest(row['token'], token):
                 raise ControlRefused('Die Bestätigung ist ungültig.')
             try:
-                data = self._fresh(row['ip'])
+                data = self._fresh(row['ip'], row['control'])
                 if data['connection_id'] != row['connection_id']:
                     raise ControlRefused('Verbindung gewechselt; bitte neu vorbereiten.')
-                if data['light_on'] != bool(row['before_value']):
-                    raise ControlRefused('Der Lichtzustand wurde zwischenzeitlich geändert.')
+                if data['light_on'] != row['before_value']:
+                    raise ControlRefused('Der Zustand wurde zwischenzeitlich geändert.')
             except ControlRefused as exc:
                 self.db.execute("UPDATE control_attempts SET state='rejected', token='', "
                                 "updated=?, detail=? WHERE id=?",
@@ -193,17 +211,19 @@ class LightControls:
             self.deadlines.pop(operation_id, None)
         try:
             # The sender has no reconnect, replay or retry path.
-            await asyncio.wait_for(self.sender(row['ip'], bool(row['desired']),
-                                              row['connection_id']), timeout=5)
+            send = (self.sender(row['ip'], bool(row['desired']), row['connection_id'])
+                    if row['control'] == 'chamber_light' else
+                    self.fan_sender(row['ip'], row['control'], row['desired'], row['connection_id']))
+            await asyncio.wait_for(send, timeout=5)
             deadline = asyncio.get_running_loop().time() + self.confirmation_timeout
             while asyncio.get_running_loop().time() < deadline:
-                data = self._fresh(row['ip'])
+                data = self._fresh(row['ip'], row['control'])
                 if data['connection_id'] != row['connection_id']:
                     raise ControlRefused('Verbindung nach Versand gewechselt.')
                 if (data['light_revision'] > self._row(operation_id, actor)['sent_revision']
-                        and data['light_on'] == bool(row['desired'])):
+                        and data['light_on'] == row['desired']):
                     return await self._finish(actor, operation_id, 'confirmed',
-                                              'Neuer Lichtzustand vom Drucker gemeldet.')
+                                              'Neuer Zustand vom Drucker gemeldet.')
                 await asyncio.sleep(.1)
         except asyncio.CancelledError:
             await self._finish(actor, operation_id, 'uncertain',

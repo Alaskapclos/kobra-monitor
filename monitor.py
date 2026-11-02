@@ -33,7 +33,7 @@ from configuration import printer_ips, load_config, save_config
 from spools import Spools
 from spoolman_view import gateway, gateway_path
 from notifications import Notifications
-from controls import LightControls, ControlRefused
+from controls import LightControls, ControlRefused, FAN_FIELDS
 from light_transport import LightControlClient
 from diagnostics import summary as diagnostic_summary
 from camera_view import CameraViews, decoder_available
@@ -56,6 +56,8 @@ class Telemetry:
         self.device_seen = {}
         self.device_session = 0
         self.device_sessions = {}
+        self.device_revisions = {}
+        self.device_connections = {}
         self.light_revision = 0
         self.light_connection_id = None
 
@@ -105,6 +107,8 @@ class Telemetry:
                 if key == 'light_on':
                     self.light_revision += 1
                     self.light_connection_id = connection_id
+                self.device_revisions[key] = self.device_revisions.get(key, 0)+1
+                self.device_connections[key] = connection_id
                 self.device_values[key] = val
                 self.device_seen[key] = self.clock()
                 self.device_sessions[key] = self.device_session
@@ -177,13 +181,14 @@ class Telemetry:
 
 
 class Monitor:
-    def __init__(self, ip, runtime, data_dir, history=None, light_control=False):
+    def __init__(self, ip, runtime, data_dir, history=None, light_control=False, fan_control=False):
         self.ip, self.runtime, self.data_dir = ip, Path(runtime), data_dir
         self.telemetry = Telemetry(ip)
         self.client = self.bridge = None
         self.task = None
         self.history = history
         self.light_control_enabled = light_control
+        self.fan_control_enabled = fan_control
 
     async def connect(self):
         hs = await asyncio.to_thread(do_handshake, self.ip)
@@ -204,7 +209,7 @@ class Monitor:
             camera_on_print=0, spoolman_server='', poll_interval=3)
         self.client = LightControlClient(self.ip, hs.username, hs.password, hs.model_id, hs.device_id,
                                   client_id='kobra-monitor-'+uuid.uuid4().hex[:12],
-                                  control_enabled=self.light_control_enabled,
+                                  control_enabled=self.light_control_enabled, fan_control_enabled=self.fan_control_enabled,
                                   cert_file=str(cert), key_file=str(key))
         self.bridge = KobraXBridge(self.client, args=args)
         self.client.callbacks.setdefault('fan/report', lambda payload: None)
@@ -256,6 +261,33 @@ class Monitor:
         # Read back the state explicitly; never retry the control command.
         await asyncio.to_thread(client.publish, 'light', 'query', None, .5)
 
+    def fan_supported(self):
+        return bool(self.fan_control_enabled and self.client and str(self.client.mode_id) == '20025')
+
+    def fan_snapshot(self, control):
+        field = FAN_FIELDS.get(control)
+        client = self.client
+        epoch = client.control_connection_id() if client else None
+        with self.telemetry.lock:
+            return {'online': bool(epoch and epoch == self.telemetry.device_connections.get(field)
+                                   and self.telemetry.connected),
+                    'connection_id': epoch,
+                    'light_on': self.telemetry.device_values.get(field),
+                    'light_revision': self.telemetry.device_revisions.get(field, 0),
+                    'light_age_s': max(0, self.telemetry.clock()-self.telemetry.device_seen.get(field, float('-inf')))}
+
+    async def refresh_fan(self):
+        if not self.fan_supported() or not self.client.control_connection_id():
+            raise ControlRefused('Lüftersteuerung für diesen Drucker nicht verfügbar.')
+        await asyncio.wait_for(asyncio.to_thread(self.client.publish, 'fan', 'query', None, 1), 2)
+
+    async def send_fan(self, control, desired, epoch):
+        if not self.fan_supported():
+            raise ControlRefused('Lüftersteuerung für diesen Drucker nicht verfügbar.')
+        client = self.client
+        await asyncio.to_thread(client.send_fan_once, control, desired, epoch, send_deadline=time.monotonic()+4)
+        await asyncio.to_thread(client.publish, 'fan', 'query', None, .5)
+
     async def disconnect(self):
         client, bridge = self.client, self.bridge
         self.client = self.bridge = None
@@ -294,7 +326,9 @@ class Monitor:
                     if connected and now >= next_light:
                         await asyncio.wait_for(asyncio.to_thread(self.client.publish,
                             'light', 'query', None, timeout=5), timeout=7)
-                        next_light = time.monotonic()+(10 if self.light_control_enabled else 30)
+                        if self.fan_control_enabled:
+                            await asyncio.wait_for(asyncio.to_thread(self.client.publish, 'fan', 'query', None, timeout=1), timeout=3)
+                        next_light = time.monotonic()+(10 if self.light_control_enabled or self.fan_control_enabled else 30)
                     if connected and now >= next_ace:
                         await asyncio.wait_for(asyncio.to_thread(self.client.query_multicolor_box), timeout=12)
                         next_ace = time.monotonic()+60
@@ -322,7 +356,8 @@ class Monitor:
 
 class Fleet:
     """Independent sessions, certificates, caches and databases per printer."""
-    def __init__(self, ips, runtime, data_dir, *, light_control_ips=None):
+    def __init__(self, ips, runtime, data_dir, *, light_control_ips=None, fan_control_ips=None):
+        self.fan_control_ips = set(printer_ips(fan_control_ips)) if fan_control_ips else set()
         self.light_control_ips = set(printer_ips(light_control_ips)) if light_control_ips else set()
         self.started = time.monotonic()
         self.ips = list(ips)
@@ -335,9 +370,9 @@ class Fleet:
         for ip in self.ips:
             private = Path(runtime)/ip
             private.mkdir(mode=0o700)
-            self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history, ip in self.light_control_ips)
+            self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history, ip in self.light_control_ips, ip in self.fan_control_ips)
         self.controls = LightControls(Path(data_dir)/'history.sqlite3', self.light_snapshot,
-            self.send_light, enabled=True) if self.light_control_ips else None
+            self.send_light, enabled=True, fan_snapshot=self.fan_snapshot, fan_sender=self.send_fan) if self.light_control_ips or self.fan_control_ips else None
         self.telemetry = self
         self.cameras = CameraViews()
         self.notifications = Notifications(self.history,self.data_dir,self.notification_names)
@@ -346,7 +381,7 @@ class Fleet:
 
     @property
     def read_only(self):
-        return not bool(self.light_control_ips & set(self.ips))
+        return not bool((self.light_control_ips | self.fan_control_ips) & set(self.ips))
 
     def light_snapshot(self, ip):
         item = self.monitors.get(ip)
@@ -357,6 +392,16 @@ class Fleet:
         if not item or not item.light_supported():
             raise ControlRefused('Dieser Drucker ist nicht für Lichtsteuerung freigegeben.')
         await item.send_light(desired, epoch)
+
+    def fan_snapshot(self, ip, control):
+        item = self.monitors.get(ip)
+        return item.fan_snapshot(control) if item and item.fan_supported() else None
+
+    async def send_fan(self, ip, control, desired, epoch):
+        item = self.monitors.get(ip)
+        if not item or not item.fan_supported():
+            raise ControlRefused('Dieser Drucker ist nicht für Lüftersteuerung freigegeben.')
+        await item.send_fan(control, desired, epoch)
 
     def report_materials(self,ip):
         state=self.spools.state()
@@ -376,10 +421,11 @@ class Fleet:
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
         for data in printers:
             item = self.monitors[data['ip']]
-            data['read_only'] = not item.light_control_enabled
+            data['read_only'] = not (item.light_control_enabled or item.fan_control_enabled)
+            data['fan_control'] = {'enabled': item.fan_control_enabled, 'supported': item.fan_supported()}
             data['light_control'] = {'enabled': item.light_control_enabled,
                                      'supported': item.light_supported()}
-        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':self.read_only,'controls':{'chamber_light':not self.read_only},'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message(),'report_archive_error':self.history.report_error}
+        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':self.read_only,'controls':{'chamber_light':bool(self.light_control_ips & set(self.ips)), 'fans':bool(self.fan_control_ips & set(self.ips))},'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message(),'report_archive_error':self.history.report_error}
 
     async def reorder(self,ips):
         async with self.config_lock:
@@ -400,7 +446,7 @@ class Fleet:
             for ip in ips:
                 if ip not in self.monitors:
                     private=self.runtime/ip;private.mkdir(mode=0o700,exist_ok=True)
-                    item=Monitor(ip,private,str(self.data_dir/ip),self.history,ip in self.light_control_ips)
+                    item=Monitor(ip,private,str(self.data_dir/ip),self.history,ip in self.light_control_ips,ip in self.fan_control_ips)
                     self.monitors[ip]=item
                     await item.start(None)
             self.ips=ips;self.ip=ips[0]
@@ -417,10 +463,10 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
         is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools','/api/order-report','/api/controls')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
@@ -476,6 +522,7 @@ def build_app(monitor,access=None):
             if not isinstance(body, dict):raise ValueError('Ungültiger Steuerauftrag.')
             action = body.get('action')
             fields = {'prepare': {'action','ip','desired','request_id'},
+                      'prepare_fan': {'action','ip','fan','desired','request_id'},
                       'execute': {'action','id','token'}, 'cancel': {'action','id'},
                       'receipt': {'action','id'}}
             if not isinstance(action,str) or action not in fields or set(body) != fields[action]:
@@ -484,15 +531,24 @@ def build_app(monitor,access=None):
             if not access.can_write(request):
                 return web.json_response({'error':'Bitte erneut anmelden.'}, status=401)
             actor = hashlib.sha256(access.session(request)['csrf'].encode()).hexdigest()
-            if action == 'prepare':
+            if action in ('prepare','prepare_fan'):
                 ip = body['ip']
                 item = monitor.monitors.get(ip) if isinstance(ip,str) else None
-                if item is None or not item.light_supported():
-                    raise ControlRefused('Dieser Drucker ist nicht für Lichtsteuerung freigegeben.')
-                await item.refresh_light()
+                fan = body.get('fan') if action == 'prepare_fan' else None
+                if action == 'prepare_fan':
+                    if not isinstance(fan,str) or fan not in FAN_FIELDS or item is None or not item.fan_supported():
+                        raise ControlRefused('Dieser Drucker oder Lüfter ist nicht freigegeben.')
+                    if type(body['desired']) is not int or not 0 <= body['desired'] <= 100:
+                        raise ControlRefused('Lüfterstufe muss eine ganze Zahl zwischen 0 und 100 sein.')
+                    await item.refresh_fan()
+                else:
+                    if item is None or not item.light_supported():
+                        raise ControlRefused('Dieser Drucker ist nicht für Lichtsteuerung freigegeben.')
+                    await item.refresh_light()
                 if not access.can_write(request):
                     return web.json_response({'error':'Bitte erneut anmelden.'}, status=401)
-                result = await service.prepare(actor,ip,body['desired'],body['request_id'])
+                result = await service.prepare(actor,ip,body['desired'],body['request_id'],
+                    **({'control':fan} if fan else {}))
             else:
                 if not isinstance(body['id'],str) or len(body['id'])!=32:
                     raise ValueError('Ungültige Vorgangskennung.')
@@ -527,6 +583,7 @@ def build_app(monitor,access=None):
 
     async def css(request): return web.FileResponse(BASE/'static/monitor.css')
     async def js(request): return web.FileResponse(BASE/'static/monitor.js')
+    async def fan_controls_js(request): return web.FileResponse(BASE/'static/fan-controls.js')
     async def controls_js(request): return web.FileResponse(BASE/'static/controls.js')
     async def status(request): return web.json_response(monitor.telemetry.snapshot())
     async def report(request):
@@ -706,6 +763,7 @@ def build_app(monitor,access=None):
     app.router.add_get('/assets/monitor.css',css)
     app.router.add_get('/assets/monitor.js',js)
     app.router.add_get('/assets/controls.js',controls_js)
+    app.router.add_get('/assets/fan-controls.js',fan_controls_js)
     app.router.add_post('/api/controls',control_action)
     app.router.add_get('/api/status',status)
     app.router.add_get('/api/report',report)
@@ -749,7 +807,9 @@ async def serve(args):
         data_dir.mkdir(exist_ok=True, mode=0o700)
         monitor = Fleet(args.ips, runtime, str(data_dir),
             light_control_ips=printer_ips(os.environ['KOBRA_LIGHT_CONTROL_IPS'].split(','))
-            if os.environ.get('KOBRA_LIGHT_CONTROL_IPS','').strip() else None)
+            if os.environ.get('KOBRA_LIGHT_CONTROL_IPS','').strip() else None,
+            fan_control_ips=printer_ips(os.environ['KOBRA_FAN_CONTROL_IPS'].split(','))
+            if os.environ.get('KOBRA_FAN_CONTROL_IPS','').strip() else None)
         access=Access(data_dir)
         runner = web.AppRunner(build_app(monitor,access), access_log=None)
         try:

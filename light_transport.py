@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Optional S1 light-only transport. Not used by the production monitor yet.
+"""Optional S1 chamber-light and three-fan transport.
 
-Normal client methods remain restricted to the existing read-only frame policy.
-Only send_light_once can write a control frame, with an explicit enable flag and
-the exact current connection identity. It never calls publish's reconnect/retry.
+Generic methods retain the read-only frame policy. Narrow, separately enabled
+entrypoints require the exact current socket identity and never reconnect/retry.
 """
 import json
 import math
@@ -16,8 +15,8 @@ from read_only_policy import validate_read_only_frame
 
 
 class LightControlClient(KobraXClient):
-    def __init__(self, *args, control_enabled=False, **kwargs):
-        if type(control_enabled) is not bool:
+    def __init__(self, *args, control_enabled=False, fan_control_enabled=False, **kwargs):
+        if type(control_enabled) is not bool or type(fan_control_enabled) is not bool:
             raise ValueError('Explicit boolean control mode required')
         expected_read_only = True
         if 'read_only' in kwargs and kwargs['read_only'] is not expected_read_only:
@@ -25,6 +24,7 @@ class LightControlClient(KobraXClient):
         kwargs['read_only'] = expected_read_only
         super().__init__(*args, **kwargs)
         self.control_enabled = control_enabled
+        self.fan_control_enabled = fan_control_enabled
         self._control_identity = uuid.uuid4().hex
 
     def _send(self, frame):
@@ -39,25 +39,40 @@ class LightControlClient(KobraXClient):
             return self._control_identity + ':' + str(self._sock_gen)
 
     def send_light_once(self, on, expected_connection_id, *, send_deadline):
+        if type(on) is not bool:
+            raise ValueError('Light state must be boolean')
+        return self._send_control_once('light', 'control',
+            {'type':2, 'status':1 if on else 0, 'brightness':100 if on else 0},
+            expected_connection_id, send_deadline=send_deadline)
+
+    def send_fan_once(self, fan, value, expected_connection_id, *, send_deadline):
+        fields = {'part_fan':'fan_speed_pct', 'aux_fan':'aux_fan_speed_pct',
+                  'chamber_fan':'box_fan_level'}
+        if not isinstance(fan, str) or fan not in fields or type(value) is not int or not 0 <= value <= 100:
+            raise ValueError('Invalid fan or level')
+        if not self.fan_control_enabled:
+            raise PermissionError('Fan control is not enabled')
+        return self._send_control_once('fan', 'setSpeed', {fields[fan]:value},
+            expected_connection_id, send_deadline=send_deadline, fan=True)
+
+    def _send_control_once(self, kind, action, data, expected_connection_id, *, send_deadline, fan=False):
         # Capture this monotonic deadline before scheduling a worker. A queued
         # or lock-blocked worker must not send after its caller has timed out.
         now = time.monotonic()
         if (type(send_deadline) not in (int, float) or not math.isfinite(send_deadline)
                 or not 0 < send_deadline - now <= 5):
             raise TimeoutError('Send authorization expired or invalid')
-        if not self.control_enabled:
+        if not (self.fan_control_enabled if fan else self.control_enabled):
             raise PermissionError('Light control is not enabled')
-        if type(on) is not bool:
-            raise ValueError('Light state must be boolean')
         # Initial scope is the two observed stock S1s, not unknown model families.
         if str(self.mode_id) != '20025':
             raise ValueError('Light control is not validated for this model')
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', str(self.device_id)):
             raise ValueError('Invalid device identity')
-        body = {'type':'light', 'action':'control', 'msgid':str(uuid.uuid4()),
+        body = {'type':kind, 'action':action, 'msgid':str(uuid.uuid4()),
                 'timestamp':int(time.time() * 1000),
-                'data':{'type':2, 'status':1 if on else 0, 'brightness':100 if on else 0}}
-        frame = _build_publish(self._web_topic('light'), json.dumps(body, separators=(',', ':')))
+                'data':data}
+        frame = _build_publish(self._web_topic(kind), json.dumps(body, separators=(',', ':')))
         if not self._lock.acquire(timeout=max(0, send_deadline - time.monotonic())):
             raise TimeoutError('Connection lock not available before send deadline')
         try:
