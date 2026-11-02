@@ -34,20 +34,20 @@ class ReadOnlyClientTests(unittest.TestCase):
         }))
 
     def test_status_queries_reach_only_the_fake_socket(self):
-        for kind, action in [('info','query'),('tempature','query'),('print','query'),('multiColorBox','getInfo'),('light','query')]:
+        for kind, action in [('info','query'),('tempature','query'),('print','query'),('multiColorBox','getInfo'),('light','query'),('fan','query')]:
             self.assertTrue(self.client._send(self.packet(kind, action)))
         self.assertTrue(self.client._send(client_module._build_subscribe(
             'anycubic/anycubicCloud/v1/printer/public/20025/test-device/#', 1)))
         self.assertTrue(self.client._send(client_module._build_pingreq()))
-        self.assertEqual(self.sock.sendall.call_count, 7)
+        self.assertEqual(self.sock.sendall.call_count, 8)
 
     def test_controls_wrong_target_and_query_with_settings_never_reach_socket(self):
         packets=[self.packet(kind,action) for kind,action in [
             ('print','start'),('print','pause'),('print','resume'),('print','stop'),
-            ('tempature','set'),('fan','set'),('light','control'),('light','set'),
+            ('tempature','set'),('fan','set'),('fan','setSpeed'),('light','control'),('light','set'),
             ('multiColorBox','feedFilament'),('multiColorBox','setDry'),('multiColorBox','setAutoFeed'),
             ('unknown','query')]]
-        packets += [self.packet('light','query',{'status':1}),self.packet('info','query',{'settings':{'target_nozzle_temp':300}}),
+        packets += [self.packet('fan','query',{'fan_speed_pct':40}),self.packet('light','query',{'status':1}),self.packet('info','query',{'settings':{'target_nozzle_temp':300}}),
                     self.packet('info','query',topic=self.prefix.replace('test-device','other')+'info')]
         for packet in packets:
             with self.subTest(packet=packet), self.assertRaises(ReadOnlyViolation):

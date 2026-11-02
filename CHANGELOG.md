@@ -1,3 +1,7 @@
+## 0.23.0-alpha.2
+
+- Lesende fan/query-Abfrage ausdrücklich durch die Client-Richtlinie erlaubt; Einstellbefehle bleiben dort gesperrt. Versionsanzeige korrigiert.
+
 ## 0.23.0-alpha.1
 
 - Lüftersteuerung bei Bauteil-, Zusatz- und Kammerlüfter: Stufendialog mit Schieberegler, Zahl, Abbrechen und OK.

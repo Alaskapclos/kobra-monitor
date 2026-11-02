@@ -103,3 +103,13 @@ class LightTransportTests(unittest.TestCase):
                 client.send_light_once(True,identity,send_deadline=time.monotonic()+.01)
         finally:client._lock.release()
         client._sock.sendall.assert_not_called()
+
+    def test_periodic_fan_query_passes_policy_but_fan_control_does_not(self):
+        client=self.client()
+        client.publish('fan','query',None,timeout=0)
+        self.assertEqual(client._sock.sendall.call_count,1)
+        with self.assertRaises(ReadOnlyViolation):
+            client.publish('fan','query',{'fan_speed_pct':40},timeout=0)
+        with self.assertRaises(ReadOnlyViolation):
+            client.publish('fan','setSpeed',{'fan_speed_pct':40},timeout=0)
+        self.assertEqual(client._sock.sendall.call_count,1)
