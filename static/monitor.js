@@ -87,6 +87,7 @@ function renderPrinter(snapshot) {
   if (connection==='online' && number(age) && age>limit) connection='stale';
   if (requestFailed || extraAge>10) connection='offline';
   renderDeviceStatus(snapshot,extraAge,connection);
+  window.kobraLightControls?.render(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';
@@ -229,6 +230,10 @@ function renderPickerOverview(button,view){
 }
 
 function render(snapshot) {
+  const lightEnabled=snapshot.controls?.chamber_light===true;
+  if($('installation-mode'))$('installation-mode').textContent=lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
+  if($('footer-mode'))$('footer-mode').textContent=lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=lightEnabled?'Kammerlicht mit Bestätigung schaltbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
@@ -348,7 +353,7 @@ async function refresh() {
     if(response.status===401){window.kobraAuth?.login();return;}
     if (!response.ok) throw new Error('Keine Statusdaten');
     const result=await response.json();
-    if (result.read_only!==true) throw new Error('Read-only-Modus nicht bestätigt');
+    if (result.read_only!==true && !(result.read_only===false&&result.controls?.chamber_light===true)) throw new Error('Unbekannter Betriebsmodus');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
     if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {
@@ -536,3 +541,5 @@ $('history-next').addEventListener('click',()=>{archivePage++;refreshArchive();}
 setInterval(()=>{if(!requestFailed && !document.hidden)refreshArchive();},10000);
 
 window.addEventListener('kobra-report-changed',()=>{historySignature=null;refreshArchive();});
+
+window.addEventListener('kobra-control-changed',refresh);

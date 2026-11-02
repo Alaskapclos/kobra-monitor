@@ -46,3 +46,12 @@
 @media(max-width:360px){.workspace-nav .nav-item{font-size:10px;padding-left:2px;padding-right:2px}}
 
 .device-light-reading{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px}.device-light-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#f0f2ed;color:#7c857e;border:1px solid #dfe4da}.device-light-icon svg{width:20px;height:20px;overflow:visible}.device-light-icon .bulb-rays,.device-light-icon .bulb-off-mark{display:none}.device-light-icon[data-state="on"]{color:#907023;background:#fff3c5;border-color:#e8d796}.device-light-icon[data-state="on"] .bulb-rays,.device-light-icon[data-state="off"] .bulb-off-mark{display:block}.device-light-icon[data-state="unknown"],.device-light-icon[data-state="stale"]{border-style:dashed}.device-light-icon[data-state="stale"]{color:#8b6735;background:#f7f2e8}
+
+/* Chamber-light controls, same stacked flow on phones. */
+.light-control-card[hidden]{display:none}
+.light-control-target{margin:16px 0;color:var(--muted,#68746a);overflow-wrap:anywhere}
+.light-control-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.light-control-message{font-size:13px;line-height:1.6;margin-top:16px}
+.light-control-action{font-weight:600;margin-bottom:20px}
+#light-control-dialog{padding:24px;max-width:min(440px,calc(100vw - 32px));border:0;border-radius:20px}
+#light-control-switch[aria-checked="true"]{background:#deead7;color:#233c2d}

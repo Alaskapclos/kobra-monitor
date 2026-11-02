@@ -1,3 +1,11 @@
+# 0.22.0-alpha.1
+
+- Optionales Kammerlicht An/Aus auf der Übersicht für ausdrücklich freigegebene S1-Drucker; Standard bleibt Lesebetrieb.
+- Besitzeranmeldung, Origin-/CSRF-Prüfung und kurz gültige Bestätigung mit konkretem Drucker. Doppelversand und Wiederholung nach Neustart gesperrt.
+- Erfolg erst nach neuer Lichttelemetrie derselben Verbindung; unklare Ergebnisse bleiben als solche sichtbar, ohne automatische Wiederholung.
+- Eng begrenzter Versandweg für Lichttyp 2, ohne allgemeinen Steuerzugriff. Keine Heiz-, Bewegungs-, Lüfter-, Upload- oder Druckbefehle.
+- Lokales Vorgangsprotokoll in der mitgesicherten Verlaufsdatenbank. Mobile Ansicht bleibt untereinander.
+
 # 0.20.0-alpha.1
 
 ## 0.21.2-alpha.1
