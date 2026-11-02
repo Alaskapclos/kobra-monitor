@@ -18,6 +18,7 @@ window.kobraSpoolWorkspace=(()=>{
   }
   function render(next){
     view=next;const manage=tab==='manage';
+    for(const id of ['printer-switcher','printer-order-status'])$(id).classList.toggle('spool-manager-picker-hidden',view==='spools'&&manage);
     for(const section of ace)section.classList.toggle('spool-tab-hidden',manage);
     document.querySelector('section[aria-labelledby="spoolman-title"]').classList.toggle('spool-tab-hidden',!manage);
     $('spool-tab-ace').setAttribute('aria-pressed',String(!manage));$('spool-tab-manage').setAttribute('aria-pressed',String(manage));
