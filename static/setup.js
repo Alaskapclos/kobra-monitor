@@ -142,6 +142,13 @@ window.kobraAuth=(()=>{
     if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
     const result=await response.json();if(!response.ok)throw new Error(result.error||'Spulenverwaltung nicht erreichbar.');return result;
   }
-  return {reorder,releaseCameras,notificationRequest,spoolRequest,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
+  async function orderReport(body,job){
+    const response=await fetch('/api/order-report'+(job?'?job='+encodeURIComponent(job):''),{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    if(response.status===413)throw new Error('Die Auftragsangaben sind zu groß. Bitte kürzen.');
+    if(response.ok&&body?.action==='bundle')return response.blob();
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Auftragsarchiv nicht erreichbar.');return result;
+  }
+  return {orderReport,reorder,releaseCameras,notificationRequest,spoolRequest,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
     setPrinters(ips,states=[]){printers=ips||[];printerStates=states;renderConnections();if(authenticated&&accountConfigured&&!printers.length&&panel.hidden)configure();}};
 })();

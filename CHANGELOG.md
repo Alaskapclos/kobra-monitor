@@ -1,3 +1,11 @@
+## 0.19.0-alpha.1
+
+- Separate workspace navigation with a mobile bottom bar for overview, customer jobs, spools and operation/help.
+- Local customer order references, part/position and manual post-print quality approval with optimistic edit concurrency.
+- Frozen, versioned completion reports in SQLite plus private archive files; PDF, JSON, Markdown and bounded ZIP batch export.
+- Captured material provenance and explicit limits; historical backfill never invents end-time inventory assignments.
+- Existing owner, CSRF and Origin protections apply; no new printer or inventory commands.
+
 # 0.18.3-alpha.1 (vorbereitet)
 
 - Lokale Bedienhilfe über „Hilfe“ erreichbar: Drucker, Kameraübersicht, Spulen, Handy-Meldungen, Verbindungsprobleme und Sicherungsgrundlagen. Ohne zusätzliche Verbindung oder neue Skripte.

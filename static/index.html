@@ -15,7 +15,9 @@
   <script defer src="/assets/notifications.js"></script>
   <script defer src="/assets/diagnostics.js"></script>
   <script defer src="/assets/spools.js"></script>
+  <script defer src="/assets/orders.js"></script>
   <script defer src="/assets/monitor.js"></script>
+  <script defer src="/assets/navigation.js"></script>
 </head>
 <body>
   <div id="setup-panel" class="setup-overlay" hidden><section class="setup-box" role="dialog" aria-modal="true" aria-labelledby="setup-heading">
@@ -58,8 +60,13 @@
   <aside class="sidebar">
     <a class="brand" href="/" aria-label="Kobra Monitor Startseite"><span class="brand-mark">k<span>:</span></span><span>Kobra<span class="brand-sub">MONITOR</span></span></a>
     <div class="sidebar-label">DEINE WERKSTATT</div>
-    <a class="nav-item" href="/" aria-current="page"><span class="nav-icon">▦</span>Übersicht<span class="nav-count">1</span></a>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.18.3 ALPHA</div></div>
+    <nav class="workspace-nav" aria-label="Arbeitsbereiche">
+      <a class="nav-item" href="#overview" data-view="overview" aria-current="page">Übersicht<span class="nav-count">1</span></a>
+      <a class="nav-item" href="#orders" data-view="orders">Druckaufträge</a>
+      <a class="nav-item" href="#spools" data-view="spools">Spulen</a>
+      <a class="nav-item" href="#settings" data-view="settings">Betrieb &amp; Hilfe</a>
+    </nav>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. Ausschließlich lesend.</p><div class="sidebar-version">KOBRA MONITOR / 0.19.0 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg>Nur lesen</span></header>
@@ -109,11 +116,27 @@
       </div>
     </section>
     <section class="bottom-grid"><article class="card drying-card"><div class="section-head"><h2>ACE-Klima</h2><span id="drying-status" class="subtle-pill">—</span></div><div class="climate-metrics"><div><span>Temperatur</span><strong id="ace-temp">—</strong></div><div><span>Luftfeuchte</span><strong id="ace-humidity">—</strong></div><div><span>Trocknung übrig</span><strong id="drying-remaining">—</strong></div></div></article><article class="card connection-card"><div class="section-head"><h2>Verbindung</h2><span class="tiny-lock">LOKAL · NUR LESEN</span></div><dl><div><dt>Zuletzt empfangen</dt><dd id="last-update">Noch keine Daten</dd></div><div><dt>Firmware</dt><dd id="firmware">—</dd></div><div><dt>Automatische Aktualisierung</dt><dd>Alle 2 Sekunden</dd></div></dl></article></section>
-    <section class="card history-card" aria-labelledby="history-title"><div class="section-head"><div><div class="eyebrow muted">LOKAL AUFGEZEICHNET</div><h2 id="history-title">Druckverlauf</h2></div><span class="subtle-pill">Aufzeichnung aktiv</span></div><div class="history-totals" aria-label="Aufträge des ausgewählten Druckers"><div><strong id="archive-total">—</strong><span>Erfasst</span></div><div><strong id="archive-completed">—</strong><span>Abgeschlossen</span></div><div><strong id="archive-active">—</strong><span>Aktiv</span></div><div><strong id="archive-cancelled">—</strong><span>Abgebrochen</span></div></div>
-      <div class="history-filters"><label class="history-search">Dateiname suchen<input id="history-search" type="search" maxlength="200" placeholder="z. B. Halterung oder PETG" autocomplete="off"></label><label>Status<select id="history-filter"><option value="all">Alle Aufträge</option><option value="active">Aktiv / pausiert</option><option value="completed">Abgeschlossen</option><option value="cancelled">Abgebrochen</option><option value="unknown_end">Ende nicht beobachtet</option></select></label></div>
+    <section id="orders" class="card history-card" aria-labelledby="history-title"><div class="section-head"><div><div class="eyebrow muted">LOKAL AUFGEZEICHNET</div><h2 id="history-title">Druckaufträge &amp; Berichte</h2></div><span class="subtle-pill">Aufzeichnung aktiv</span></div><div class="history-totals" aria-label="Aufträge des ausgewählten Druckers"><div><strong id="archive-total">—</strong><span>Erfasst</span></div><div><strong id="archive-completed">—</strong><span>Abgeschlossen</span></div><div><strong id="archive-active">—</strong><span>Aktiv</span></div><div><strong id="archive-cancelled">—</strong><span>Abgebrochen</span></div></div>
+      <div class="history-filters"><label class="history-search">Auftrag oder Datei suchen<input id="history-search" type="search" maxlength="200" placeholder="Kundenauftrag, Teil oder Dateiname" autocomplete="off"></label><label>Status<select id="history-filter"><option value="all">Alle Aufträge</option><option value="active">Aktiv / pausiert</option><option value="completed">Abgeschlossen</option><option value="cancelled">Abgebrochen</option><option value="unknown_end">Ende nicht beobachtet</option></select></label></div>
       <p id="history-message" class="history-message" role="status">Historie wird geladen…</p>
+      <p class="history-message">Abgeschlossene Drucke erhalten automatisch eine feste Berichtsversion. Kundenangaben und manuelle Qualitätsabnahme kannst du je Auftrag ergänzen. PDF, JSON und Markdown bleiben je Version erhalten.</p>
+      <div class="notify-actions"><button id="reports-backfill" class="timeline-button" type="button">Alle bisherigen Abschlüsse archivieren</button><button id="reports-bundle" class="timeline-button" type="button">Ausgewählte Berichte als ZIP</button></div>
+      <p id="reports-message" role="status" aria-live="polite"></p>
       <div id="history-content" class="history-content"><p class="empty-state">Neue Drucke werden automatisch erkannt.</p></div>
       <nav class="history-pages" aria-label="Seiten der Druckhistorie"><button id="history-prev" class="timeline-button" type="button" disabled>← Neuere</button><span id="history-page">Seite 1 von 1</span><button id="history-next" class="timeline-button" type="button" disabled>Ältere →</button></nav>
+    </section>
+    <section id="order-detail" class="card notification-card" aria-labelledby="order-title" hidden>
+      <div class="section-head"><h2 id="order-title">Auftrag bearbeiten</h2><button id="order-close" class="timeline-button" type="button">Schließen</button></div>
+      <p id="order-file" class="timeline-file"></p>
+      <form id="order-form"><div class="order-fields">
+        <label>Kundenauftragsnummer<input id="order-customer_order" maxlength="100" autocomplete="off"></label>
+        <label>Position<input id="order-position" maxlength="80" autocomplete="off"></label>
+        <label>Teilbezeichnung<input id="order-part" maxlength="200" autocomplete="off"></label>
+        <label>Qualitätsabnahme<select id="order-approval"><option value="pending">Nicht geprüft</option><option value="accepted">Freigegeben</option><option value="rejected">Beanstandet</option></select></label>
+        <label>Prüfername<input id="order-approver" maxlength="100" autocomplete="off"></label>
+        <label class="order-note">Anmerkung<textarea id="order-note" maxlength="2000" rows="3"></textarea></label>
+      </div><p>Druckabschluss und manuelle Qualitätsabnahme sind getrennte Angaben. Keine Verbrauchsbuchung.</p><button id="order-save" class="timeline-button" type="submit">Angaben speichern</button><button id="order-archive" class="timeline-button" type="button">Bericht archivieren</button></form>
+      <p id="order-message" role="status" aria-live="polite"></p><h3>Archivierte Versionen</h3><div id="order-versions"></div>
     </section>
     <section id="timeline-card" class="card history-card timeline-card" aria-labelledby="timeline-title" hidden>
       <div class="section-head"><div><div class="eyebrow muted">DEIN DRUCK IM VERLAUF</div><h2 id="timeline-title">Temperaturverlauf</h2></div><button id="timeline-close" class="timeline-button" type="button" aria-label="Temperaturverlauf schließen">Schließen</button></div>
@@ -133,6 +156,7 @@
       <details><summary>Spulen und Restmengen verstehen</summary><p>Unter „Spulenverwaltung → Spoolman öffnen“ Spulen anlegen und ihre Gewichte pflegen. Danach im Monitor „Spulen aktualisieren“ wählen und den Lesezeitpunkt prüfen.</p><p>Eine normale Herstellerkennung kann bei mehreren Spulen gleich sein. Solche Spulen fest dem Slot zuordnen und nach einem Wechsel selbst bestätigen. Nur eine nachweislich individuelle Kennung, etwa aus einem selbst beschriebenen ReSpool-Tag, mit der passenden Spule verknüpfen. Diese Spule folgt dann ihrer Kennung; eine zusätzliche feste Slotbindung ist nicht nötig.</p><p>ACE-Prozente stammen vom Drucker, Grammwerte aus dem Spoolman-Buchbestand. Der Monitor bucht keinen Verbrauch. Originaltags müssen für eine feste Slotzuordnung nicht verändert werden.</p></details>
       <details><summary>Benachrichtigungen am Handy einrichten</summary><p>Den Monitor über HTTPS öffnen. Auf jedem gewünschten Gerät unter „Benachrichtigungen → Einrichten“ selbst aktivieren, die Erlaubnis bestätigen und eine Testmeldung senden.</p><p>Auf iPhone/iPad zuerst in Safari „Teilen → Zum Home-Bildschirm“ wählen und den Monitor über dieses Symbol öffnen. Auf Android einen unterstützten Browser verwenden. Bei einer ausgegrauten Schaltfläche den Hinweis im Einrichtungsbereich lesen.</p></details>
       <details><summary>Fehlende Werte oder Verbindungsprobleme</summary><p>Unter „Betriebsstatus → Öffnen“ und an den Lesezeitpunkten prüfen, welche Daten fehlen. Ist nur der Zugriff von unterwegs betroffen, VPN/Tailscale und die private HTTPS-Adresse prüfen. Ist die Oberfläche erreichbar, der Drucker aber offline, LAN-Modus, Druckeradresse und den Netzwerkweg vom Monitor zum Drucker prüfen.</p><p>„Status veraltet“ und „Letzter bekannter Wert“ sind keine aktuellen Messungen. Ein Verbindungsverlust bestätigt kein Druckende. Vorbereitung und Bettnivellierung gehören zum selben Auftrag; frühe Restzeiten können noch fehlen. „Beginn beobachtet“ und ein später erkannter laufender Druck haben unterschiedliche Aufzeichnungsabdeckung.</p></details>
+      <details><summary>Kundenaufträge und Berichte ablegen</summary><p>Unter „Druckaufträge → Auftrag &amp; Berichte“ Kundenauftragsnummer, Position und Teilbezeichnung ergänzen. Nach Druckende kannst du die Qualität manuell abnehmen und den Prüfernamen speichern. Änderungen erzeugen eine neue feste Berichtsversion.</p><p>PDF, JSON oder Markdown bei der gewünschten Version laden. Für mehrere Aufträge die Auswahlfelder markieren und „Ausgewählte Berichte als ZIP“ wählen. Bestehende Abschlüsse können nachträglich archiviert werden; ihre damalige Spoolman-Zuordnung wird nicht erfunden. Datenbank und Archivdateien werden mit dem Monitor gesichert. Es erfolgt keine automatische Verbrauchsbuchung.</p></details>
       <details><summary>Betrieb, Fernzugriff und Sicherung</summary><p>Aufzeichnung und Kameraaufbereitung laufen auf dem Rechner oder NAS mit dem Monitor. Dieses Gerät muss eingeschaltet bleiben. Das Schließen des Browsers beendet die Aufzeichnung nicht. Von unterwegs zuerst Tailscale oder dein VPN verbinden und dann die private Monitor-Adresse öffnen.</p><p>Monitor und Spoolman getrennt sichern. Vor einem Update die Sicherung prüfen und die vorhandenen Datenvolumes erhalten. Eine zusätzliche Kopie außerhalb des NAS schützt bei dessen Ausfall. Nach einem Neustart mit dem vorhandenen Konto anmelden; kein neues Konto anlegen.</p><p>Der Lesebetrieb enthält keine Druckersteuerung und keine automatische Verbrauchsbuchung. Drucke startest und bedienst du weiterhin selbst.</p></details>
       <p><a href="#printer-switcher">Zur Druckerübersicht ↑</a></p>
     </section>

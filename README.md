@@ -186,3 +186,7 @@ Unter **Betriebsstatus → Öffnen** prüfst du Verbindungsfrische, Kameraaufber
 Jede Druckerkarte zeigt Druckstatus, Fortschritt, geschätzte Restzeit sowie Düse und Druckbett. Eine Karte auswählen öffnet die vertrauten Details darunter. Karten bleiben per Ziehen oder Tastatur sortierbar. Fortschritt und Restzeit erscheinen nur bei aktuellen Druck-/Pausendaten; während der Vorbereitung werden möglicherweise zwischengespeicherte Werte ausgeblendet. Veraltete Druckdaten und Temperaturen werden getrennt behandelt. Bei Verbindungsverlust werden die Livewerte in der Karte ausgeblendet.
 
 Der größere Projektplan steht in [ROADMAP.md](ROADMAP.md). Einrichtung der optionalen Spulenverwaltung: [Spoolman-Anbindung](docs/SPOOLMAN.md). Noch keine automatische Verbrauchsbuchung oder NFC-Zuordnung.
+
+## Kundenaufträge und Berichte
+
+Navigation mit getrennten Arbeitsbereichen, optionale Kundenauftragsnummern und manuelle Qualitätsabnahme, feste Berichtsversionen sowie PDF-/JSON-/Markdown- und ZIP-Export: [Bedienung und Archivgrenzen](docs/CUSTOMER_REPORTS.md). Keine Druckersteuerung oder automatische Verbrauchsbuchung.

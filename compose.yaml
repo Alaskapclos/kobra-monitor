@@ -1,7 +1,7 @@
 services:
   monitor:
     build: .
-    image: kobra-monitor:0.18.3-alpha.1
+    image: kobra-monitor:0.19.0-alpha.1
     restart: unless-stopped
     init: true
     ports:

@@ -278,9 +278,10 @@ function render(snapshot) {
 }
 
 function renderHistory(jobs,ip) {
+  window.kobraOrders?.setScope(ip);
   const container=$('history-content');if(!container)return;
   const selected=jobs.filter(job=>job.ip===ip);
-  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at})=>({id,filename,state,progress,observed_start,first_seen,ended_at}))]);
+  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version})=>({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version}))]);
   if(signature===historySignature)return;
   historySignature=signature;
   container.replaceChildren();
@@ -305,13 +306,14 @@ function renderHistory(jobs,ip) {
     if(!job.ended_at&&number(job.progress))state.textContent+=` · ${Math.round(job.progress)} %`;
     const actions=document.createElement('div');actions.className='history-actions';
     const report=document.createElement('a');report.className='report-link';
-    report.textContent='Bericht laden';report.href='/api/report?job='+encodeURIComponent(job.id);
+    report.textContent='Aufzeichnung als Text';report.href='/api/report?job='+encodeURIComponent(job.id);
     report.setAttribute('download','');
-    report.setAttribute('aria-label','Bericht laden: '+fileName(job.filename));
+    report.setAttribute('aria-label','Aufzeichnung als Text: '+fileName(job.filename));
     const view=document.createElement('button');view.type='button';view.className='timeline-button';
     view.textContent='Verlauf ansehen';view.dataset.job=job.id;
     view.setAttribute('aria-controls','timeline-card');view.setAttribute('aria-expanded',String(timelineJob===job.id));
     view.addEventListener('click',()=>openTimeline(job));
+    window.kobraOrders?.decorate(job,file,actions);
     actions.append(state,view,report);
     row.append(file,dates,actions);container.append(row);
   }
@@ -327,6 +329,7 @@ async function refresh() {
     const result=await response.json();
     if (result.read_only!==true) throw new Error('Read-only-Modus nicht bestätigt');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
+    if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {
     requestFailed=true;
     if (lastResponse) render(lastResponse);
@@ -510,3 +513,5 @@ $('history-filter').addEventListener('change',filterArchive);
 $('history-prev').addEventListener('click',()=>{archivePage=Math.max(0,archivePage-1);refreshArchive();});
 $('history-next').addEventListener('click',()=>{archivePage++;refreshArchive();});
 setInterval(()=>{if(!requestFailed && !document.hidden)refreshArchive();},10000);
+
+window.addEventListener('kobra-report-changed',()=>{historySignature=null;refreshArchive();});

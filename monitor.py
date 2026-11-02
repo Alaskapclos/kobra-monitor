@@ -247,13 +247,25 @@ class Fleet:
         self.cameras = CameraViews()
         self.notifications = Notifications(self.history,self.data_dir,self.notification_names)
         self.spools = Spools(self.data_dir)
+        self.history.report_materials=self.report_materials
+
+    def report_materials(self,ip):
+        state=self.spools.state()
+        printers=[self.monitors[v].telemetry.snapshot() for v in self.ips if v in self.monitors]
+        detections=[r for r in self.spools.detections(printers) if r['ip']==ip]
+        ids={r['spool_id'] for r in detections if r['status']=='recognized'}
+        manual=dict(self.spools.mappings.get(ip,{}))
+        return {'basis':'Zum Archivierungszeitpunkt erfasst; keine Verbrauchsmessung.',
+                'captured_at':time.time(),'inventory_current':state['inventory_current'],
+                'inventory_checked_at':state['checked_at'],'detections':detections,'manual_slots':manual,
+                'inventory':[r for r in state['spools'] if r['id'] in ids|set(manual.values())] if state['inventory_current'] else []}
 
     def notification_names(self):
         return {ip:(item.telemetry.snapshot().get('data') or {}).get('printer_name') or 'Drucker '+str(self.ips.index(ip)+1) for ip,item in self.monitors.items()}
 
     def snapshot(self):
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
-        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message()}
+        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':True,'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message(),'report_archive_error':self.history.report_error}
 
     async def reorder(self,ips):
         async with self.config_lock:
@@ -290,12 +302,12 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools')
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools','/api/order-report')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         valid_method=(request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
@@ -356,6 +368,44 @@ def build_app(monitor,access=None):
         if text is None:return web.json_response({'error':'Auftrag nicht gefunden.'},status=404)
         return web.Response(text=text,content_type='text/markdown',charset='utf-8',headers={
             'Content-Disposition':f'attachment; filename="Kobra-Druckbericht-{job_id[:8]}.md"'})
+    async def order_report(request):
+        history=getattr(monitor,'history',None)
+        if history is None:return web.json_response({'error':'Historie nicht verfügbar.'},status=503)
+        try:
+            if request.method=='GET':
+                return web.json_response(await asyncio.to_thread(history.reports.detail,request.query.get('job','')))
+            if request.content_type!='application/json':raise ValueError('JSON erforderlich.')
+            body=await request.json()
+            job=body.get('job','')
+            action=body.get('action')
+            if action=='save':
+                result=await asyncio.to_thread(history.reports.save,job,body.get('annotation',{}))
+            elif action=='archive':
+                await asyncio.to_thread(history.reports.freeze,job,'Manuell nachträglich archiviert')
+                result=await asyncio.to_thread(history.reports.detail,job)
+            elif action=='backfill':
+                result={'archived':await asyncio.to_thread(history.reports.bootstrap),'read_only':True}
+            elif action=='bundle':
+                data=await asyncio.to_thread(history.reports.bundle,body.get('jobs'))
+                return web.Response(body=data,content_type='application/zip',headers={'Content-Disposition':'attachment; filename="Kobra-Auftragsberichte.zip"'})
+            else:raise ValueError('Unbekannte Aktion.')
+            return web.json_response(result)
+        except RuntimeError as exc:return web.json_response({'error':str(exc)},status=409)
+        except (ValueError,TypeError,AttributeError) as exc:return web.json_response({'error':str(exc)},status=400)
+        except Exception:return web.json_response({'error':'Bericht konnte nicht gespeichert werden. Bisherige Archivversionen bleiben erhalten.'},status=503)
+
+    async def report_export(request):
+        try:
+            version=request.query.get('version','')
+            if not version.isascii() or not version.isdigit() or len(version)>8:raise ValueError('Ungültige Version.')
+            history=getattr(monitor,'history',None)
+            if history is None:return web.json_response({'error':'Historie nicht verfügbar.'},status=503)
+            data,mime,name=await asyncio.to_thread(history.reports.export,request.query.get('job',''),int(version),request.query.get('format','pdf'))
+            return web.Response(body=data,content_type=mime,headers={'Content-Disposition':f'attachment; filename="{name}"'})
+        except (ValueError,TypeError):return web.json_response({'error':'Archivversion oder Format nicht gefunden.'},status=404)
+
+    async def orders_js(request):return web.FileResponse(BASE/'static/orders.js')
+    async def navigation_js(request):return web.FileResponse(BASE/'static/navigation.js')
     async def health(request):
         result={'ok':True,'service':'kobra-monitor','read_only':True,'ip':monitor.ip,'ips':getattr(monitor,'ips',[monitor.ip])}
         cameras=getattr(monitor,'cameras',None)
@@ -484,6 +534,11 @@ def build_app(monitor,access=None):
     app.router.add_get('/assets/monitor.js',js)
     app.router.add_get('/api/status',status)
     app.router.add_get('/api/report',report)
+    app.router.add_get('/api/order-report',order_report)
+    app.router.add_post('/api/order-report',order_report)
+    app.router.add_get('/api/report-export',report_export)
+    app.router.add_get('/assets/orders.js',orders_js)
+    app.router.add_get('/assets/navigation.js',navigation_js)
     app.router.add_get('/api/timeline',timeline)
     app.router.add_get('/api/jobs',jobs)
     app.router.add_get('/health',health)

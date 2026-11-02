@@ -32,3 +32,5 @@ account.json
 # Private inventory endpoint and local slot mappings
 spoolman.json
 .spoolman-*
+
+report-archive/
