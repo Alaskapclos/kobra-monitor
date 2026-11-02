@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Check the prospective repository contents, not local runtime directories."""
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -22,6 +23,12 @@ for file in paths:
     if (str(Path.home())+'/').encode() in body:errors.append('Personal absolute path: '+name)
 for name in ('LICENSE','NOTICE.md','SOURCES.json','README.md','SECURITY.md','compose.yaml','.github/workflows/ci.yml'):
     if not (root/name).exists():errors.append('Missing '+name)
+version=(root/'VERSION').read_text().strip()
+for name in ('compose.yaml','deploy/ugos/compose.yaml','deploy/ugos/backups.compose.yaml','.github/workflows/ci.yml'):
+    file=root/name
+    if file.exists():
+        for image_version in re.findall(r'kobra-monitor:([0-9][0-9A-Za-z.\-]+)',file.read_text()):
+            if image_version != version:errors.append('Image version mismatch: '+name)
 if errors:
     print('\n'.join(errors));sys.exit(1)
 print(f'Release content check passed ({len(paths)} files). This does not replace comprehensive secret scanning.')
