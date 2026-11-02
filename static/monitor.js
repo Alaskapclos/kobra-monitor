@@ -54,6 +54,21 @@ function renderSlots(data, seen, stale) {
   }
 }
 
+function renderDeviceStatus(snapshot, extraAge, connection) {
+  const readings=snapshot.device_status||{}, limit=number(snapshot.stale_after_s)?snapshot.stale_after_s:90;
+  const modes={1:'Silent',2:'Standard',3:'Sport'};
+  for(const key of ['fan_speed','aux_fan_speed','box_fan_level','light_on','light_brightness','speed_mode']) {
+    const target=$('device-'+key), stamp=$('device-'+key+'-age');if(!target||!stamp)continue;
+    const reading=readings[key], valid=reading&&number(reading.age_s)&&reading.age_s>=0&&
+      (key==='light_on'?typeof reading.value==='boolean':number(reading.value));
+    if(!valid){target.textContent='Nicht gemeldet';stamp.textContent='';target.classList.toggle('device-reading-stale',false);continue;}
+    const age=reading.age_s+extraAge, old=connection!=='online'||age>limit||reading.current_session===false;
+    const v=reading.value;
+    target.textContent=key==='light_on'?(v?'An':'Aus'):key==='speed_mode'?(modes[v]||`Unbekannter Modus (${v})`):key==='box_fan_level'?`Stufe ${v}`:`${v} %`;
+    stamp.textContent=(old?'Veraltet · ':'')+ageText(age);target.classList.toggle('device-reading-stale',old);
+  }
+}
+
 function renderPrinter(snapshot) {
   const extraAge = Math.max(0,(Date.now()-lastFetchAt)/1000);
   const ages = snapshot.section_age_s || {};
@@ -66,6 +81,7 @@ function renderPrinter(snapshot) {
   let connection = snapshot.connection;
   if (connection==='online' && number(age) && age>limit) connection='stale';
   if (requestFailed || extraAge>10) connection='offline';
+  renderDeviceStatus(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';

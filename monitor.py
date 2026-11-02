@@ -9,6 +9,7 @@ import copy
 import ipaddress
 import json
 import logging
+import math
 import os
 from pathlib import Path
 import signal
@@ -48,9 +49,15 @@ class Telemetry:
         self.connected = False
         self.message = 'Verbindung zum Drucker wird aufgebaut.'
         self.last_project = None
+        self.device_values = {}
+        self.device_seen = {}
+        self.device_session = 0
+        self.device_sessions = {}
 
     def link(self, connected, message=''):
         with self.lock:
+            if self.connected and not connected:
+                self.device_session += 1
             self.connected = connected
             self.message = message
 
@@ -58,6 +65,41 @@ class Telemetry:
         if payload.get('code') not in (None, 200) or not isinstance(payload.get('data'), dict):
             return
         raw = payload['data']
+        # Read received fields directly; bridge defaults are not measurements.
+        candidates = {}
+        if kind in ('info', 'fan'):
+            for source, target in (('fan_speed_pct', 'fan_speed'),
+                    ('aux_fan_speed_pct', 'aux_fan_speed'),
+                    ('box_fan_level', 'box_fan_level'),
+                    ('print_speed_mode', 'speed_mode')):
+                if source in raw:
+                    candidates[target] = raw[source]
+        if kind == 'print' and isinstance(raw.get('settings'), dict):
+            if 'print_speed_mode' in raw['settings']:
+                candidates['speed_mode'] = raw['settings']['print_speed_mode']
+        if kind == 'light':
+            lights = raw.get('lights')
+            chamber = [entry for entry in lights if isinstance(entry, dict)
+                       and type(entry.get('type')) is int and entry['type'] == 2] if isinstance(lights, list) else []
+            light = chamber[0] if len(chamber) == 1 else raw if raw.get('type') == 2 else {}
+            if 'status' in light:
+                candidates['light_on'] = light['status']
+            if 'brightness' in light:
+                candidates['light_brightness'] = light['brightness']
+        with self.lock:
+            for key, val in candidates.items():
+                if key == 'light_on':
+                    if type(val) not in (bool, int) or val not in (0, 1):
+                        continue
+                    val = bool(val)
+                elif (type(val) not in (int, float) or not math.isfinite(val)
+                        or val < 0 or val > (100 if key != 'speed_mode' else 255)):
+                    continue
+                if key in ('speed_mode', 'box_fan_level') and int(val) != val:
+                    continue
+                self.device_values[key] = val
+                self.device_seen[key] = self.clock()
+                self.device_sessions[key] = self.device_session
         groups = []
         if kind == 'info':
             if any(key in raw for key in ('printerName','model','version')):
@@ -119,6 +161,10 @@ class Telemetry:
             return {'read_only':True, 'ip':self.ip, 'connection':status,
                     'message':self.message, 'age_s':latest, 'section_age_s':ages,
                     'stale_after_s':STALE_AFTER, 'data':copy.deepcopy(self.data) if ages else None,
+                    'device_status': {key: {'value': value,
+                        'age_s': max(0, round(now-self.device_seen[key], 1)),
+                        'current_session': self.device_sessions[key] == self.device_session}
+                        for key, value in self.device_values.items()},
                     'last_project':copy.deepcopy(self.last_project), 'server_time':time.time()}
 
 
@@ -151,6 +197,7 @@ class Monitor:
                                   client_id='readonly-monitor-'+uuid.uuid4().hex[:12], read_only=True,
                                   cert_file=str(cert), key_file=str(key))
         self.bridge = KobraXBridge(self.client, args=args)
+        self.client.callbacks.setdefault('fan/report', lambda payload: None)
         for suffix, original in list(self.client.callbacks.items()):
             kind = suffix.split('/')[0]
             def report(payload, callback=original, kind=kind, source_bridge=self.bridge):
@@ -203,6 +250,8 @@ class Monitor:
                     now = time.monotonic()
                     if connected and now >= next_info:
                         await asyncio.wait_for(asyncio.to_thread(self.client.query_info), timeout=12)
+                        await asyncio.wait_for(asyncio.to_thread(self.client.publish,
+                            'light', 'query', None, timeout=5), timeout=7)
                         next_info = time.monotonic()+30
                     if connected and now >= next_ace:
                         await asyncio.wait_for(asyncio.to_thread(self.client.query_multicolor_box), timeout=12)

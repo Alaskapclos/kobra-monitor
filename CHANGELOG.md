@@ -1,5 +1,13 @@
 # 0.20.0-alpha.1
 
+## 0.21.0-alpha.1
+
+- Desktop overview places the compact camera on the left and printer status on the right; mobile stacks all sections.
+- Enlarge a single camera or grid tile in an accessible dialog while reusing its running view; close with the button or Escape.
+- Show received part/auxiliary fan percentages, raw chamber-fan level, chamber light and brightness, and Silent/Standard/Sport modes. Missing, invalid, stale and previous-session fields are distinguished.
+- Poll the read-only light/query report with null data; light/control and other setting commands remain blocked. Chamber-light type 2 is selected from the lights array without bridge defaults.
+
+
 - Originale Spoolman-Oberfläche unter Spulen eingebettet, mit ACE-/Verwaltungs-Unterbereichen.
 - Besitzeranmeldung, begrenzter nativer Unterpfad, Origin-Schutz und Live-Verbindungen; keine Frontend-Kopie oder Spoolman-Codeänderung.
 - Manuelle Bestandsverwaltung getrennt vom weiterhin lesenden Druckerzugriff.
