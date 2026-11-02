@@ -5,7 +5,7 @@ function harness(){
  const elements={};for(const id of ['fan-control-dialog','fan-control-range','fan-control-value','fan-control-ok','fan-control-message','fan-control-title','fan-control-printer','fan-control-unit','fan-control-cancel','control-part_fan','control-aux_fan','control-chamber_fan'])elements[id]={value:'0',textContent:'',hidden:false,disabled:false,open:false,listeners:{},setAttribute(){},focus(){},showModal(){this.open=true;},close(){this.open=false;},addEventListener(k,f){this.listeners[k]=f;}};
  let held=0,count=0,release,failed=false,previous=0;const calls=[],events={};
  const window={addEventListener(k,f){events[k]=f;},dispatchEvent(){}};
- const context={window,document:{getElementById:id=>elements[id]},crypto:webcrypto,AbortSignal,Event,location:{hash:'#overview'},fetch:async(path,options)=>{
+ const context={window,document:{getElementById:id=>elements[id]},crypto:{getRandomValues:webcrypto.getRandomValues.bind(webcrypto)},Uint8Array,AbortSignal,Event,location:{hash:'#overview'},fetch:async(path,options)=>{
  if(path==='/api/session'){if(++count===held)await new Promise(r=>release=r);return {json:async()=>({authenticated:true,account_configured:true,csrf:'fixture'})};}
  const body=JSON.parse(options.body);calls.push(body);if(body.action==='execute'&&failed)throw Error('fixture');
  return {ok:true,json:async()=>body.action==='prepare_fan'?{id:'a'.repeat(32),token:'fixture',state:'prepared',previous}:{state:'confirmed'}};

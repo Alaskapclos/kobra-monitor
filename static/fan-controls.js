@@ -32,6 +32,12 @@ window.kobraFanControls=(()=>{
       close();say('Lüfterzustand geändert oder veraltet. Bitte erneut öffnen.');
     }
   }
+  function requestKey(){
+    const bytes=crypto.getRandomValues(new Uint8Array(16));
+    bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+    const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
   async function api(body,guard=()=>true,onDispatch=()=>{}){
     const response=await fetch('/api/session',{signal:AbortSignal.timeout(5000)});
     const session=await response.json();
@@ -70,7 +76,7 @@ window.kobraFanControls=(()=>{
     render(snapshot,currentAge(),connection);say(labels[chosen.fan]+': Übernahme wird geprüft …');
     let intent=null,dispatched=false;
     try{
-      intent=await api({action:'prepare_fan',ip:chosen.ip,fan:chosen.fan,desired:chosen.desired,request_id:crypto.randomUUID()},valid);
+      intent=await api({action:'prepare_fan',ip:chosen.ip,fan:chosen.fan,desired:chosen.desired,request_id:requestKey()},valid);
       if(!valid()||intent.previous!==chosen.before){
         if(intent.state==='prepared')await api({action:'cancel',id:intent.id});
         intent=null;throw Error('Zustand geändert; bitte erneut auswählen.');

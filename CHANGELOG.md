@@ -1,3 +1,7 @@
+## 0.23.0-alpha.3
+
+- Einmalige Lüftervorgangskennung auch über private HTTP-LAN-Adressen erzeugen; Browserprüfung ohne crypto.randomUUID ergänzt.
+
 ## 0.23.0-alpha.2
 
 - Lesende fan/query-Abfrage ausdrücklich durch die Client-Richtlinie erlaubt; Einstellbefehle bleiben dort gesperrt. Versionsanzeige korrigiert.
