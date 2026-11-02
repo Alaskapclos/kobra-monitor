@@ -1,5 +1,11 @@
 # 0.20.0-alpha.1
 
+## 0.21.2-alpha.1
+
+- Chamber fan gets a matching bar on its reported 0–100 level scale.
+- Chamber light shows an on/off bulb icon, neutral for unknown/stale readings.
+- Remove brightness row from the overview; no control added.
+
 ## 0.21.1-alpha.1
 
 - Mobile Bereichsnavigation oben unter dem Logo, beim Scrollen erreichbar.

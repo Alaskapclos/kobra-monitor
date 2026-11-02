@@ -7,8 +7,8 @@ Auf dem Desktop steht die kompakte Kamera links, rechts folgen Druckstatus, Temp
 ## Gemeldete Werte
 
 - Bauteil- und Zusatzlüfter: gemeldete Prozentwerte mit kleinem ergänzendem Balken, keine Drehzahlmessung. Fehlende oder veraltete Werte erhalten keinen aktuellen Balken.
-- Kammerlüfter: unveränderte gemeldete Stufe; keine ungeprüfte Umrechnung in Prozent oder U/min.
-- Kammerlicht: Lichttyp 2 aus `lights`, An/Aus und separat gemeldete Helligkeit. Andere Lichttypen werden nicht als Kammerlicht angezeigt.
+- Kammerlüfter: gemeldete Stufe auf der Skala 0–100 mit ergänzendem Balken; weiterhin keine gemessene Drehzahl oder Umdeutung als Prozentmessung. Der Bereich wird auch vom Entwickler der [Anycubic-LAN-Integration](https://github.com/chrisfore/anycubic_ha_local#notes--caveats) dokumentiert und passt zu den beobachteten S1-Endwerten 0 und 100.
+- Kammerlicht: Lichttyp 2 aus `lights`, An/Aus mit Glühbirnensymbol. Veraltete/unbekannte Daten erhalten ein neutrales Symbol. Keine bedienbare Schaltfläche und keine Helligkeitszeile; die unabhängig erfasste Helligkeit bleibt intern erhalten. Andere Lichttypen werden nicht als Kammerlicht angezeigt.
 - Speed Mode: 1 Silent, 2 Standard, 3 Sport entsprechend der vorhandenen Bridge-Zuordnung. Weitere Codes bleiben ausdrücklich unbekannt.
 
 Jedes Feld hat einen eigenen Empfangszeitpunkt. Fehlende Felder sind „Nicht gemeldet“; echte 0 und Aus bleiben gültige Werte. Ungültige Werte oder leere Bestätigungen erneuern keinen Empfangszeitpunkt. Ausfall, Alter und ein zwischenzeitlicher Verbindungsabbruch kennzeichnen alte Werte. Statusdaten einer vorherigen Verbindung werden nach Wiederanmeldung erst durch erneuten Empfang aktuell.

@@ -2,7 +2,7 @@
 // Exercise the selected printer, including loss and recovery, with no printer I/O.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
 class Element {
- constructor(){this.children=[];this.style={};this.attributes={};this.className='';this.handlers={};this.hidden=false;this.classList={toggle:(name,on)=>{const values=this.className.split(' ').filter(v=>v&&v!==name);if(on)values.push(name);this.className=values.join(' ');}};}
+ constructor(){this.children=[];this.style={};this.dataset={};this.attributes={};this.className='';this.handlers={};this.hidden=false;this.classList={toggle:(name,on)=>{const values=this.className.split(' ').filter(v=>v&&v!==name);if(on)values.push(name);this.className=values.join(' ');}};}
  addEventListener(k,f){this.handlers[k]=f;}setAttribute(k,v){this.attributes[k]=String(v);}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}querySelector(){return this.children[0];}
 }
 const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);};
