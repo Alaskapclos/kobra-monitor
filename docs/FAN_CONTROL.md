@@ -16,3 +16,7 @@ Upstream dokumentiert den lokalen Weg `fan` / `setSpeed` und je Aufruf genau ein
 - [Getrennte Lüfterfelder](https://github.com/Nino6689/anycubic-cloud-api/blob/main/src/anycubic_cloud_api/api/functions.py)
 
 Keine Übernahme einer generischen beschreibbaren Bridge. Der einzelne Versandweg baut nur diese begrenzten Frames; alle normalen Clientmethoden bleiben durch die bestehende Leseschutzprüfung geschützt. Software- und simulierte Browserprüfungen belegen noch keine physische Wirkung an allen realen Lüftern. Der erste produktive Wert wird vom Besitzer selbst im Dialog gewählt und mit OK bestätigt.
+
+## Praktischer Nachweis
+
+Am 02.11.2026 bestätigt der Besitzer alle vorhandenen Steuerungen auf PC und Handy direkt vor dem Drucker ohne Fehler. Damit ist die Wirkung der Lüftersteuerung im konkret freigegebenen Umfang praktisch abgenommen. Konkrete Stufen, Handyplattform und weitere Druckermodelle sind damit nicht dokumentiert.

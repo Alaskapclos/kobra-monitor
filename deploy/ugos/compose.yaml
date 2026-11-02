@@ -1,11 +1,12 @@
 # Import the matching linux/amd64 image in UGOS Docker before deployment.
 services:
   monitor:
-    image: kobra-monitor:0.23.0-alpha.3
+    image: kobra-monitor:0.24.0-alpha.1
     platform: linux/amd64
     restart: unless-stopped
     init: true
     environment:
+      KOBRA_SPEED_CONTROL_IPS: "${KOBRA_SPEED_CONTROL_IPS:-}"
       KOBRA_FAN_CONTROL_IPS: "${KOBRA_FAN_CONTROL_IPS:-}"
       KOBRA_LIGHT_CONTROL_IPS: "${KOBRA_LIGHT_CONTROL_IPS:-}"
     ports:

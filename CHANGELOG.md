@@ -1,3 +1,10 @@
+## 0.24.0-alpha.1
+
+- Speed Mode direkt am Status: Silent, Standard oder Sport mit OK übernehmen.
+- Getrennte Freigabe pro S1, Bindung an den aktuell gemeldeten Druck und die aktuelle Verbindung, keine Übernahme im Leerlauf.
+- Auftrag-/Dateiwechsel, Pause, Laufzeitneustart, veraltete Daten und Doppelklicks abgesichert; keine automatische Wiederholung.
+- Bestehende Steuerprotokolle bei Schemaerweiterung erhalten.
+
 ## 0.23.0-alpha.3
 
 - Einmalige Lüftervorgangskennung auch über private HTTP-LAN-Adressen erzeugen; Browserprüfung ohne crypto.randomUUID ergänzt.

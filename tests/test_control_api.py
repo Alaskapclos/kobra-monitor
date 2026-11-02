@@ -99,6 +99,22 @@ class ControlApiTests(unittest.IsolatedAsyncioTestCase):
         result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
         self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[('part_fan',40)])
 
+    async def test_speed_http_binds_current_job_context_and_requires_owner(self):
+        data=dict(online=True,connection_id='fake-epoch',light_on=2,light_age_s=0,light_revision=1,context='a'*64)
+        async def send(ip,mode,epoch,context):
+            self.writes.append((mode,context));data.update(light_on=mode,light_revision=2)
+        self.controls.speed_snapshot=lambda ip:dict(data);self.controls.speed_sender=send
+        self.item.speed_supported=lambda:True;self.item.refresh_speed=AsyncMock();self.item.speed_snapshot=lambda:dict(data)
+        body=dict(action='prepare_speed',ip=self.ip,desired=3,context='a'*64,request_id=str(uuid.uuid4()))
+        for headers in ({},{'Cookie':self.headers['Cookie']},{**self.headers,'Origin':'https://evil.invalid'}):
+            self.assertNotEqual((await self.call('/api/controls',body,headers)).status,200)
+        self.item.refresh_speed.assert_not_awaited()
+        for change in ({'desired':True},{'desired':4},{'context':'b'*64},{'ip':'192.0.2.99'},{'taskid':'-1'}):
+            self.assertEqual((await self.call('/api/controls',{**body,**change})).status,400)
+        prepared=json.loads((await self.call('/api/controls',body)).text);self.assertFalse(self.writes)
+        result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
+        self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[(3,'a'*64)])
+
 class ControlFleetTests(unittest.IsolatedAsyncioTestCase):
     async def test_default_read_only_and_configured_printer_allowlist(self):
         for enabled in (None,['192.168.250.10']):
@@ -121,3 +137,12 @@ class ControlFleetTests(unittest.IsolatedAsyncioTestCase):
             item.telemetry.receive('light',{'data':{'type':2,'status':0}},None,'epoch-2')
             self.assertTrue(item.light_snapshot()['online']);self.assertEqual(item.light_snapshot()['light_revision'],2)
             self.assertIs(item.light_snapshot()['light_on'],False)
+
+    async def test_speed_only_allowlist_is_explicit_and_idle_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime=Path(tmp)/'run';runtime.mkdir();data=Path(tmp)/'data';data.mkdir()
+            fleet=Fleet(['192.168.250.10','192.168.250.11'],runtime,data,speed_control_ips=['192.168.250.10'])
+            result=fleet.snapshot();self.assertFalse(result['read_only']);self.assertTrue(result['controls']['speed_mode'])
+            self.assertEqual([p['speed_control']['enabled'] for p in result['printers']],[True,False])
+            self.assertFalse(result['printers'][0]['speed_control']['available'])
+            fleet.controls.close();fleet.history.close()

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Optional S1 chamber-light and three-fan transport.
+"""Optional S1 chamber-light, three-fan and job-bound speed-mode transport.
 
 Generic methods retain the read-only frame policy. Narrow, separately enabled
 entrypoints require the exact current socket identity and never reconnect/retry.
@@ -15,8 +15,8 @@ from read_only_policy import validate_read_only_frame
 
 
 class LightControlClient(KobraXClient):
-    def __init__(self, *args, control_enabled=False, fan_control_enabled=False, **kwargs):
-        if type(control_enabled) is not bool or type(fan_control_enabled) is not bool:
+    def __init__(self, *args, control_enabled=False, fan_control_enabled=False, speed_control_enabled=False, **kwargs):
+        if type(control_enabled) is not bool or type(fan_control_enabled) is not bool or type(speed_control_enabled) is not bool:
             raise ValueError('Explicit boolean control mode required')
         expected_read_only = True
         if 'read_only' in kwargs and kwargs['read_only'] is not expected_read_only:
@@ -25,6 +25,7 @@ class LightControlClient(KobraXClient):
         super().__init__(*args, **kwargs)
         self.control_enabled = control_enabled
         self.fan_control_enabled = fan_control_enabled
+        self.speed_control_enabled = speed_control_enabled
         self._control_identity = uuid.uuid4().hex
 
     def _send(self, frame):
@@ -55,14 +56,25 @@ class LightControlClient(KobraXClient):
         return self._send_control_once('fan', 'setSpeed', {fields[fan]:value},
             expected_connection_id, send_deadline=send_deadline, fan=True)
 
-    def _send_control_once(self, kind, action, data, expected_connection_id, *, send_deadline, fan=False):
+    def send_speed_once(self, mode, task_id, expected_connection_id, *, send_deadline, job_guard):
+        if type(mode) is not int or mode not in (1,2,3):
+            raise ValueError('Invalid speed mode')
+        if not isinstance(task_id,str) or not re.fullmatch(r'-1|[1-9][0-9]{0,19}', task_id):
+            raise ValueError('Observed print task ID required')
+        if not callable(job_guard):
+            raise ValueError('Current print job guard required')
+        return self._send_control_once('print', 'update',
+            {'taskid':task_id, 'settings':{'print_speed_mode':mode}}, expected_connection_id,
+            send_deadline=send_deadline, speed=True, job_guard=job_guard)
+
+    def _send_control_once(self, kind, action, data, expected_connection_id, *, send_deadline, fan=False, speed=False, job_guard=None):
         # Capture this monotonic deadline before scheduling a worker. A queued
         # or lock-blocked worker must not send after its caller has timed out.
         now = time.monotonic()
         if (type(send_deadline) not in (int, float) or not math.isfinite(send_deadline)
                 or not 0 < send_deadline - now <= 5):
             raise TimeoutError('Send authorization expired or invalid')
-        if not (self.fan_control_enabled if fan else self.control_enabled):
+        if not (self.speed_control_enabled if speed else self.fan_control_enabled if fan else self.control_enabled):
             raise PermissionError('Light control is not enabled')
         # Initial scope is the two observed stock S1s, not unknown model families.
         if str(self.mode_id) != '20025':
@@ -83,6 +95,10 @@ class LightControlClient(KobraXClient):
                     or identity != expected_connection_id or not self._running
                     or self._sock is None):
                 raise ConnectionError('Connection changed before sending; not sent')
+            if speed and not job_guard():
+                raise ConnectionError('Print job changed before sending; not sent')
+            if time.monotonic() >= send_deadline:
+                raise TimeoutError('Send authorization expired; not sent')
             # Exactly one call. A partial/failed write has an uncertain outcome.
             # The caller must not reconnect or retry this command.
             self._sock.sendall(frame)

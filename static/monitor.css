@@ -61,3 +61,7 @@
 @media(prefers-reduced-motion:reduce){.light-toggle,.light-toggle span{transition:none}}
 
 .fan-control-reading{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.fan-control-button{border:1px solid var(--line,#d8ddcf);border-radius:8px;background:#f3f5ec;color:#33483d;font:inherit;font-size:.78rem;padding:5px 9px;cursor:pointer}.fan-control-button:disabled{opacity:.5;cursor:default}.fan-control-dialog{box-sizing:border-box;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #d8ddcf;border-radius:18px;padding:24px;color:#263a31;background:#fff}.fan-control-dialog::backdrop{background:#172d2466}.fan-control-dialog label{display:block;margin:18px 0 6px}.fan-control-dialog input[type=number]{box-sizing:border-box;width:100%;padding:10px;border:1px solid #c7cfbf;border-radius:8px;font:inherit}.fan-control-dialog input[type=range]{width:100%;margin:20px 0}.fan-control-dialog p{font-size:.9rem;line-height:1.5}.fan-control-actions{display:flex;justify-content:flex-end;gap:12px}.fan-control-actions button:last-child{background:#314d40;color:#fff}.fan-control-button:focus-visible,.fan-control-dialog button:focus-visible{outline:3px solid #a3b575;outline-offset:3px}
+
+.fan-control-dialog select{box-sizing:border-box;width:100%;padding:10px;border:1px solid #c7cfbf;border-radius:8px;font:inherit;background:#fff;color:inherit}.speed-control-file{overflow-wrap:anywhere;color:#58685e}
+
+.device-reading-age[hidden]{display:none}
