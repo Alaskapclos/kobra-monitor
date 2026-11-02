@@ -7,7 +7,7 @@
     if(section.classList.contains('page-heading'))continue;
     const label=section.getAttribute('aria-labelledby');
     const view=['history-title','order-title','timeline-title'].includes(label)?'orders':
-      ['filament-title','spools-title'].includes(label)||section.classList.contains('bottom-grid')?'spools':
+      ['filament-title','spools-title','spooltabs-title','spoolman-title'].includes(label)||section.classList.contains('bottom-grid')?'spools':
       ['notify-title','check-title','help-title'].includes(label)?'settings':'overview';
     groups[view].push(section);
   }
@@ -17,6 +17,7 @@
     if(current==='overview'&&view!=='overview')window.kobraCamera?.close();
     current=view;
     for(const [name,sections] of Object.entries(groups))for(const section of sections)section.classList.toggle('workspace-hidden',name!==view);
+    window.kobraSpoolWorkspace?.render(view);
     const picker=document.getElementById('printer-switcher');if(picker)picker.classList.toggle('workspace-hidden',view==='settings');
     for(const a of links){if(a.dataset.view===view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
     const titles={overview:['Deine Druckerübersicht.','Live-Status und Kameras im Blick.'],orders:['Druckaufträge & Berichte.','Kundenaufträge zuordnen, Qualität abnehmen und feste Berichte ablegen.'],spools:['Deine Spulen.','ACE-Daten und Spoolman-Bestand mit klarer Zuordnung.'],settings:['Betrieb & Hilfe.','Benachrichtigungen, Verbindungen und Bedienung.']};

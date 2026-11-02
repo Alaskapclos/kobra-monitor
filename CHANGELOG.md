@@ -1,3 +1,9 @@
+# 0.20.0-alpha.1
+
+- Originale Spoolman-Oberfläche unter Spulen eingebettet, mit ACE-/Verwaltungs-Unterbereichen.
+- Besitzeranmeldung, begrenzter nativer Unterpfad, Origin-Schutz und Live-Verbindungen; keine Frontend-Kopie oder Spoolman-Codeänderung.
+- Manuelle Bestandsverwaltung getrennt vom weiterhin lesenden Druckerzugriff.
+
 ## 0.19.0-alpha.1
 
 - Separate workspace navigation with a mobile bottom bar for overview, customer jobs, spools and operation/help.

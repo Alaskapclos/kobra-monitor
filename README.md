@@ -190,3 +190,5 @@ Der größere Projektplan steht in [ROADMAP.md](ROADMAP.md). Einrichtung der opt
 ## Kundenaufträge und Berichte
 
 Navigation mit getrennten Arbeitsbereichen, optionale Kundenauftragsnummern und manuelle Qualitätsabnahme, feste Berichtsversionen sowie PDF-/JSON-/Markdown- und ZIP-Export: [Bedienung und Archivgrenzen](docs/CUSTOMER_REPORTS.md). Keine Druckersteuerung oder automatische Verbrauchsbuchung.
+
+Die originale Spoolman-Oberfläche kann ab 0.20 geschützt unter **Spulen → Spulen verwalten** eingebettet werden. [Einrichtung und Updates](docs/SPOOLMAN_EMBEDDED.md). Manuelle Änderungen schreiben in Spoolman; die Drucker bleiben lesend.
