@@ -1,5 +1,10 @@
 # 0.20.0-alpha.1
 
+## 0.21.1-alpha.1
+
+- Mobile Bereichsnavigation oben unter dem Logo, beim Scrollen erreichbar.
+- Kleine Balken zusätzlich zu Bauteil- und Zusatzlüfter-Prozentwerten; bei fehlenden/veralteten Werten ausgeblendet. Kammerstufe weiterhin unverändert.
+
 ## 0.21.0-alpha.1
 
 - Desktop overview places the compact camera on the left and printer status on the right; mobile stacks all sections.
