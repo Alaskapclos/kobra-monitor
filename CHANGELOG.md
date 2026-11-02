@@ -1,3 +1,9 @@
+## 0.25.0-alpha.1
+
+- Düse und Druckbett erhalten getrennte Solltemperatur-Dialoge mit OK und Abbrechen direkt neben ihren Anzeigen; 0 °C schaltet den gewählten Heizer aus.
+- Separate standardmäßig leere Temperaturfreigabe. Nur S1, aktuelle Verbindung und frischer Leerlauf oder laufender Druck; Status-/Auftragswechsel verwirft die Auswahl. Einmaliger enger SET_TEMPERATURE-Versand, keine Wiederholung.
+- Sollwertbestätigung erst durch neuere Telemetrie; keine Behauptung, die Isttemperatur sei bereits erreicht.
+
 ## 0.24.0-alpha.1
 
 - Speed Mode direkt am Status: Silent, Standard oder Sport mit OK übernehmen.

@@ -34,7 +34,7 @@ from configuration import printer_ips, load_config, save_config
 from spools import Spools
 from spoolman_view import gateway, gateway_path
 from notifications import Notifications
-from controls import LightControls, ControlRefused, FAN_FIELDS
+from controls import LightControls, ControlRefused, FAN_FIELDS, TEMP_LIMITS
 from light_transport import LightControlClient
 from diagnostics import summary as diagnostic_summary
 from camera_view import CameraViews, decoder_available
@@ -66,6 +66,9 @@ class Telemetry:
         self.job_seen = float('-inf')
         self.job_connection = None
         self.job_token = uuid.uuid4().hex
+        self.thermal_seen = float("-inf")
+        self.thermal_connection = None
+        self.thermal_token = None
         self.light_revision = 0
         self.light_connection_id = None
 
@@ -93,6 +96,25 @@ class Telemetry:
         if kind == 'print' and isinstance(raw.get('settings'), dict):
             if 'print_speed_mode' in raw['settings']:
                 candidates['speed_mode'] = raw['settings']['print_speed_mode']
+        if kind in ('info','tempature'):
+            temps = raw.get('temp') if kind == 'info' else raw
+            if isinstance(temps,dict):
+                for source,target in (('target_nozzle_temp','nozzle_target'),('target_hotbed_temp','bed_target')):
+                    val = temps.get(source)
+                    if type(val) in (int,float) and math.isfinite(val) and int(val) == val and 0 <= val <= TEMP_LIMITS[target]:
+                        candidates[target] = int(val)
+        if kind == 'info':
+            with self.lock:
+                project = raw.get('project')
+                idle = raw.get('state') == 'free' and project is None
+                printing = (isinstance(project,dict) and project.get('state') == 'printing'
+                    and project.get('pause',0) == 0 and self.job_task_id is not None
+                    and self.job_filename is not None and project.get('filename') == self.job_filename
+                    and type(project.get('task_id')) in (str,int) and str(project['task_id']) == self.job_task_id)
+                if idle or printing:
+                    self.thermal_seen = self.clock();self.thermal_connection = connection_id
+                    self.thermal_token = self.job_token
+                else:self.thermal_seen = float('-inf')
         if kind == 'light':
             lights = raw.get('lights')
             chamber = [entry for entry in lights if isinstance(entry, dict)
@@ -109,7 +131,7 @@ class Telemetry:
                         continue
                     val = bool(val)
                 elif (type(val) not in (int, float) or not math.isfinite(val)
-                        or val < 0 or val > (100 if key != 'speed_mode' else 255)):
+                        or val < 0 or val > (TEMP_LIMITS[key] if key in TEMP_LIMITS else 100 if key != 'speed_mode' else 255)):
                     continue
                 if key in ('speed_mode', 'box_fan_level') and int(val) != val:
                     continue
@@ -173,8 +195,10 @@ class Telemetry:
                 project = raw.get('project')
                 if not isinstance(project,dict):
                     if raw.get('state') == 'free':
-                        self.job_phase = 'free';self.job_token = uuid.uuid4().hex
-                        self.job_seen = float('-inf');self.job_task_id = None
+                        if self.job_phase != 'free' or self.job_connection != connection_id:
+                            self.job_token = uuid.uuid4().hex
+                        self.job_phase = 'free';self.job_connection = connection_id
+                        self.job_seen = float('-inf');self.job_task_id = None;self.job_filename = None;self.job_elapsed = None
                     return
                 task = project.get('task_id')
                 filename = project.get('filename')
@@ -230,7 +254,7 @@ class Telemetry:
 
 
 class Monitor:
-    def __init__(self, ip, runtime, data_dir, history=None, light_control=False, fan_control=False, speed_control=False):
+    def __init__(self, ip, runtime, data_dir, history=None, light_control=False, fan_control=False, speed_control=False, temperature_control=False):
         self.ip, self.runtime, self.data_dir = ip, Path(runtime), data_dir
         self.telemetry = Telemetry(ip)
         self.client = self.bridge = None
@@ -239,6 +263,7 @@ class Monitor:
         self.light_control_enabled = light_control
         self.fan_control_enabled = fan_control
         self.speed_control_enabled = speed_control
+        self.temperature_control_enabled = temperature_control
 
     async def connect(self):
         hs = await asyncio.to_thread(do_handshake, self.ip)
@@ -259,7 +284,7 @@ class Monitor:
             camera_on_print=0, spoolman_server='', poll_interval=3)
         self.client = LightControlClient(self.ip, hs.username, hs.password, hs.model_id, hs.device_id,
                                   client_id='kobra-monitor-'+uuid.uuid4().hex[:12],
-                                  control_enabled=self.light_control_enabled, fan_control_enabled=self.fan_control_enabled, speed_control_enabled=self.speed_control_enabled,
+                                  control_enabled=self.light_control_enabled, fan_control_enabled=self.fan_control_enabled, speed_control_enabled=self.speed_control_enabled, temperature_control_enabled=self.temperature_control_enabled,
                                   cert_file=str(cert), key_file=str(key))
         self.bridge = KobraXBridge(self.client, args=args)
         self.client.callbacks.setdefault('fan/report', lambda payload: None)
@@ -382,6 +407,43 @@ class Monitor:
             send_deadline=time.monotonic()+4,job_guard=guard)
         await asyncio.to_thread(client.publish,'info','query',None,.5)
 
+    def temperature_supported(self):
+        return bool(self.temperature_control_enabled and self.client and str(self.client.mode_id) == '20025')
+
+    def temperature_state(self, control, epoch):
+        # No client lock here: also used inside the transport socket lock.
+        t = self.telemetry
+        with t.lock:
+            context = hashlib.sha256(json.dumps([t.job_token,t.job_task_id,t.job_filename,t.job_phase,t.thermal_connection]).encode()).hexdigest()
+            return {'online':bool(t.connected and epoch and epoch == t.thermal_connection == t.device_connections.get(control)
+                                  and t.thermal_token == t.job_token),
+                'connection_id':epoch,'light_on':t.device_values.get(control),
+                'light_revision':t.device_revisions.get(control,0),
+                'light_age_s':max(0,t.clock()-min(t.thermal_seen,t.device_seen.get(control,float('-inf')))),
+                'context':context}
+
+    def temperature_snapshot(self, control):
+        if not self.temperature_supported() or control not in TEMP_LIMITS:return None
+        return self.temperature_state(control,self.client.control_connection_id())
+
+    async def refresh_temperature(self):
+        if not self.temperature_supported() or not self.client.control_connection_id():
+            raise ControlRefused('Temperatursteuerung für diesen Drucker nicht freigegeben.')
+        await asyncio.wait_for(asyncio.to_thread(self.client.publish,'info','query',None,1),2)
+
+    async def send_temperature(self, control, desired, epoch, context):
+        data = self.temperature_snapshot(control)
+        if not data or not data['online'] or data['context'] != context or data['connection_id'] != epoch or data['light_age_s'] > 15:
+            raise ControlRefused('Druckerzustand geändert oder veraltet; nicht gesendet.')
+        before = data['light_on']
+        def guard():
+            current = self.temperature_state(control,epoch)
+            return current['online'] and current['context'] == context and current['light_on'] == before and 0 <= current['light_age_s'] <= 15
+        client = self.client
+        await asyncio.to_thread(client.send_temperature_once,control,desired,epoch,
+            send_deadline=time.monotonic()+4,job_guard=guard)
+        await asyncio.to_thread(client.publish,'info','query',None,.5)
+
     async def disconnect(self):
         client, bridge = self.client, self.bridge
         self.client = self.bridge = None
@@ -416,7 +478,7 @@ class Monitor:
                     now = time.monotonic()
                     if connected and now >= next_info:
                         await asyncio.wait_for(asyncio.to_thread(self.client.query_info), timeout=12)
-                        next_info = time.monotonic()+(10 if self.speed_control_enabled else 30)
+                        next_info = time.monotonic()+(10 if self.speed_control_enabled or self.temperature_control_enabled else 30)
                     if connected and now >= next_light:
                         await asyncio.wait_for(asyncio.to_thread(self.client.publish,
                             'light', 'query', None, timeout=5), timeout=7)
@@ -450,7 +512,8 @@ class Monitor:
 
 class Fleet:
     """Independent sessions, certificates, caches and databases per printer."""
-    def __init__(self, ips, runtime, data_dir, *, light_control_ips=None, fan_control_ips=None, speed_control_ips=None):
+    def __init__(self, ips, runtime, data_dir, *, light_control_ips=None, fan_control_ips=None, speed_control_ips=None, temperature_control_ips=None):
+        self.temperature_control_ips = set(printer_ips(temperature_control_ips)) if temperature_control_ips else set()
         self.speed_control_ips = set(printer_ips(speed_control_ips)) if speed_control_ips else set()
         self.fan_control_ips = set(printer_ips(fan_control_ips)) if fan_control_ips else set()
         self.light_control_ips = set(printer_ips(light_control_ips)) if light_control_ips else set()
@@ -465,9 +528,9 @@ class Fleet:
         for ip in self.ips:
             private = Path(runtime)/ip
             private.mkdir(mode=0o700)
-            self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history, ip in self.light_control_ips, ip in self.fan_control_ips, ip in self.speed_control_ips)
+            self.monitors[ip] = Monitor(ip, private, str(Path(data_dir)/ip),self.history, ip in self.light_control_ips, ip in self.fan_control_ips, ip in self.speed_control_ips, ip in self.temperature_control_ips)
         self.controls = LightControls(Path(data_dir)/'history.sqlite3', self.light_snapshot,
-            self.send_light, enabled=True, fan_snapshot=self.fan_snapshot, fan_sender=self.send_fan, speed_snapshot=self.speed_snapshot, speed_sender=self.send_speed) if self.light_control_ips or self.fan_control_ips or self.speed_control_ips else None
+            self.send_light, enabled=True, fan_snapshot=self.fan_snapshot, fan_sender=self.send_fan, speed_snapshot=self.speed_snapshot, speed_sender=self.send_speed, temperature_snapshot=self.temperature_snapshot, temperature_sender=self.send_temperature) if self.light_control_ips or self.fan_control_ips or self.speed_control_ips or self.temperature_control_ips else None
         self.telemetry = self
         self.cameras = CameraViews()
         self.notifications = Notifications(self.history,self.data_dir,self.notification_names)
@@ -476,7 +539,7 @@ class Fleet:
 
     @property
     def read_only(self):
-        return not bool((self.light_control_ips | self.fan_control_ips | self.speed_control_ips) & set(self.ips))
+        return not bool((self.light_control_ips | self.fan_control_ips | self.speed_control_ips | self.temperature_control_ips) & set(self.ips))
 
     def light_snapshot(self, ip):
         item = self.monitors.get(ip)
@@ -508,6 +571,15 @@ class Fleet:
             raise ControlRefused('Dieser Drucker ist nicht für Speed Mode freigegeben.')
         await item.send_speed(desired,epoch,context)
 
+    def temperature_snapshot(self,ip,control):
+        item = self.monitors.get(ip)
+        return item.temperature_snapshot(control) if item else None
+
+    async def send_temperature(self,ip,control,desired,epoch,context):
+        item = self.monitors.get(ip)
+        if not item or not item.temperature_supported():raise ControlRefused('Temperatursteuerung nicht freigegeben.')
+        await item.send_temperature(control,desired,epoch,context)
+
     def report_materials(self,ip):
         state=self.spools.state()
         printers=[self.monitors[v].telemetry.snapshot() for v in self.ips if v in self.monitors]
@@ -526,7 +598,11 @@ class Fleet:
         printers = [self.monitors[ip].telemetry.snapshot() for ip in self.ips if ip in self.monitors]
         for data in printers:
             item = self.monitors[data['ip']]
-            data['read_only'] = not (item.light_control_enabled or item.fan_control_enabled or item.speed_control_enabled)
+            data['read_only'] = not (item.light_control_enabled or item.fan_control_enabled or item.speed_control_enabled or item.temperature_control_enabled)
+            temperature = item.temperature_snapshot('nozzle_target')
+            data['temperature_control'] = {'enabled':item.temperature_control_enabled,'supported':item.temperature_supported(),
+                'available':bool(temperature and temperature['online'] and temperature['light_age_s'] <= 15),
+                'context':temperature['context'] if temperature else None}
             speed = item.speed_snapshot()
             data['speed_control'] = {'enabled':item.speed_control_enabled,'supported':item.speed_supported(),
                 'available':bool(speed and speed['online'] and speed['light_age_s'] <= 15),
@@ -534,7 +610,7 @@ class Fleet:
             data['fan_control'] = {'enabled': item.fan_control_enabled, 'supported': item.fan_supported()}
             data['light_control'] = {'enabled': item.light_control_enabled,
                                      'supported': item.light_supported()}
-        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':self.read_only,'controls':{'chamber_light':bool(self.light_control_ips & set(self.ips)), 'fans':bool(self.fan_control_ips & set(self.ips)), 'speed_mode':bool(self.speed_control_ips & set(self.ips))},'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message(),'report_archive_error':self.history.report_error}
+        return {**(printers[0] if printers else {}), 'configured':bool(printers), 'printers':printers, 'ips':self.ips, 'read_only':self.read_only,'controls':{'chamber_light':bool(self.light_control_ips & set(self.ips)), 'fans':bool(self.fan_control_ips & set(self.ips)), 'speed_mode':bool(self.speed_control_ips & set(self.ips)), 'temperature':bool(self.temperature_control_ips & set(self.ips))},'history':self.history.jobs(), 'camera_available':self.cameras.available(),'camera_message':decoder_available.message(),'report_archive_error':self.history.report_error}
 
     async def reorder(self,ips):
         async with self.config_lock:
@@ -555,7 +631,7 @@ class Fleet:
             for ip in ips:
                 if ip not in self.monitors:
                     private=self.runtime/ip;private.mkdir(mode=0o700,exist_ok=True)
-                    item=Monitor(ip,private,str(self.data_dir/ip),self.history,ip in self.light_control_ips,ip in self.fan_control_ips, ip in self.speed_control_ips)
+                    item=Monitor(ip,private,str(self.data_dir/ip),self.history,ip in self.light_control_ips,ip in self.fan_control_ips, ip in self.speed_control_ips, ip in self.temperature_control_ips)
                     self.monitors[ip]=item
                     await item.start(None)
             self.ips=ips;self.ip=ips[0]
@@ -572,10 +648,10 @@ class Fleet:
 
 
 def build_app(monitor,access=None):
-    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js','/favicon.ico'}
+    allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js','/assets/temperature-controls.js','/favicon.ico'}
     @web.middleware
     async def boundary(request, handler):
-        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js'}
+        public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js','/assets/temperature-controls.js'}
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
         is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools','/api/order-report','/api/controls')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
@@ -633,6 +709,7 @@ def build_app(monitor,access=None):
             fields = {'prepare': {'action','ip','desired','request_id'},
                       'prepare_fan': {'action','ip','fan','desired','request_id'},
                       'prepare_speed': {'action','ip','desired','request_id','context'},
+                      'prepare_temperature': {'action','ip','heater','desired','request_id','context'},
                       'execute': {'action','id','token'}, 'cancel': {'action','id'},
                       'receipt': {'action','id'}}
             if not isinstance(action,str) or action not in fields or set(body) != fields[action]:
@@ -641,11 +718,20 @@ def build_app(monitor,access=None):
             if not access.can_write(request):
                 return web.json_response({'error':'Bitte erneut anmelden.'}, status=401)
             actor = hashlib.sha256(access.session(request)['csrf'].encode()).hexdigest()
-            if action in ('prepare','prepare_fan','prepare_speed'):
+            if action in ('prepare','prepare_fan','prepare_speed','prepare_temperature'):
                 ip = body['ip']
                 item = monitor.monitors.get(ip) if isinstance(ip,str) else None
                 fan = body.get('fan') if action == 'prepare_fan' else None
-                if action == 'prepare_speed':
+                heater = body.get('heater') if action == 'prepare_temperature' else None
+                if action == 'prepare_temperature':
+                    if not isinstance(heater,str) or heater not in TEMP_LIMITS or item is None or not item.temperature_supported():
+                        raise ControlRefused('Dieser Drucker oder Heizer ist nicht freigegeben.')
+                    if not service._valid_value(heater,body['desired']):raise ControlRefused('Ungültige Solltemperatur.')
+                    if not isinstance(body['context'],str) or len(body['context']) != 64:raise ControlRefused('Aktueller Druckerzustand fehlt.')
+                    await item.refresh_temperature()
+                    current = item.temperature_snapshot(heater)
+                    if not current or current['context'] != body['context']:raise ControlRefused('Druckerzustand gewechselt; bitte neu auswählen.')
+                elif action == 'prepare_speed':
                     if item is None or not item.speed_supported():
                         raise ControlRefused('Dieser Drucker ist nicht für Speed Mode freigegeben.')
                     if type(body['desired']) is not int or body['desired'] not in (1,2,3):
@@ -669,7 +755,7 @@ def build_app(monitor,access=None):
                 if not access.can_write(request):
                     return web.json_response({'error':'Bitte erneut anmelden.'}, status=401)
                 result = await service.prepare(actor,ip,body['desired'],body['request_id'],
-                    **({'control':'speed_mode'} if action == 'prepare_speed' else {'control':fan} if fan else {}))
+                    **({'control':heater} if heater else {'control':'speed_mode'} if action == 'prepare_speed' else {'control':fan} if fan else {}))
             else:
                 if not isinstance(body['id'],str) or len(body['id'])!=32:
                     raise ValueError('Ungültige Vorgangskennung.')
@@ -704,6 +790,8 @@ def build_app(monitor,access=None):
 
     async def css(request): return web.FileResponse(BASE/'static/monitor.css')
     async def js(request): return web.FileResponse(BASE/'static/monitor.js')
+    async def temperature_controls_js(request): return web.FileResponse(BASE/'static/temperature-controls.js')
+
     async def speed_controls_js(request): return web.FileResponse(BASE/'static/speed-controls.js')
     async def fan_controls_js(request): return web.FileResponse(BASE/'static/fan-controls.js')
     async def controls_js(request): return web.FileResponse(BASE/'static/controls.js')
@@ -886,6 +974,7 @@ def build_app(monitor,access=None):
     app.router.add_get('/assets/monitor.js',js)
     app.router.add_get('/assets/controls.js',controls_js)
     app.router.add_get('/assets/fan-controls.js',fan_controls_js)
+    app.router.add_get('/assets/temperature-controls.js',temperature_controls_js)
     app.router.add_get('/assets/speed-controls.js',speed_controls_js)
     app.router.add_post('/api/controls',control_action)
     app.router.add_get('/api/status',status)
@@ -934,7 +1023,9 @@ async def serve(args):
             fan_control_ips=printer_ips(os.environ['KOBRA_FAN_CONTROL_IPS'].split(','))
             if os.environ.get('KOBRA_FAN_CONTROL_IPS','').strip() else None,
             speed_control_ips=printer_ips(os.environ['KOBRA_SPEED_CONTROL_IPS'].split(','))
-            if os.environ.get('KOBRA_SPEED_CONTROL_IPS','').strip() else None)
+            if os.environ.get('KOBRA_SPEED_CONTROL_IPS','').strip() else None,
+            temperature_control_ips=printer_ips(os.environ['KOBRA_TEMPERATURE_CONTROL_IPS'].split(','))
+            if os.environ.get('KOBRA_TEMPERATURE_CONTROL_IPS','').strip() else None)
         access=Access(data_dir)
         runner = web.AppRunner(build_app(monitor,access), access_log=None)
         try:

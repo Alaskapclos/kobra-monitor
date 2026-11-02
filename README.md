@@ -10,7 +10,7 @@ Optional lassen sich Bauteil-, Zusatz- und Kammerlüfter über „Einstellen“ 
 
 Optional ist der Speed Mode während eines laufenden Drucks über einen Auswahl- und OK-Dialog einstellbar. [Freigabe und Grenzen](docs/SPEED_CONTROL.md).
 
-**Entwicklungsstand: 0.24.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
+**Entwicklungsstand: 0.25.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
 der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
 Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
 zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem

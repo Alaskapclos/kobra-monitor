@@ -65,3 +65,5 @@
 .fan-control-dialog select{box-sizing:border-box;width:100%;padding:10px;border:1px solid #c7cfbf;border-radius:8px;font:inherit;background:#fff;color:inherit}.speed-control-file{overflow-wrap:anywhere;color:#58685e}
 
 .device-reading-age[hidden]{display:none}
+
+.temperature-target{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.temperature-target>span{white-space:nowrap}.temperatures-card>.light-control-message{margin:10px 24px}

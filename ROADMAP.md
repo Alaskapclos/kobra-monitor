@@ -23,7 +23,7 @@ Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 
 - Kammerlicht: direkter Schalter neben der Glühbirne, physisch bestätigt.
 - Bauteil-, Zusatz- und Kammerlüfter: Einstellen direkt am Wert, Stufendialog mit OK/Abbrechen, physisch auf PC und Handy bestätigt.
 - Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Praktischer Umschalttest steht separat aus.
-- Nächster Ausbau nach Speed-Mode-Abnahme: Solltemperaturen mit eigener OK-Bestätigung; noch nicht umgesetzt.
+- Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; reale Heizwirkung separat zu prüfen.
 - Bewegungen, Upload/Start, Pause/Stop und Filamentsteuerung noch nicht umgesetzt.
 - Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
 

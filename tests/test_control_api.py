@@ -76,6 +76,8 @@ class ControlApiTests(unittest.IsolatedAsyncioTestCase):
     async def test_light_assets_use_existing_security_headers_and_mode_is_accurate(self):
         response=await self.call('/api/session',{},method='GET')
         self.assertIs(json.loads(response.text)['read_only'],False)
+        thermal=await self.call('/assets/temperature-controls.js',{},headers={},method='GET')
+        self.assertEqual(thermal.status,200)
         response=await self.call('/assets/controls.js',{},headers={},method='GET')
         self.assertEqual(response.status,200)
         self.assertEqual(response.headers['Cache-Control'],'no-store')
@@ -114,6 +116,22 @@ class ControlApiTests(unittest.IsolatedAsyncioTestCase):
         prepared=json.loads((await self.call('/api/controls',body)).text);self.assertFalse(self.writes)
         result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
         self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[(3,'a'*64)])
+
+    async def test_temperature_http_requires_owner_limits_heater_and_context(self):
+        data=dict(online=True,connection_id='fake-epoch',light_on=0,light_age_s=0,light_revision=1,context='a'*64)
+        async def send(ip,heater,value,epoch,context):
+            self.writes.append((heater,value));data.update(light_on=value,light_revision=2)
+        self.controls.temperature_snapshot=lambda ip,heater:dict(data);self.controls.temperature_sender=send
+        self.item.temperature_supported=lambda:True;self.item.refresh_temperature=AsyncMock();self.item.temperature_snapshot=lambda heater:dict(data)
+        body=dict(action='prepare_temperature',ip=self.ip,heater='bed_target',desired=60,context='a'*64,request_id=str(uuid.uuid4()))
+        for headers in ({},{'Cookie':self.headers['Cookie']},{**self.headers,'Origin':'https://evil.invalid'}):
+            self.assertNotEqual((await self.call('/api/controls',body,headers)).status,200)
+        self.item.refresh_temperature.assert_not_awaited()
+        for change in ({'desired':True},{'desired':121},{'heater':'chamber'},{'context':'b'*64},{'ip':'192.0.2.99'},{'taskid':'-1'}):
+            self.assertEqual((await self.call('/api/controls',{**body,**change})).status,400)
+        prepared=json.loads((await self.call('/api/controls',body)).text);self.assertFalse(self.writes)
+        result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
+        self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[('bed_target',60)])
 
 class ControlFleetTests(unittest.IsolatedAsyncioTestCase):
     async def test_default_read_only_and_configured_printer_allowlist(self):
