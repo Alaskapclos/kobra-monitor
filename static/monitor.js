@@ -92,6 +92,7 @@ function renderPrinter(snapshot) {
   window.kobraSpeedControls?.render(snapshot,extraAge,connection);
   window.kobraTemperatureControls?.render(snapshot,extraAge,connection);
   window.kobraPrintControls?.render(snapshot,extraAge,connection);
+  window.kobraMotionControls?.render(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';
@@ -236,12 +237,13 @@ function renderPickerOverview(button,view){
 function render(snapshot) {
   const lightEnabled=snapshot.controls?.chamber_light===true;
   const fanEnabled=snapshot.controls?.fans===true;
+  const motionEnabled=snapshot.controls?.motion===true;
   const printEnabled=snapshot.controls?.print_job===true;
   const temperatureEnabled=snapshot.controls?.temperature===true;
   const speedEnabled=snapshot.controls?.speed_mode===true;
-  if($('installation-mode'))$('installation-mode').textContent=printEnabled?'Druckersteuerung freigegeben':temperatureEnabled?'Druckersteuerung freigegeben':speedEnabled?'Druckersteuerung freigegeben':fanEnabled?'Licht-/Lüftersteuerung freigegeben':lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
-  if($('footer-mode'))$('footer-mode').textContent=printEnabled?'Status und Druckersteuerung':temperatureEnabled?'Status und Druckersteuerung':speedEnabled?'Status und Druckersteuerung':fanEnabled?'Status, Licht und Lüfter':lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
-  if($('sidebar-mode'))$('sidebar-mode').textContent=printEnabled?'Druckaktionen, Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':temperatureEnabled?'Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':speedEnabled?'Licht, Lüfter und Speed Mode einstellbar.':fanEnabled?'Licht und Lüfter gezielt einstellbar.':lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
+  if($('installation-mode'))$('installation-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Druckersteuerung freigegeben':temperatureEnabled?'Druckersteuerung freigegeben':speedEnabled?'Druckersteuerung freigegeben':fanEnabled?'Licht-/Lüftersteuerung freigegeben':lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
+  if($('footer-mode'))$('footer-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Status und Druckersteuerung':temperatureEnabled?'Status und Druckersteuerung':speedEnabled?'Status und Druckersteuerung':fanEnabled?'Status, Licht und Lüfter':lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=motionEnabled?'Manuelle Fahrten und weitere Druckersteuerungen einstellbar.':printEnabled?'Druckaktionen, Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':temperatureEnabled?'Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':speedEnabled?'Licht, Lüfter und Speed Mode einstellbar.':fanEnabled?'Licht und Lüfter gezielt einstellbar.':lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
@@ -361,7 +363,7 @@ async function refresh() {
     if(response.status===401){window.kobraAuth?.login();return;}
     if (!response.ok) throw new Error('Keine Statusdaten');
     const result=await response.json();
-    if (result.read_only!==true && !(result.read_only===false&&(result.controls?.chamber_light===true||result.controls?.fans===true||result.controls?.speed_mode===true||result.controls?.temperature===true||result.controls?.print_job===true))) throw new Error('Unbekannter Betriebsmodus');
+    if (result.read_only!==true && !(result.read_only===false&&(result.controls?.chamber_light===true||result.controls?.fans===true||result.controls?.speed_mode===true||result.controls?.temperature===true||result.controls?.print_job===true||result.controls?.motion===true))) throw new Error('Unbekannter Betriebsmodus');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
     if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {

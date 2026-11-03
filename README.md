@@ -4,7 +4,7 @@ Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Entwicklungsstand: 0.26.1-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
+**Entwicklungsstand: 0.27.0-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
 
 ## Enthaltene Funktionen
 
@@ -24,6 +24,7 @@ Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 | Speed Mode | Silent, Standard oder Sport und OK | Nur während eines aktuellen laufenden Drucks |
 | Düse und Druckbett | Getrennter Sollwertdialog und OK; 0 °C schaltet den Heizer aus | S1: Düse bis 320 °C, Bett bis 120 °C; Bestätigung des Sollwerts bedeutet nicht, dass die Temperatur erreicht ist |
 | Pause und Fortsetzen | Bestätigung mit Drucker und Datei | Nur im passenden frischen Druckzustand |
+| Manuelle Bewegung | X/Y/Z mit 1/15/50 mm, getrennte Referenzfahrten XY und Z, Warnhinweis und Anwesenheitsbestätigung | Optional, nur im frischen Leerlauf; Versand ist keine Bestätigung der physischen Ausführung |
 | Druckabbruch | Auch bei Vorbereitung/Bettnivellierung, eigener Bestätigungsdialog | Der abgebrochene Druck kann nicht fortgesetzt werden |
 
 Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md).
@@ -34,7 +35,7 @@ Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SP
 
 Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. **Pause, Fortsetzen und Abbruch sind in dieser Version implementiert und mit synthetischen Druckern geprüft; die praktische Abnahme an einem echten S1 steht noch aus.** Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
 
-Nicht enthalten: Datei-Upload und Druckstart, Achsbewegungen, Homing, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
+Nicht enthalten: Datei-Upload und Druckstart, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
 
 ![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
 
@@ -217,3 +218,5 @@ Der größere Projektplan steht in [ROADMAP.md](ROADMAP.md). Einrichtung der opt
 Navigation mit getrennten Arbeitsbereichen, optionale Kundenauftragsnummern und manuelle Qualitätsabnahme, feste Berichtsversionen sowie PDF-/JSON-/Markdown- und ZIP-Export: [Bedienung und Archivgrenzen](docs/CUSTOMER_REPORTS.md). Keine Druckersteuerung oder automatische Verbrauchsbuchung.
 
 Die originale Spoolman-Oberfläche kann ab 0.20 geschützt unter **Spulen → Spulen verwalten** eingebettet werden. [Einrichtung und Updates](docs/SPOOLMAN_EMBEDDED.md). Manuelle Änderungen schreiben in Spoolman; die Drucker bleiben lesend.
+
+Manuelle Bewegung: siehe [Bedienung und Grenzen](docs/MOTION_CONTROL.md). Vor jedem Fahrbefehl direkt am Drucker stehen, freien Fahrweg und Abstand zwischen Düse und Druckbett prüfen. Die Standardinstallation aktiviert keine Achsensteuerung.

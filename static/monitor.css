@@ -70,3 +70,25 @@
 
 .print-controls{display:flex;gap:10px;flex-wrap:wrap;padding:16px 24px;border-top:1px solid var(--line,#e8e9e1)}.print-controls[hidden]{display:none}.print-controls .light-control-message{flex-basis:100%}.print-control-danger{color:#8b352b;border-color:#d4aca6}.print-control-danger:hover{background:#f8e9e6}.print-control-danger:disabled{opacity:.45}
 @media(max-width:650px){.temperatures-card{display:flex;flex-direction:column}.temperature-block.bed{border-left:0;border-top:1px solid #f0f2e9}.temp-reading{flex-wrap:wrap}.temperature-target{max-width:100%}}
+
+/* Clearly distinguish actions from reported values, retaining the workshop palette. */
+:root{--action-border:#63755e;--action-fill:#edf2e2;--action-ink:#243c2d}
+:is(.refresh-button,.timeline-button,.fan-control-button){border:1.5px solid var(--action-border);background:var(--action-fill);color:var(--action-ink);font-weight:650;box-shadow:0 2px 0 #23332e1f;min-height:40px;text-decoration:none}
+:is(.refresh-button,.timeline-button,.fan-control-button):not(:disabled):hover{background:#dce8c4;border-color:#34593d;box-shadow:0 2px 0 #23332e33}
+:is(.refresh-button,.timeline-button,.fan-control-button):not(:disabled):active{background:#cddfae;box-shadow:none;transform:translateY(1px)}
+:is(.refresh-button,.timeline-button,.fan-control-button):disabled{opacity:1;background:#f2f3ef;color:#737b73;border-color:#b7bfb1;border-style:dashed;box-shadow:none;cursor:not-allowed}
+:is(button,a,summary,input,select,textarea):focus-visible{outline:3px solid #316647;outline-offset:3px}
+.print-control-danger:not(:disabled){background:#fff0eb;color:#8a3026;border-color:#ab4a3d}
+.print-control-danger:not(:disabled):hover{background:#f8dad1;border-color:#8a3026}
+.fan-control-actions button:last-child:not(:disabled){background:#2f563e;color:#fff;border-color:#254331}
+.workspace-nav .nav-item{border:1px solid #6d806c;background:#293c31;color:#edf3e7}
+.workspace-nav .nav-item:hover{background:#40583e}
+.workspace-nav .nav-item[aria-current=page]{background:#dae69b;color:#23392b;border-color:#dae69b;font-weight:700;box-shadow:inset 0 -3px 0 #96b261}
+.light-toggle{border-width:2px;border-color:#73826c;box-shadow:0 1px 2px #23332e26}
+.light-toggle[aria-checked="true"]{background:#376147;border-color:#284d35}
+.light-toggle:disabled{opacity:1;border-style:dashed;background:#e2e6de}
+@media(max-width:650px){:is(.refresh-button,.timeline-button,.fan-control-button){min-height:44px}}
+
+.motion-card{margin-top:20px;padding:24px}.motion-card[hidden]{display:none}.motion-card .section-head{margin-bottom:16px}.motion-warning{padding:14px 16px;border:1.5px solid #bd8138;border-left:5px solid #ad7229;border-radius:10px;background:#fff5de;color:#62431d;font-size:14px;line-height:1.65}.motion-warning strong{display:block}.motion-panel{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:22px 0}.motion-panel label{display:grid;gap:10px;font-size:14px;font-weight:600}.motion-panel select{font:inherit;padding:12px;border:1.5px solid var(--action-border);border-radius:8px;background:#fff}.motion-xy{display:grid;grid-template-columns:repeat(3,minmax(64px,82px));grid-template-rows:repeat(3,64px);gap:8px}.motion-y-plus{grid-area:1/2}.motion-x-minus{grid-area:2/1}.motion-xy-home{grid-area:2/2}.motion-x-plus{grid-area:2/3}.motion-y-minus{grid-area:3/2}.motion-xy button,.motion-z button{font-size:14px}.motion-z{display:grid;gap:8px;grid-template-rows:repeat(3,64px)}#motion-availability,#motion-message{font-size:13px;line-height:1.6;margin-top:14px}.motion-presence{display:flex!important;gap:10px;align-items:flex-start;line-height:1.6}.motion-presence input{flex:none;width:20px;height:20px;margin-top:3px}#motion-action{font-size:20px;font-weight:650;margin:16px 0}.motion-card .fan-control-actions{margin-top:20px;flex-wrap:wrap}@media(max-width:650px){.motion-card{padding:18px}.motion-panel{gap:16px}.motion-panel>label{width:100%}.motion-xy{grid-template-columns:repeat(3,minmax(54px,1fr));gap:6px;flex:1}.motion-z{max-width:90px}.motion-xy button,.motion-z button{padding:6px;font-size:13px}}
+
+.timeline-button[aria-pressed="true"]{background:#2f563e;color:#fff;border-color:#254331;box-shadow:inset 0 -3px 0 #142e2070}

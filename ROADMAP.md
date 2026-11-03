@@ -18,13 +18,13 @@ Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie un
 
 Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 mit Manifest, Prüfsummen und isolierter Vollwiederherstellung erfolgreich geprüft; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
 
-## Aktueller Steuerbereich (Stand 0.26.1)
+## Aktueller Steuerbereich (Stand 0.27)
 
 - Kammerlicht: direkter Schalter neben der Glühbirne, physisch bestätigt.
 - Bauteil-, Zusatz- und Kammerlüfter: Einstellen direkt am Wert, Stufendialog mit OK/Abbrechen, physisch auf PC und Handy bestätigt.
 - Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Vom Besitzer praktisch bestätigt.
 - Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; vom Besitzer direkt am Drucker bestätigt.
-- Pause, Fortsetzen und Abbruch implementiert; Abbruch seit 0.26.1 auch während Vorbereitung und Bettnivellierung; physische Abnahme noch offen.
+- Manuelle Achsen und Referenzfahrten in 0.27 vorbereitet, physische Abnahme offen. Pause, Fortsetzen und Abbruch implementiert; Abbruch seit 0.26.1 auch während Vorbereitung und Bettnivellierung; physische Abnahme noch offen.
 - Bewegungen, Upload/Start und Filamentsteuerung noch nicht umgesetzt.
 - Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
 

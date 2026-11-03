@@ -1,3 +1,9 @@
+## 0.27.0-alpha.1
+
+- Optionale manuelle X/Y/Z-Schritte und getrennte Referenzfahrten XY/Z in der Übersicht. Nur aktueller Leerlauf, separate Druckerfreigabe, Dialog und bestätigte Anwesenheit vor Ort.
+- Begrenzte Einzelbefehle, gemeinsames Schaltprotokoll, Schutz vor alten Bestätigungen und keine automatische Wiederholung. Versand wird nicht als abgeschlossene Bewegung ausgegeben.
+- Schaltflächen mit klareren Umrandungen, kräftigerer Beschriftung, sichtbaren Fokus-/Auswahlzuständen und erkennbaren gesperrten Zuständen; grüne Farbwelt erhalten.
+
 ## 0.26.1-alpha.1
 
 - Druckabbruch ab der eindeutig erfassten Vorbereitung, einschließlich Aufheizen und Bettnivellierung. Pause/Fortsetzen bleiben auf Printing/Pause begrenzt.

@@ -11,6 +11,7 @@ import sqlite3
 import time
 import uuid
 from print_job_control import PRINT_ACTIONS
+from motion_control import MOTION_ACTIONS, valid_motion
 
 
 class ControlRefused(ValueError):
@@ -33,7 +34,7 @@ class LightControls:
     """
     def __init__(self, database, snapshot, sender=None, *, enabled=False,
                  clock=time.time, monotonic=time.monotonic,
-                 token_lifetime=20, confirmation_timeout=8, fan_snapshot=None, fan_sender=None, speed_snapshot=None, speed_sender=None, temperature_snapshot=None, temperature_sender=None, print_snapshot=None, print_sender=None):
+                 token_lifetime=20, confirmation_timeout=8, fan_snapshot=None, fan_sender=None, speed_snapshot=None, speed_sender=None, temperature_snapshot=None, temperature_sender=None, print_snapshot=None, print_sender=None, motion_snapshot=None, motion_sender=None):
         if type(enabled) is not bool or (sender is not None and not callable(sender)):
             raise ValueError('Explicit boolean mode and a callable sender required')
         for value, maximum in ((token_lifetime, 60), (confirmation_timeout, 30)):
@@ -43,6 +44,8 @@ class LightControls:
         self.speed_snapshot, self.speed_sender = speed_snapshot, speed_sender
         self.temperature_snapshot, self.temperature_sender = temperature_snapshot, temperature_sender
         self.print_snapshot,self.print_sender=print_snapshot,print_sender
+        self.motion_snapshot,self.motion_sender=motion_snapshot,motion_sender
+        self.motion_deadlines={}
         self.snapshot = snapshot
         self.sender = sender
         self.enabled = enabled
@@ -82,6 +85,13 @@ class LightControls:
                         "detail='Vorbereitung durch Neustart verworfen.', updated=? "
                         "WHERE state='prepared'", (self.clock(),))
 
+        # Following a restart, conservatively lock recently sent movement intents.
+        for r in self.db.execute("SELECT ip FROM control_attempts WHERE control IN ('axis_x','axis_y','axis_z','home_xy','home_z') AND state IN ('sent','sending','uncertain')"):
+            self.motion_deadlines[r[0]]=self.monotonic()+60
+
+    def motion_wait(self,ip):
+        return max(0,self.motion_deadlines.get(ip,0)-self.monotonic())
+
     def close(self):
         self.db.close()
 
@@ -98,13 +108,14 @@ class LightControls:
         cast = bool if row['control'] == 'chamber_light' else int
         result.update(action=row['control'], desired=cast(row['desired']),
                       previous=cast(row['before_value']))
-        if row['control'] in ('speed_mode',*TEMP_LIMITS,*PRINT_ACTIONS):result['context'] = row['target_context']
+        if row['control'] in ('speed_mode',*TEMP_LIMITS,*PRINT_ACTIONS,*MOTION_ACTIONS):result['context'] = row['target_context']
         if include_token and row['state'] == 'prepared':
             result.update(token=row['token'], expires=row['expires'])
         return result
 
     def _fresh(self, ip, control='chamber_light'):
         data = self.snapshot(ip) if control == 'chamber_light' else (
+            self.motion_snapshot(ip) if control in MOTION_ACTIONS and self.motion_snapshot else
             self.print_snapshot(ip) if control in PRINT_ACTIONS and self.print_snapshot else
             self.temperature_snapshot(ip,control) if control in TEMP_LIMITS and self.temperature_snapshot else
             self.speed_snapshot(ip) if control == 'speed_mode' and self.speed_snapshot else
@@ -120,7 +131,7 @@ class LightControls:
                 or type(age) not in (int, float) or not math.isfinite(age)
                 or not 0 <= age <= 15):
             raise ControlRefused('Frische Zustandsdaten und eine aktuelle Verbindung fehlen.')
-        if (control == 'speed_mode' or control in TEMP_LIMITS or control in PRINT_ACTIONS) and (not isinstance(data.get('context'),str)
+        if (control == 'speed_mode' or control in TEMP_LIMITS or control in PRINT_ACTIONS or control in MOTION_ACTIONS) and (not isinstance(data.get('context'),str)
                 or len(data['context']) != 64):
             raise ControlRefused('Aktueller Druckerzustand fehlt; Steuerung ist gesperrt.')
         return data
@@ -129,6 +140,7 @@ class LightControls:
     def _valid_value(control, value):
         return (type(value) is bool if control == 'chamber_light' else
                 type(value) is int and value in (1,2,3) if control == 'speed_mode' else
+                type(value) is int and (value == 0 or valid_motion(control,value)) if control in MOTION_ACTIONS else
                 type(value) is int and value in (0,1,2,3,4,5) if control in PRINT_ACTIONS else
                 type(value) is int and 0 <= value <= TEMP_LIMITS[control] if control in TEMP_LIMITS else
                 control in FAN_FIELDS and type(value) is int and 0 <= value <= 100)
@@ -157,7 +169,8 @@ class LightControls:
                 or (control in FAN_FIELDS and self.fan_sender is None)
                 or (control == 'speed_mode' and self.speed_sender is None)
                 or (control in TEMP_LIMITS and self.temperature_sender is None)
-                or (control in PRINT_ACTIONS and self.print_sender is None)):
+                or (control in PRINT_ACTIONS and self.print_sender is None)
+                or (control in MOTION_ACTIONS and (self.motion_sender is None or not valid_motion(control,desired)))):
             raise ControlRefused('Ungültiger Steuerauftrag.')
         try:
             if str(uuid.UUID(request_id)) != request_id:
@@ -172,6 +185,7 @@ class LightControls:
                 if old['ip'] != ip or old['control'] != control or old['desired'] != desired:
                     raise ControlRefused('Diese Vorgangskennung wurde bereits anders verwendet.')
                 return self._public(old, include_token=True)
+            if control in MOTION_ACTIONS and self.motion_wait(ip)>0:raise ControlRefused('Bewegung kann noch laufen; bitte vor Ort prüfen und Wartezeit abwarten.')
             data = self._fresh(ip, control)
             if control in PRINT_ACTIONS and (desired != PRINT_ACTIONS[control][1] or data['light_on'] not in PRINT_ACTIONS[control][2]):
                 raise ControlRefused('Diese Aktion passt nicht zum aktuellen Druckzustand.')
@@ -216,10 +230,11 @@ class LightControls:
             if not isinstance(token, str) or not secrets.compare_digest(row['token'], token):
                 raise ControlRefused('Die Bestätigung ist ungültig.')
             try:
+                if row['control'] in MOTION_ACTIONS and self.motion_wait(row['ip'])>0:raise ControlRefused('Vorherige Bewegung kann noch laufen.')
                 data = self._fresh(row['ip'], row['control'])
                 if data['connection_id'] != row['connection_id']:
                     raise ControlRefused('Verbindung gewechselt; bitte neu vorbereiten.')
-                if (row['control'] == 'speed_mode' or row['control'] in TEMP_LIMITS or row['control'] in PRINT_ACTIONS) and data['context'] != row['target_context']:
+                if (row['control'] == 'speed_mode' or row['control'] in TEMP_LIMITS or row['control'] in PRINT_ACTIONS or row['control'] in MOTION_ACTIONS) and data['context'] != row['target_context']:
                     raise ControlRefused('Druckauftrag gewechselt; bitte neu auswählen.')
                 if data['light_on'] != row['before_value']:
                     raise ControlRefused('Der Zustand wurde zwischenzeitlich geändert.')
@@ -234,10 +249,14 @@ class LightControls:
                             "Rückmeldung wird geprüft.' WHERE id=?",
                             (data['light_revision'], self.clock(), operation_id))
             self.deadlines.pop(operation_id, None)
+            if row['control'] in MOTION_ACTIONS:
+                self.motion_deadlines[row['ip']]=self.monotonic()+(60 if row['control'].startswith('home_') else 5)
         try:
             # The sender has no reconnect, replay or retry path.
             send = (self.sender(row['ip'], bool(row['desired']), row['connection_id'])
                     if row['control'] == 'chamber_light' else
+                    self.motion_sender(row['ip'],row['control'],row['desired'],row['connection_id'],row['target_context'])
+                    if row['control'] in MOTION_ACTIONS else
                     self.print_sender(row['ip'],row['control'],row['connection_id'],row['target_context'])
                     if row['control'] in PRINT_ACTIONS else
                     self.temperature_sender(row['ip'],row['control'],row['desired'],row['connection_id'],row['target_context'])
@@ -246,12 +265,14 @@ class LightControls:
                     if row['control'] == 'speed_mode' else
                     self.fan_sender(row['ip'], row['control'], row['desired'], row['connection_id']))
             await asyncio.wait_for(send, timeout=5)
+            if row['control'] in MOTION_ACTIONS:
+                return await self._finish(actor,operation_id,'sent','Befehl einmal gesendet. Bewegung und Stillstand direkt am Drucker prüfen; nicht als abgeschlossene Fahrt bestätigt.')
             deadline = asyncio.get_running_loop().time() + self.confirmation_timeout
             while asyncio.get_running_loop().time() < deadline:
                 data = self._fresh(row['ip'], row['control'])
                 if data['connection_id'] != row['connection_id']:
                     raise ControlRefused('Verbindung nach Versand gewechselt.')
-                if (row['control'] == 'speed_mode' or row['control'] in TEMP_LIMITS or row['control'] in PRINT_ACTIONS) and data['context'] != row['target_context']:
+                if (row['control'] == 'speed_mode' or row['control'] in TEMP_LIMITS or row['control'] in PRINT_ACTIONS or row['control'] in MOTION_ACTIONS) and data['context'] != row['target_context']:
                     raise ControlRefused('Druckauftrag nach Versand gewechselt.')
                 if (data['light_revision'] > self._row(operation_id, actor)['sent_revision']
                         and data['light_on'] == row['desired']):
