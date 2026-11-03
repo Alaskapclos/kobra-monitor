@@ -700,6 +700,7 @@ class Fleet:
             data['motion_control']={'enabled':item.motion_control_enabled,'supported':item.motion_supported(),
                 'available':bool(motion and motion['online'] and motion['light_age_s']<=15 and wait<=0),
                 'context':motion['context'] if motion else None,
+                'print_cycle':motion['print_cycle'] if motion else None,
                 'age_s':motion['light_age_s'] if motion and math.isfinite(motion['light_age_s']) else None,
                 'wait_s':math.ceil(wait)}
             printing=item.print_snapshot()
@@ -838,13 +839,15 @@ def build_app(monitor,access=None):
                 operation=body.get('operation') if action=='prepare_print' else None
                 if action=='prepare_motion':
                     operation=body['operation']
-                    if (body['present'] is not True or not isinstance(operation,str) or not valid_motion(operation,body['desired'])
+                    if (type(body['present']) is not bool or not isinstance(operation,str) or not valid_motion(operation,body['desired'])
                             or item is None or not item.motion_supported()):
                         raise ControlRefused('Bewegung nur mit bestätigter Anwesenheit am freigegebenen Drucker.')
                     if not isinstance(body['context'],str) or len(body['context'])!=64:raise ControlRefused('Aktueller Leerlauf fehlt.')
                     await item.refresh_motion()
                     current=item.motion_snapshot()
                     if not current or current['context']!=body['context']:raise ControlRefused('Druckerzustand geändert.')
+                    if body['present'] is not True and (operation.startswith('home_') or not service.motion_confirmed(actor,ip,current.get('print_cycle'))):
+                        raise ControlRefused('Bitte die Anwesenheit vor der ersten Fahrt nach einem Druck bestätigen.')
                 elif action=='prepare_print':
                     if not isinstance(operation,str) or operation not in PRINT_ACTIONS or item is None or not item.print_supported():raise ControlRefused('Druckaktion nicht freigegeben.')
                     if not isinstance(body['context'],str) or len(body['context'])!=64:raise ControlRefused('Aktueller Druckauftrag fehlt.')
@@ -884,12 +887,18 @@ def build_app(monitor,access=None):
                     return web.json_response({'error':'Bitte erneut anmelden.'}, status=401)
                 result = await service.prepare(actor,ip,PRINT_ACTIONS[operation][1] if action=='prepare_print' else body['desired'],body['request_id'],
                     **({'control':operation} if operation else {'control':heater} if heater else {'control':'speed_mode'} if action == 'prepare_speed' else {'control':fan} if fan else {}))
+                if action=='prepare_motion' and body['present'] is True:
+                    service.remember_motion_confirmation(actor,result['id'],current.get('print_cycle'))
             else:
                 if not isinstance(body['id'],str) or len(body['id'])!=32:
                     raise ValueError('Ungültige Vorgangskennung.')
                 if action == 'execute':result = await service.execute(actor,body['id'],body['token'])
                 elif action == 'cancel':result = await service.cancel(actor,body['id'])
                 else:result = await service.receipt(actor,body['id'])
+            if action=='execute' and result.get('action','').startswith('axis_'):
+                latest=monitor.monitors[result['ip']].motion_snapshot()
+                result['motion_confirmed']=bool(latest and service.motion_confirmed(actor,result['ip'],latest.get('print_cycle')))
+                result['print_cycle']=latest.get('print_cycle') if latest else None
             return web.json_response(result)
         except (ValueError, TypeError, AttributeError) as exc:
             return web.json_response({'error': str(exc) if isinstance(exc,ValueError) else 'Ungültiger Steuerauftrag.'},status=400)
@@ -927,7 +936,15 @@ def build_app(monitor,access=None):
     async def speed_controls_js(request): return web.FileResponse(BASE/'static/speed-controls.js')
     async def fan_controls_js(request): return web.FileResponse(BASE/'static/fan-controls.js')
     async def controls_js(request): return web.FileResponse(BASE/'static/controls.js')
-    async def status(request): return web.json_response(monitor.telemetry.snapshot())
+    async def status(request):
+        data=monitor.telemetry.snapshot()
+        service=getattr(monitor,'controls',None)
+        if service and access.session(request):
+            actor=hashlib.sha256(access.session(request)['csrf'].encode()).hexdigest()
+            for printer in data.get('printers',[]):
+                motion=printer.get('motion_control')
+                if motion:motion['confirmed']=service.motion_confirmed(actor,printer['ip'],motion.get('print_cycle'))
+        return web.json_response(data)
     async def report(request):
         job_id=request.query.get('job','')
         if len(job_id)!=32 or any(c not in '0123456789abcdef' for c in job_id):

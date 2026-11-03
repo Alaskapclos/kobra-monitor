@@ -4,7 +4,7 @@ Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Entwicklungsstand: 0.27.0-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
+**Entwicklungsstand: 0.27.1-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
 
 ## Enthaltene Funktionen
 
@@ -24,7 +24,7 @@ Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 | Speed Mode | Silent, Standard oder Sport und OK | Nur während eines aktuellen laufenden Drucks |
 | Düse und Druckbett | Getrennter Sollwertdialog und OK; 0 °C schaltet den Heizer aus | S1: Düse bis 320 °C, Bett bis 120 °C; Bestätigung des Sollwerts bedeutet nicht, dass die Temperatur erreicht ist |
 | Pause und Fortsetzen | Bestätigung mit Drucker und Datei | Nur im passenden frischen Druckzustand |
-| Manuelle Bewegung | X/Y/Z mit 1/15/50 mm, getrennte Referenzfahrten XY und Z, Warnhinweis und Anwesenheitsbestätigung | Optional, nur im frischen Leerlauf; Versand ist keine Bestätigung der physischen Ausführung |
+| Manuelle Bewegung | X/Y/Z mit 1/15/50 mm, getrennte Referenzfahrten XY und Z, Warnhinweis und erste Anwesenheitsbestätigung bis zum nächsten Druck; Homing immer einzeln | Optional, nur im frischen Leerlauf; Versand ist keine Bestätigung der physischen Ausführung |
 | Druckabbruch | Auch bei Vorbereitung/Bettnivellierung, eigener Bestätigungsdialog | Der abgebrochene Druck kann nicht fortgesetzt werden |
 
 Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md).

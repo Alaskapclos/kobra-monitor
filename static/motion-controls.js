@@ -10,12 +10,14 @@ window.kobraMotionControls=(()=>{
  const fresh=(data,elapsed,link)=>data?.motion_control?.enabled===true&&data.motion_control.supported===true&&
   data.motion_control.available===true&&link==='online'&&/^[a-f0-9]{64}$/.test(data.motion_control.context||'')&&
   Number.isFinite(data.motion_control.age_s)&&data.motion_control.age_s>=0&&Number.isFinite(elapsed)&&elapsed>=0&&data.motion_control.age_s+elapsed<=15;
+ function confirmed(data){return !!data?.motion_control?.print_cycle&&data.motion_control.confirmed===true;}
  function close(){generation++;active=null;if(dialog.open)dialog.close();$('motion-present').checked=false;}
  function render(data,elapsed=0,link=data.connection){
   if(selected!==data.ip){close();say('');selected=data.ip;}
   snapshot=data;extra=elapsed;connection=link;renderedAt=Date.now();
   $('motion-controls').hidden=data.motion_control?.enabled!==true;
   for(const b of buttons)b.disabled=busy||!fresh(data,elapsed,link);
+  $('motion-consent-state').textContent=confirmed(data)?'X/Y/Z freigegeben: Bis zum nächsten regulären Druck kommt keine weitere Bestätigungsfrage. Homing wird weiterhin einzeln bestätigt.':'Vor der ersten X/Y/Z-Fahrt nach einem Druck ist eine Bestätigung erforderlich.';
   $('motion-availability').textContent=data.motion_control?.wait_s>0?`Wartezeit: ${data.motion_control.wait_s} s. Stillstand vor Ort prüfen.`:fresh(data,elapsed,link)?'Bereit für einzelne manuelle Fahrten.':'Nur bei aktuellem Leerlauf verfügbar; während Druck, Pause und Vorbereitung gesperrt.';
   if(active&&(!fresh(data,elapsed,link)||data.motion_control.context!==active.context)){close();say('Druckerzustand oder Verbindung geändert. Bitte erneut auswählen.');}
  }
@@ -33,25 +35,31 @@ window.kobraMotionControls=(()=>{
   if(![1,15,50].includes(step))return;
   const desired=action.startsWith('home_')?1:Number(b.dataset.direction)*step;
   close();say('');active={ip:selected,action,desired,context:snapshot.motion_control.context};
+  if(action.startsWith('axis_')&&confirmed(snapshot)){const chosen={...active};active=null;return run(chosen,false);}
+  $('motion-confirmation-note').hidden=action.startsWith('home_');
   $('motion-printer').textContent=snapshot.data?.printer_name||selected;
-  $('motion-action').textContent=action==='home_xy'?'Referenzfahrt X/Y':action==='home_z'?'Referenzfahrt Z':`${action.slice(-1).toUpperCase()} ${desired>0?'+':''}${desired} mm`;
+  $('motion-action').textContent=action==='home_xy'?'Homing Druckkopf (X/Y)':action==='home_z'?'Homing Druckbett (Z)':`${action.slice(-1).toUpperCase()} ${desired>0?'+':''}${desired} mm`;
   $('motion-present').checked=false;$('motion-ok').disabled=true;dialog.showModal();$('motion-cancel').focus();
  });
  $('motion-present').addEventListener('change',()=>{$('motion-ok').disabled=!$('motion-present').checked;});
  $('motion-cancel').addEventListener('click',close);dialog.addEventListener('cancel',close);
- $('motion-ok').addEventListener('click',async()=>{
-  if(!active||busy||!$('motion-present').checked)return;const chosen={...active},mark=++generation;
+ $('motion-ok').addEventListener('click',()=>{
+  if(!active||busy||!$('motion-present').checked)return;return run({...active},true);
+ });
+ async function run(chosen,present){
+  const mark=++generation;
   const valid=()=>mark===generation&&selected===chosen.ip&&fresh(snapshot,age(),connection)&&snapshot.motion_control.context===chosen.context;
   active=null;dialog.close();busy=true;render(snapshot,age(),connection);say('Bewegungsauftrag wird geprüft …');let intent=null,dispatched=false;
   try{
-   intent=await api({action:'prepare_motion',ip:chosen.ip,operation:chosen.action,desired:chosen.desired,present:true,context:chosen.context,request_id:key()},valid);
+   intent=await api({action:'prepare_motion',ip:chosen.ip,operation:chosen.action,desired:chosen.desired,present,context:chosen.context,request_id:key()},valid);
    if(!valid()||intent.context!==chosen.context){if(intent.state==='prepared')await api({action:'cancel',id:intent.id});intent=null;throw Error('Druckerzustand geändert; bitte erneut auswählen.');}
    if(intent.state!=='prepared'){if(mark===generation)say(intent.detail);return;}
    const result=await api({action:'execute',id:intent.id,token:intent.token},valid,()=>{dispatched=true;});intent=null;
+   if(result.motion_confirmed===true&&result.print_cycle===snapshot?.motion_control?.print_cycle)snapshot.motion_control.confirmed=true;
    if(mark===generation)say(result.detail);window.dispatchEvent(new Event('kobra-control-changed'));
   }catch(error){if(intent&&!dispatched)api({action:'cancel',id:intent.id}).catch(()=>{});if(mark===generation)say(error.message+(dispatched?' Ausgang unklar; kein automatischer Wiederholungsversuch.':''));}
   finally{busy=false;if(snapshot)render(snapshot,age(),connection);}
- });
+ }
  window.addEventListener('hashchange',()=>{if(location.hash&&!['#overview','#printer-switcher'].includes(location.hash))close();});window.addEventListener('pagehide',close);
  return {render,close};
 })();

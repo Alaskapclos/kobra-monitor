@@ -94,3 +94,5 @@
 .timeline-button[aria-pressed="true"]{background:#2f563e;color:#fff;border-color:#254331;box-shadow:inset 0 -3px 0 #142e2070}
 
 .fan-control-actions .timeline-button:disabled{background:#f2f3ef;color:#737b73;border-color:#b7bfb1;border-style:dashed;box-shadow:none;cursor:not-allowed}
+
+.motion-homing-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}.motion-axis-label{display:grid;place-items:center;font-size:13px;color:#64735f;font-weight:650}#motion-confirmation-note[hidden]{display:none}

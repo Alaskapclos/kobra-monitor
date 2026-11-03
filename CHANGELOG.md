@@ -1,3 +1,9 @@
+## 0.27.1-alpha.1
+
+- Z-Tasten entsprechen der Tischbewegung: Plus nach oben, Minus nach unten; X und Y unverändert.
+- Eigene klare Homing-Schaltflächen für Druckkopf X/Y und Druckbett Z; Wartezeit nach Homing und Neustart auf30 Sekunden verkürzt.
+- Anwesenheit für X/Y/Z nur vor der ersten Fahrt bestätigen. Weitere Schritte derselben Anmeldung an diesem Drucker bis zum nächsten regulären Druck ohne Dialog; schon dessen Vorbereitung setzt die Freigabe zurück. Hinweis erklärt dies vor der Bestätigung. Homing bleibt einzeln bestätigt.
+
 ## 0.27.0-alpha.1
 
 - Optionale manuelle X/Y/Z-Schritte und getrennte Referenzfahrten XY/Z in der Übersicht. Nur aktueller Leerlauf, separate Druckerfreigabe, Dialog und bestätigte Anwesenheit vor Ort.

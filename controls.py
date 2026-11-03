@@ -46,6 +46,8 @@ class LightControls:
         self.print_snapshot,self.print_sender=print_snapshot,print_sender
         self.motion_snapshot,self.motion_sender=motion_snapshot,motion_sender
         self.motion_deadlines={}
+        self.motion_consents={}
+        self.motion_pending_consents={}
         self.snapshot = snapshot
         self.sender = sender
         self.enabled = enabled
@@ -87,10 +89,18 @@ class LightControls:
 
         # Following a restart, conservatively lock recently sent movement intents.
         for r in self.db.execute("SELECT ip FROM control_attempts WHERE control IN ('axis_x','axis_y','axis_z','home_xy','home_z') AND state IN ('sent','sending','uncertain')"):
-            self.motion_deadlines[r[0]]=self.monotonic()+60
+            self.motion_deadlines[r[0]]=self.monotonic()+30
 
     def motion_wait(self,ip):
         return max(0,self.motion_deadlines.get(ip,0)-self.monotonic())
+
+    def motion_confirmed(self,actor,ip,cycle):
+        return bool(cycle and self.motion_consents.get((actor,ip))==cycle)
+
+    def remember_motion_confirmation(self,actor,operation_id,cycle):
+        row=self._row(operation_id,actor)
+        if row['control'].startswith('axis_') and row['state']=='prepared':
+            self.motion_pending_consents[operation_id]=(actor,row['ip'],cycle)
 
     def close(self):
         self.db.close()
@@ -179,6 +189,7 @@ class LightControls:
             raise ControlRefused('Ungültige Vorgangskennung.') from None
         async with self.lock:
             self._expire()
+            self.motion_pending_consents={k:v for k,v in self.motion_pending_consents.items() if self.db.execute("SELECT 1 FROM control_attempts WHERE id=? AND state='prepared'",(k,)).fetchone()}
             old = self.db.execute('SELECT * FROM control_attempts WHERE actor=? AND request_id=?',
                                   (actor, request_id)).fetchone()
             if old:
@@ -216,6 +227,7 @@ class LightControls:
                                 "updated=?, detail='Ohne Versand verworfen.' WHERE id=?",
                                 (self.clock(), operation_id))
             self.deadlines.pop(operation_id, None)
+            self.motion_pending_consents.pop(operation_id,None)
             return self._public(self._row(operation_id, actor))
 
     async def execute(self, actor, operation_id, token):
@@ -250,7 +262,7 @@ class LightControls:
                             (data['light_revision'], self.clock(), operation_id))
             self.deadlines.pop(operation_id, None)
             if row['control'] in MOTION_ACTIONS:
-                self.motion_deadlines[row['ip']]=self.monotonic()+(60 if row['control'].startswith('home_') else 5)
+                self.motion_deadlines[row['ip']]=self.monotonic()+(30 if row['control'].startswith('home_') else 5)
         try:
             # The sender has no reconnect, replay or retry path.
             send = (self.sender(row['ip'], bool(row['desired']), row['connection_id'])
@@ -266,6 +278,10 @@ class LightControls:
                     self.fan_sender(row['ip'], row['control'], row['desired'], row['connection_id']))
             await asyncio.wait_for(send, timeout=5)
             if row['control'] in MOTION_ACTIONS:
+                consent=self.motion_pending_consents.pop(operation_id,None)
+                current=self.motion_snapshot(row['ip']) if self.motion_snapshot else None
+                if consent and current and current.get('print_cycle')==consent[2]:
+                    self.motion_consents[(consent[0],consent[1])]=consent[2]
                 return await self._finish(actor,operation_id,'sent','Befehl einmal gesendet. Bewegung und Stillstand direkt am Drucker prüfen; nicht als abgeschlossene Fahrt bestätigt.')
             deadline = asyncio.get_running_loop().time() + self.confirmation_timeout
             while asyncio.get_running_loop().time() < deadline:

@@ -28,14 +28,23 @@ class MotionStateTests(unittest.TestCase):
    if action.startswith('home_'):self.assertEqual(motion_payload(action,1),{'axis':axis,'move_type':2,'distance':0})
    else:
     for step in [1,15,50]:
-     for sign in [-1,1]:self.assertEqual(motion_payload(action,sign*step),{'axis':axis,'move_type':int(sign>0),'distance':step})
+     for sign in [-1,1]:self.assertEqual(motion_payload(action,sign*step),{'axis':axis,'move_type':int(sign<0 if action=='axis_z' else sign>0),'distance':step})
   for action,value in [('axis_x',0),('axis_y',51),('axis_z',True),('axis_z',1.0),('home_xy',50),('motors_off',1),('gcode',1)]:
    with self.assertRaises(ValueError):motion_payload(action,value)
+
+class MotionCycleTests(unittest.TestCase):
+ def test_regular_print_preparation_revokes_manual_permission_cycle(self):
+  m=MotionState(lambda:100);idle={'data':{'state':'free','project':None}}
+  m.receive('info',idle,'e');before=m.print_cycle
+  m.receive('axis',{'state':'done','data':{}},'e');m.receive('info',idle,'e');self.assertEqual(before,m.print_cycle)
+  m.receive('info',{'data':{'state':'busy','project':{'state':'auto_leveling','filename':'part.3mf'}}},'e');new=m.print_cycle;self.assertNotEqual(before,new)
+  m.receive('print',{'state':'printing','data':{}},'e');self.assertEqual(new,m.print_cycle)
+  m.receive('info',idle,'e');self.assertEqual(new,m.print_cycle)
 
 class MotionIntentTests(unittest.IsolatedAsyncioTestCase):
  async def asyncSetUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.now=100
-  self.data=dict(online=True,connection_id='e',light_on=0,light_revision=1,light_age_s=0,context='a'*64);self.sent=[]
+  self.data=dict(online=True,connection_id='e',light_on=0,light_revision=1,light_age_s=0,context='a'*64,print_cycle='cycle-a');self.sent=[]
   async def send(*args):self.sent.append(args)
   self.c=LightControls(Path(self.tmp.name)/'db',lambda ip:None,send,enabled=True,motion_snapshot=lambda ip:dict(self.data),motion_sender=send,monotonic=lambda:self.now);self.addCleanup(self.c.close)
  async def prepare(self,action='axis_x',value=1):return await self.c.prepare('owner','192.0.2.1',value,str(uuid.uuid4()),control=action)
@@ -45,7 +54,7 @@ class MotionIntentTests(unittest.IsolatedAsyncioTestCase):
   with self.assertRaises(ControlRefused):await self.prepare()
   self.now+=5;self.assertEqual((await self.prepare())['state'],'prepared')
  async def test_home_has_longer_wait(self):
-  p=await self.prepare('home_z');await self.c.execute('owner',p['id'],p['token']);self.assertEqual(self.c.motion_wait('192.0.2.1'),60)
+  p=await self.prepare('home_z');await self.c.execute('owner',p['id'],p['token']);self.assertEqual(self.c.motion_wait('192.0.2.1'),30)
  async def test_changed_state_context_epoch_and_cancel_never_send(self):
   for update in [dict(online=False),dict(context='b'*64),dict(connection_id='new'),dict(light_age_s=16)]:
    self.data.update(online=True,context='a'*64,connection_id='e',light_age_s=0);p=await self.prepare();self.data.update(update)
@@ -79,7 +88,7 @@ class MotionTransportTests(unittest.TestCase):
 class MotionAPITests(unittest.IsolatedAsyncioTestCase):
  call=api_tests.ControlApiTests.call
  async def asyncSetUp(self):
-  await api_tests.ControlApiTests.asyncSetUp(self);self.item.motion_supported=lambda:True;self.item.refresh_motion=AsyncMock();self.motion=dict(online=True,connection_id='e',light_on=0,light_revision=1,light_age_s=0,context='a'*64)
+  await api_tests.ControlApiTests.asyncSetUp(self);self.item.motion_supported=lambda:True;self.item.refresh_motion=AsyncMock();self.motion=dict(online=True,connection_id='e',light_on=0,light_revision=1,light_age_s=0,context='a'*64,print_cycle='cycle-a')
   self.item.motion_snapshot=lambda:dict(self.motion);self.controls.motion_snapshot=lambda ip:dict(self.motion)
   async def send(*args):self.writes.append(args)
   self.controls.motion_sender=send
@@ -97,3 +106,19 @@ class MotionAPITests(unittest.IsolatedAsyncioTestCase):
  async def test_motion_asset_is_public_but_motion_endpoint_is_protected(self):
   self.assertEqual((await self.call('/assets/motion-controls.js',{},headers={},method='GET')).status,200)
   self.assertEqual((await self.call('/api/controls',self.motion_body(),headers={})).status,401)
+
+ async def test_first_confirmed_axis_grants_only_same_actor_printer_and_print_cycle(self):
+  p=json.loads((await self.call('/api/controls',self.motion_body())).text)
+  r=json.loads((await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']))).text)
+  self.assertTrue(r['motion_confirmed']);self.controls.motion_deadlines.clear()
+  next_body=dict(self.motion_body(),present=False)
+  p=json.loads((await self.call('/api/controls',next_body)).text);self.assertEqual(p['state'],'prepared');await self.call('/api/controls',dict(action='cancel',id=p['id']))
+  self.motion['context']='b'*64;self.motion['print_cycle']='cycle-b'
+  self.assertEqual((await self.call('/api/controls',dict(self.motion_body(),present=False,context='b'*64))).status,400)
+  self.motion.update(context='a'*64,print_cycle='cycle-a')
+  self.assertEqual((await self.call('/api/controls',dict(self.motion_body(),operation='home_xy',present=False))).status,400)
+ async def test_new_login_requires_new_presence_confirmation(self):
+  p=json.loads((await self.call('/api/controls',self.motion_body())).text);await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']));self.controls.motion_deadlines.clear()
+  login=await self.call('/api/session',{'username':'Owner','password':'A synthetic long password!'},headers={})
+  other={'Cookie':'kobra_session='+login.cookies['kobra_session'].value,'X-Kobra-CSRF':json.loads(login.text)['csrf']}
+  self.assertEqual((await self.call('/api/controls',dict(self.motion_body(),present=False),headers=other)).status,400)
