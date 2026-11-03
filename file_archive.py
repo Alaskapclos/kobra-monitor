@@ -125,7 +125,7 @@ class FileArchive:
                 if used + size > self.max_total or shutil.disk_usage(self.root).free < size + RESERVE: raise ValueError('Archiv voll. Original bleibt in der lokalen Warteschlange.')
                 target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                 os.chmod(temporary, 0o600)
-                with temporary.open('rb') as stream: os.fsync(stream.fileno())
+                with temporary.open('r+b') as stream: os.fsync(stream.fileno())
                 os.replace(temporary, target)
                 fd = os.open(target.parent, os.O_RDONLY) if os.name != 'nt' else None
                 try: os.fsync(fd) if fd is not None else None

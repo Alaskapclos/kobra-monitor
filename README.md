@@ -38,7 +38,7 @@ Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SP
 
 Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. Druckabbruch einschließlich Vorbereitung sowie manuelle Achsen, korrigierte Z-Tischrichtung und Homing wurden vom Besitzer an diesem S1 praktisch bestätigt. Pause und Fortsetzen sind implementiert und synthetisch geprüft; ihre gesonderte physische Abnahme steht noch aus. Der Reset der manuellen Anwesenheitsfreigabe bei einem neuen Druck wurde synthetisch geprüft und ist als eigener realer Ablauf noch nicht bestätigt. Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
 
-Nicht enthalten: Datei-Upload und Druckstart, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
+Nicht enthalten: Dateiübertragung zum Drucker und Druckstart, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
 
 ![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
 

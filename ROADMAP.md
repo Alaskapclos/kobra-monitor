@@ -26,7 +26,7 @@ Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 
 - Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; vom Besitzer direkt am Drucker bestätigt.
 - Manuelle X/Y/Z-Schritte und getrennte Homing-Tasten für Druckkopf X/Y und Druckbett Z in 0.27.1 installiert und vom Besitzer praktisch bestätigt. Z-Plus bewegt den Tisch hoch, Z-Minus herunter. Erste X/Y/Z-Fahrt mit Anwesenheitsbestätigung, weitere Fahrten bis zum nächsten regulären Druck ohne Dialog; Homing immer einzeln bestätigt. Ein neuer Druck einschließlich Vorbereitung widerruft die Freigabe serverseitig. Homing-Wartezeit30s, Einzelschritt5s. Der Freigabe-Reset nach einem neuen realen Druck bleibt separat zu prüfen.
 - Pause, Fortsetzen und Abbruch implementiert. Abbruch auch während Vorbereitung/Bettnivellierung vom Besitzer bestätigt; Pause/Fortsetzen noch separat physisch abzunehmen.
-- Dateiübertragung/Druckstart, Filamenttransport und Trocknungssteuerung noch nicht umgesetzt.
+- Dateiübertragung zum Drucker/Druckstart, Filamenttransport und Trocknungssteuerung noch nicht umgesetzt. Das zusätzliche NAS-Originalarchiv ist separat unter 0.28 beschrieben.
 - Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
 
 ## Gesamtplan (ursprüngliche Reihenfolge)

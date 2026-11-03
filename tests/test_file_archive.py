@@ -149,7 +149,7 @@ class FileArchiveHTTPTests(unittest.IsolatedAsyncioTestCase):
             root=Path(t);data=root/'data';data.mkdir();write_account(data,'fixture','A long fixture passphrase 2026!')
             h=History(data/'history.sqlite3');access=Access(data)
             app=build_app(SimpleNamespace(history=h,start=AsyncMock(),stop=AsyncMock()),access)
-            client=TestClient(TestServer(app));await client.start_server()
+            client=TestClient(TestServer(app));await client.start_server();c=None
             try:
                 token=h.files.new_client('isolated');source=root/'source';source.mkdir();c=helper.Collector(source,root/'queue')
                 # Random content exceeds the ordinary 8-KB JSON boundary.
@@ -163,5 +163,6 @@ class FileArchiveHTTPTests(unittest.IsolatedAsyncioTestCase):
                 response=await client.get('/api/archive/original?sha256='+sha,headers={'Cookie':'kobra_session='+cookie})
                 self.assertEqual(response.status,200);self.assertEqual(await response.read(),original)
                 self.assertTrue(response.headers['Content-Disposition'].startswith('attachment;'))
-                c.db.close()
-            finally:await client.close();h.close()
+            finally:
+                if c is not None:c.db.close()
+                await client.close();h.close()
