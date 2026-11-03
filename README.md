@@ -4,18 +4,37 @@ Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-Optional ist das Kammerlicht ausgewählter S1-Drucker direkt auf der Übersicht schaltbar. Ein Klick schaltet das Licht ohne zusätzliche Bestätigung; neue Druckerrückmeldungen bestätigen den tatsächlichen Zustand. [Freigabe und Grenzen](docs/LIGHT_CONTROL.md).
+**Entwicklungsstand: 0.26.0-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
 
-Optional lassen sich Bauteil-, Zusatz- und Kammerlüfter über „Einstellen“ mit Stufenauswahl und OK-Bestätigung steuern. [Freigabe und Grenzen](docs/FAN_CONTROL.md).
+## Enthaltene Funktionen
 
-Optional ist der Speed Mode während eines laufenden Drucks über einen Auswahl- und OK-Dialog einstellbar. [Freigabe und Grenzen](docs/SPEED_CONTROL.md).
+- Mehrere lokale Drucker mit eigener Statuskarte, Fortschritt, Temperaturen, Datenfrische und gespeicherter Reihenfolge.
+- Geschützte Kameraansicht mit Vergrößerung und optionaler Mehrkameraübersicht.
+- Druckhistorie, Temperaturkurven, Druckberichte und Auftragszuordnung mit Export für die eigene Ablage.
+- Spoolman-Anbindung einschließlich eingebetteter nativer Spulenverwaltung und expliziter ACE-Slot-/Kennungszuordnung. Spoolman bleibt die Bestandsdatenbank.
+- Optionale Web-Push-Benachrichtigungen je Gerät für Druckereignisse und Verbindungsprobleme; Einrichtung über HTTPS und mit eigener Browserfreigabe.
+- Lokales Benutzerkonto, private Nutzung über VPN/HTTPS, Betriebsdiagnose und separat betreibbarer Sicherungsdienst.
 
-**Entwicklungsstand: 0.25.0-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
-der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
-Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
-zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
-UGREEN DXP4800GT mit UGOS läuft der amd64-Container mit zwei Druckern;
-Einrichtung und aktive Verlaufseinträge blieben beim Containerneustart erhalten.
+## Optionale Druckersteuerung
+
+| Funktion | Bedienung | Grenzen |
+| --- | --- | --- |
+| Kammerlicht | Direkter Schalter ohne Zusatzdialog | Neue Druckermeldung bestätigt den Zustand |
+| Drei Lüfter | Stufenauswahl und OK | Gemeldete Einstellungen, keine gemessenen Drehzahlen |
+| Speed Mode | Silent, Standard oder Sport und OK | Nur während eines aktuellen laufenden Drucks |
+| Düse und Druckbett | Getrennter Sollwertdialog und OK; 0 °C schaltet den Heizer aus | S1: Düse bis 320 °C, Bett bis 120 °C; Bestätigung des Sollwerts bedeutet nicht, dass die Temperatur erreicht ist |
+| Pause und Fortsetzen | Bestätigung mit Drucker und Datei | Nur im passenden frischen Druckzustand |
+| Druckabbruch | Eigener Abbruchdialog mit eindeutiger Warnung | Der abgebrochene Druck kann nicht fortgesetzt werden |
+
+Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md).
+
+Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SPEED_CONTROL_IPS`, `KOBRA_TEMPERATURE_CONTROL_IPS` und `KOBRA_PRINT_CONTROL_IPS` sind standardmäßig leer. Eine Funktion erhält damit keine automatische Freigabe für alle eingerichteten Drucker. Anmeldung, aktuelle Zustandsdaten, gebundener Zielauftrag und Einzelversand bleiben erforderlich. Bei unklarem Ausgang gibt es keinen automatischen Wiederholungsversuch.
+
+## Unterstützter und geprüfter Umfang
+
+Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. **Pause, Fortsetzen und Abbruch sind in dieser Version implementiert und mit synthetischen Druckern geprüft; die praktische Abnahme an einem echten S1 steht noch aus.** Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
+
+Nicht enthalten: Datei-Upload und Druckstart, Achsbewegungen, Homing, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
 
 ![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
 

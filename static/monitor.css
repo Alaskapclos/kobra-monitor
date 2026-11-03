@@ -67,3 +67,6 @@
 .device-reading-age[hidden]{display:none}
 
 .temperature-target{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.temperature-target>span{white-space:nowrap}.temperatures-card>.light-control-message{margin:10px 24px}
+
+.print-controls{display:flex;gap:10px;flex-wrap:wrap;padding:16px 24px;border-top:1px solid var(--line,#e8e9e1)}.print-controls[hidden]{display:none}.print-controls .light-control-message{flex-basis:100%}.print-control-danger{color:#8b352b;border-color:#d4aca6}.print-control-danger:hover{background:#f8e9e6}.print-control-danger:disabled{opacity:.45}
+@media(max-width:650px){.temperatures-card{display:flex;flex-direction:column}.temperature-block.bed{border-left:0;border-top:1px solid #f0f2e9}.temp-reading{flex-wrap:wrap}.temperature-target{max-width:100%}}

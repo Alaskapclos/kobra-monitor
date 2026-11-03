@@ -1,3 +1,9 @@
+## 0.26.0-alpha.1
+
+- Pause, Fortsetzen und Druckabbruch direkt in der Übersicht mit eigenem Bestätigungsdialog für Drucker und Datei.
+- Getrennte ausdrückliche Freigabe, aktuelle Auftrags-/Verbindungsbindung, enger einmaliger print/pause|resume|stop-Versand und neuere Zustandsbestätigung. Leerlauf oder Verbindungsverlust ist keine Abbruchbestätigung.
+- README auf den tatsächlichen Funktionsumfang der Version gebracht; praktische Nachweise und offene Grenzen getrennt dokumentiert.
+
 ## 0.25.0-alpha.1
 
 - Düse und Druckbett erhalten getrennte Solltemperatur-Dialoge mit OK und Abbrechen direkt neben ihren Anzeigen; 0 °C schaltet den gewählten Heizer aus.

@@ -1,6 +1,6 @@
 # Projektplan und aktueller Stand
 
-Fortgeschrieben am 02.11.2026; ursprünglicher Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit Einschätzen“ und den späteren Nutzerentscheidungen. Dies ist die gemeinsame Arbeitsgrundlage; geplante Punkte sind keine zugesicherten fertigen Funktionen.
+Fortgeschrieben am 03.11.2026; ursprünglicher Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit Einschätzen“ und den späteren Nutzerentscheidungen. Dies ist die gemeinsame Arbeitsgrundlage; geplante Punkte sind keine zugesicherten fertigen Funktionen.
 
 ## Leitlinien
 
@@ -18,13 +18,14 @@ Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie un
 
 Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 mit Manifest, Prüfsummen und isolierter Vollwiederherstellung erfolgreich geprüft; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
 
-## Aktueller Steuerbereich (Stand 0.24)
+## Aktueller Steuerbereich (Stand 0.26)
 
 - Kammerlicht: direkter Schalter neben der Glühbirne, physisch bestätigt.
 - Bauteil-, Zusatz- und Kammerlüfter: Einstellen direkt am Wert, Stufendialog mit OK/Abbrechen, physisch auf PC und Handy bestätigt.
-- Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Praktischer Umschalttest steht separat aus.
-- Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; reale Heizwirkung separat zu prüfen.
-- Bewegungen, Upload/Start, Pause/Stop und Filamentsteuerung noch nicht umgesetzt.
+- Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Vom Besitzer praktisch bestätigt.
+- Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; vom Besitzer direkt am Drucker bestätigt.
+- Pause, Fortsetzen und Abbruch in 0.26 implementiert; physische Abnahme noch offen.
+- Bewegungen, Upload/Start und Filamentsteuerung noch nicht umgesetzt.
 - Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
 
 ## Gesamtplan (ursprüngliche Reihenfolge)
@@ -55,3 +56,7 @@ Lokale ACE-SKU wird übernommen; explizit bestätigte eindeutige Kennungen sind 
 5. Abschluss mit dem Nutzer: verbleibende Einschränkungen gemeinsam bewerten. Erst danach den getrennten Steuerbereich planen und freigeben. Diese historische Vorgabe wurde durch die gesonderte Licht-/Lüfterfreigabe vom 02.11.2026 erweitert; weitere Funktionen bleiben getrennt freizugeben.
 
 Materialbedarf und Kosten bleiben im Gesamtplan. Belastbare Verbrauchserfassung ist hierfür eine gesonderte Datenfrage; ACE-Prozentwerte liefern keinen gemessenen Grammverbrauch.
+
+## Öffentliche Alpha vorbereiten
+
+Besitzer möchte am 03.11.2026 eine öffentliche GitHub-Freigabe nach den nächsten praktischen Steuerprüfungen vorbereiten. README muss exakt zur freizugebenden Version passen und vorhandene Funktionen, Grenzen und offene Nachweise unterscheiden. Vor Veröffentlichung Repository-Inhalt und Bild-/Artefaktdateien auf private Laufzeitdaten prüfen. Noch keine öffentliche Freigabe oder Änderung der Sichtbarkeit autorisiert.

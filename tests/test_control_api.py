@@ -133,6 +133,21 @@ class ControlApiTests(unittest.IsolatedAsyncioTestCase):
         result=await self.call('/api/controls',dict(action='execute',id=prepared['id'],token=prepared['token']))
         self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,[('bed_target',60)])
 
+    async def test_print_http_owner_phase_and_context_cannot_be_overridden(self):
+        data=dict(online=True,connection_id='fake-epoch',light_on=1,light_age_s=0,light_revision=1,context='a'*64)
+        async def send(ip,operation,epoch,context):self.writes.append(operation);data.update(light_on=2,light_revision=2)
+        self.controls.print_snapshot=lambda ip:dict(data);self.controls.print_sender=send
+        self.item.print_supported=lambda:True;self.item.refresh_print=AsyncMock();self.item.print_snapshot=lambda:dict(data)
+        body=dict(action='prepare_print',ip=self.ip,operation='print_pause',context='a'*64,request_id=str(uuid.uuid4()))
+        for headers in ({},{'Cookie':self.headers['Cookie']},{**self.headers,'Origin':'https://evil.invalid'}):
+            self.assertNotEqual((await self.call('/api/controls',body,headers)).status,200)
+        self.item.refresh_print.assert_not_awaited()
+        for change in ({'operation':'print_start'},{'desired':2},{'context':'b'*64},{'ip':'192.0.2.99'},{'taskid':'-1'}):
+            self.assertEqual((await self.call('/api/controls',{**body,**change})).status,400)
+        p=json.loads((await self.call('/api/controls',body)).text);self.assertFalse(self.writes)
+        result=await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']))
+        self.assertEqual(json.loads(result.text)['state'],'confirmed');self.assertEqual(self.writes,['print_pause'])
+
 class ControlFleetTests(unittest.IsolatedAsyncioTestCase):
     async def test_default_read_only_and_configured_printer_allowlist(self):
         for enabled in (None,['192.168.250.10']):

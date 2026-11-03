@@ -15,8 +15,8 @@ from read_only_policy import validate_read_only_frame
 
 
 class LightControlClient(KobraXClient):
-    def __init__(self, *args, control_enabled=False, fan_control_enabled=False, speed_control_enabled=False, temperature_control_enabled=False, **kwargs):
-        if type(temperature_control_enabled) is not bool or type(control_enabled) is not bool or type(fan_control_enabled) is not bool or type(speed_control_enabled) is not bool:
+    def __init__(self, *args, control_enabled=False, fan_control_enabled=False, speed_control_enabled=False, temperature_control_enabled=False, print_control_enabled=False, **kwargs):
+        if type(print_control_enabled) is not bool or type(temperature_control_enabled) is not bool or type(control_enabled) is not bool or type(fan_control_enabled) is not bool or type(speed_control_enabled) is not bool:
             raise ValueError('Explicit boolean control mode required')
         expected_read_only = True
         if 'read_only' in kwargs and kwargs['read_only'] is not expected_read_only:
@@ -27,6 +27,7 @@ class LightControlClient(KobraXClient):
         self.fan_control_enabled = fan_control_enabled
         self.speed_control_enabled = speed_control_enabled
         self.temperature_control_enabled = temperature_control_enabled
+        self.print_control_enabled = print_control_enabled
         self._control_identity = uuid.uuid4().hex
 
     def _send(self, frame):
@@ -68,6 +69,15 @@ class LightControlClient(KobraXClient):
             {'taskid':task_id, 'settings':{'print_speed_mode':mode}}, expected_connection_id,
             send_deadline=send_deadline, speed=True, job_guard=job_guard)
 
+    def send_print_once(self, action, task_id, expected_connection_id, *, send_deadline, job_guard):
+        if not isinstance(action,str) or action not in ('pause','resume','stop'):
+            raise ValueError('Invalid print action')
+        if not isinstance(task_id,str) or not re.fullmatch(r'-1|[1-9][0-9]{0,19}',task_id):
+            raise ValueError('Observed print task required')
+        if not callable(job_guard):raise ValueError('Current print guard required')
+        return self._send_control_once('print',action,{'taskid':task_id},expected_connection_id,
+            send_deadline=send_deadline,printing=True,job_guard=job_guard)
+
     def send_temperature_once(self, heater, value, expected_connection_id, *, send_deadline, job_guard):
         limits = {'nozzle_target':320, 'bed_target':120}
         if not isinstance(heater,str) or heater not in limits or type(value) is not int or not 0 <= value <= limits[heater]:
@@ -81,14 +91,14 @@ class LightControlClient(KobraXClient):
              'target_hotbed_temp':value if heater == 'bed_target' else 0},
             expected_connection_id,send_deadline=send_deadline,temperature=True,job_guard=job_guard)
 
-    def _send_control_once(self, kind, action, data, expected_connection_id, *, send_deadline, fan=False, speed=False, temperature=False, job_guard=None):
+    def _send_control_once(self, kind, action, data, expected_connection_id, *, send_deadline, fan=False, speed=False, temperature=False, printing=False, job_guard=None):
         # Capture this monotonic deadline before scheduling a worker. A queued
         # or lock-blocked worker must not send after its caller has timed out.
         now = time.monotonic()
         if (type(send_deadline) not in (int, float) or not math.isfinite(send_deadline)
                 or not 0 < send_deadline - now <= 5):
             raise TimeoutError('Send authorization expired or invalid')
-        if not (self.temperature_control_enabled if temperature else self.speed_control_enabled if speed else self.fan_control_enabled if fan else self.control_enabled):
+        if not (self.print_control_enabled if printing else self.temperature_control_enabled if temperature else self.speed_control_enabled if speed else self.fan_control_enabled if fan else self.control_enabled):
             raise PermissionError('Light control is not enabled')
         # Initial scope is the two observed stock S1s, not unknown model families.
         if str(self.mode_id) != '20025':
@@ -109,7 +119,7 @@ class LightControlClient(KobraXClient):
                     or identity != expected_connection_id or not self._running
                     or self._sock is None):
                 raise ConnectionError('Connection changed before sending; not sent')
-            if (speed or temperature) and not job_guard():
+            if (speed or temperature or printing) and not job_guard():
                 raise ConnectionError('Print job changed before sending; not sent')
             if time.monotonic() >= send_deadline:
                 raise TimeoutError('Send authorization expired; not sent')

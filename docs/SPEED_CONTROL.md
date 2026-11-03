@@ -19,3 +19,5 @@ Der Dienst fragt bei Speed-Mode-Freigabe Info-Berichte alle zehn Sekunden ab. Di
 - [Aktueller LAN-Druck über project.task_id](https://github.com/Nino6689/anycubic-cloud-api/blob/main/src/anycubic_cloud_api/data_models/printer.py)
 
 Die gebündelte S1-Bridge verwendet ebenfalls print/update und Moduscodes 1/2/3. Der Monitor nutzt dafür einen eigenen begrenzten Versandweg. Eine lesende Gegenprobe an den vorhandenen S1 bestätigt Standard=2 und die lokale task_id=-1 beim laufenden Druck. Reale Moduswechsel wurden durch den Agenten nicht ausgelöst. Physische Wirkung der drei Modi bleibt separat durch den Besitzer zu prüfen.
+
+Besitzerabnahme vom 02.11.2026: Speed Mode beim laufenden Druck direkt getestet, funktioniert. Keine konkrete Modusfolge oder weitere Modellfreigabe daraus ableiten.
