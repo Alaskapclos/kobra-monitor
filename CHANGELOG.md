@@ -4,6 +4,15 @@
 - Eigene klare Homing-Schaltflächen für Druckkopf X/Y und Druckbett Z; Wartezeit nach Homing und Neustart auf30 Sekunden verkürzt.
 - Anwesenheit für X/Y/Z nur vor der ersten Fahrt bestätigen. Weitere Schritte derselben Anmeldung an diesem Drucker bis zum nächsten regulären Druck ohne Dialog; schon dessen Vorbereitung setzt die Freigabe zurück. Hinweis erklärt dies vor der Bestätigung. Homing bleibt einzeln bestätigt.
 
+## 0.28.0-alpha.1
+
+- Privates Archiv für vollständige geslicte 3MF-Originale: atomarer Eingang, unabhängige SHA-256-/Größen-/ZIP-Prüfung, inhaltsadressierte unveränderliche Ablage und geschützter Download.
+- Separater Computerzugang mit ausschließlich Datei-Eingang/Helferstatus. Optionaler macOS-Helfer übernimmt künftige Sendecache-Pakete; dauerhafte lokale Warteschlange und Wiederholung nur der Archivübertragung bei NAS-Ausfall.
+- Archivansicht unter Druckaufträge; ausdrückliche Originalzuordnung erzeugt bei abgeschlossenen Aufträgen eine neue feste Berichtsversion mit Inhaltshash. Keine automatische Gleichsetzung nach Dateinamen und kein Druckstart aus dem Archiv.
+- Vollsicherung nimmt den Datenbankschnappschuss vor den unveränderlichen Originalen auf; Wiederherstellung prüft referenzierte Inhalte. Laufzeitdateien, unfertige Eingänge und Computer-Konfiguration bleiben privat.
+- Vorher vorbereitete README-/Roadmap-/Sicherheitskorrekturen zum tatsächlichen Steuerungsumfang übernommen. Freigabeprüfung berücksichtigt auch neue nicht ignorierte Quelldateien.
+- Reale Slicer-Übernahme und Helfereinrichtung bleiben bis zum nächsten selbst gestarteten Auftrag gesondert abzunehmen; interner Slicer-Cachepfad ist nicht als stabile öffentliche Schnittstelle zugesichert.
+
 ## 0.27.0-alpha.1
 
 - Optionale manuelle X/Y/Z-Schritte und getrennte Referenzfahrten XY/Z in der Übersicht. Nur aktueller Leerlauf, separate Druckerfreigabe, Dialog und bestätigte Anwesenheit vor Ort.

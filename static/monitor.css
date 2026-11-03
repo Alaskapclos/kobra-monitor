@@ -96,3 +96,6 @@
 .fan-control-actions .timeline-button:disabled{background:#f2f3ef;color:#737b73;border-color:#b7bfb1;border-style:dashed;box-shadow:none;cursor:not-allowed}
 
 .motion-homing-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}.motion-axis-label{display:grid;place-items:center;font-size:13px;color:#64735f;font-weight:650}#motion-confirmation-note[hidden]{display:none}
+
+/* Original file archive */
+#files-list strong,#order-original{overflow-wrap:anywhere;min-width:0}#files-pair,#order-original label{display:grid;gap:12px;margin:16px 0}#files-pair input,#order-original select{font:inherit;padding:12px;border:1px solid var(--line);border-radius:10px;max-width:100%;min-width:0;background:#f8f9f5;color:inherit}#files-pair button{justify-self:start}#files-clients{margin-top:18px}

@@ -6,7 +6,7 @@
   for(const section of main.querySelectorAll(':scope > section')){
     if(section.classList.contains('page-heading'))continue;
     const label=section.getAttribute('aria-labelledby');
-    const view=['history-title','order-title','timeline-title'].includes(label)?'orders':
+    const view=['history-title','order-title','timeline-title','files-title'].includes(label)?'orders':
       ['filament-title','spools-title','spooltabs-title','spoolman-title'].includes(label)||section.classList.contains('bottom-grid')?'spools':
       ['notify-title','check-title','help-title'].includes(label)?'settings':'overview';
     groups[view].push(section);

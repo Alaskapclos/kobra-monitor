@@ -8,14 +8,14 @@ import sys
 
 root=Path(__file__).resolve().parent.parent
 try:
-    result=subprocess.run(['git','ls-files','-z'],cwd=root,capture_output=True,check=True)
+    result=subprocess.run(['git','ls-files','--cached','--others','--exclude-standard','-z'],cwd=root,capture_output=True,check=True)
     paths=[root/value for value in result.stdout.decode().split('\0') if value]
 except (OSError,subprocess.CalledProcessError):
     paths=[p for p in root.rglob('*') if p.is_file() and not any(v in ('.git','.venv','.state','data','__pycache__') for v in p.relative_to(root).parts)]
 errors=[]
 for file in paths:
     name=str(file.relative_to(root));parts=file.relative_to(root).parts
-    if any(v in ('.state','.venv','data','backups','.backups','report-archive','__pycache__') for v in parts) or file.name.startswith('kobra-backup-') or file.name.startswith('.account-') or file.name.startswith('.push-') or file.name in ('.env','access-token','account.json','spoolman.json','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
+    if any(v in ('.state','.venv','data','backups','.backups','report-archive','file-archive','.archive-incoming','archive-queue','__pycache__') for v in parts) or file.name.startswith('kobra-backup-') or file.name.startswith('.account-') or file.name.startswith('.push-') or file.name in ('.env','access-token','account.json','spoolman.json','archive-client.json','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
         errors.append('Runtime/private file: '+name)
     body=file.read_bytes()
     for key_type in ('','RSA ','EC '):

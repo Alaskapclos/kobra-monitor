@@ -4,16 +4,19 @@ Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Entwicklungsstand: 0.27.1-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
+**Entwicklungsstand: 0.28.0-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
 
 ## Enthaltene Funktionen
 
 - Mehrere lokale Drucker mit eigener Statuskarte, Fortschritt, Temperaturen, Datenfrische und gespeicherter Reihenfolge.
 - Geschützte Kameraansicht mit Vergrößerung und optionaler Mehrkameraübersicht.
 - Druckhistorie, Temperaturkurven, Druckberichte und Auftragszuordnung mit Export für die eigene Ablage.
+- Privates Originaldatei-Archiv für fertige `.gcode.3mf`-Pakete: SHA-256/ZIP-Prüfung, getrennte Versionen bei geändertem Inhalt, manuelle Auftragszuordnung und Originaldownload. Optionaler macOS-Slicerhelfer mit dauerhafter Offline-Warteschlange; [Einrichtung und Grenzen](docs/FILE_ARCHIVE.md).
 - Spoolman-Anbindung einschließlich eingebetteter nativer Spulenverwaltung und expliziter ACE-Slot-/Kennungszuordnung. Spoolman bleibt die Bestandsdatenbank.
 - Optionale Web-Push-Benachrichtigungen je Gerät für Druckereignisse und Verbindungsprobleme; Einrichtung über HTTPS und mit eigener Browserfreigabe.
 - Lokales Benutzerkonto, private Nutzung über VPN/HTTPS, Betriebsdiagnose und separat betreibbarer Sicherungsdienst.
+
+Die Originaldatei-Archivierung ist lokal mit synthetischen Dateien einschließlich HTTP-Übertragung und Sicherungswiederherstellung geprüft. Der nächste echte Slicerauftrag muss den beobachteten macOS-Cachepfad praktisch bestätigen. Nachdruck aus dem Archiv ist noch nicht implementiert.
 
 ## Optionale Druckersteuerung
 
@@ -27,13 +30,13 @@ Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 | Manuelle Bewegung | X/Y/Z mit 1/15/50 mm, getrennte Referenzfahrten XY und Z, Warnhinweis und erste Anwesenheitsbestätigung bis zum nächsten Druck; Homing immer einzeln | Optional, nur im frischen Leerlauf; Versand ist keine Bestätigung der physischen Ausführung |
 | Druckabbruch | Auch bei Vorbereitung/Bettnivellierung, eigener Bestätigungsdialog | Der abgebrochene Druck kann nicht fortgesetzt werden |
 
-Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md).
+Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md), [Achsen und Homing](docs/MOTION_CONTROL.md).
 
-Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SPEED_CONTROL_IPS`, `KOBRA_TEMPERATURE_CONTROL_IPS` und `KOBRA_PRINT_CONTROL_IPS` sind standardmäßig leer. Eine Funktion erhält damit keine automatische Freigabe für alle eingerichteten Drucker. Anmeldung, aktuelle Zustandsdaten, gebundener Zielauftrag und Einzelversand bleiben erforderlich. Bei unklarem Ausgang gibt es keinen automatischen Wiederholungsversuch.
+Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SPEED_CONTROL_IPS`, `KOBRA_TEMPERATURE_CONTROL_IPS`, `KOBRA_PRINT_CONTROL_IPS` und `KOBRA_MOTION_CONTROL_IPS` sind standardmäßig leer. Eine Funktion erhält damit keine automatische Freigabe für alle eingerichteten Drucker. Anmeldung, aktuelle Zustandsdaten, gebundener Zielauftrag und Einzelversand bleiben erforderlich. Bei unklarem Ausgang gibt es keinen automatischen Wiederholungsversuch.
 
 ## Unterstützter und geprüfter Umfang
 
-Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. **Pause, Fortsetzen und Abbruch sind in dieser Version implementiert und mit synthetischen Druckern geprüft; die praktische Abnahme an einem echten S1 steht noch aus.** Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
+Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. Druckabbruch einschließlich Vorbereitung sowie manuelle Achsen, korrigierte Z-Tischrichtung und Homing wurden vom Besitzer an diesem S1 praktisch bestätigt. Pause und Fortsetzen sind implementiert und synthetisch geprüft; ihre gesonderte physische Abnahme steht noch aus. Der Reset der manuellen Anwesenheitsfreigabe bei einem neuen Druck wurde synthetisch geprüft und ist als eigener realer Ablauf noch nicht bestätigt. Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
 
 Nicht enthalten: Datei-Upload und Druckstart, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
 

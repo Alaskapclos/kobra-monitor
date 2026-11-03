@@ -18,14 +18,15 @@ Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie un
 
 Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 mit Manifest, Prüfsummen und isolierter Vollwiederherstellung erfolgreich geprüft; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
 
-## Aktueller Steuerbereich (Stand 0.27)
+## Aktueller Steuerbereich (Stand 0.27.1)
 
 - Kammerlicht: direkter Schalter neben der Glühbirne, physisch bestätigt.
 - Bauteil-, Zusatz- und Kammerlüfter: Einstellen direkt am Wert, Stufendialog mit OK/Abbrechen, physisch auf PC und Handy bestätigt.
 - Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Vom Besitzer praktisch bestätigt.
 - Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; vom Besitzer direkt am Drucker bestätigt.
-- Manuelle Achsen und Referenzfahrten in 0.27 vorbereitet, physische Abnahme offen. Pause, Fortsetzen und Abbruch implementiert; Abbruch seit 0.26.1 auch während Vorbereitung und Bettnivellierung; physische Abnahme noch offen.
-- Bewegungen, Upload/Start und Filamentsteuerung noch nicht umgesetzt.
+- Manuelle X/Y/Z-Schritte und getrennte Homing-Tasten für Druckkopf X/Y und Druckbett Z in 0.27.1 installiert und vom Besitzer praktisch bestätigt. Z-Plus bewegt den Tisch hoch, Z-Minus herunter. Erste X/Y/Z-Fahrt mit Anwesenheitsbestätigung, weitere Fahrten bis zum nächsten regulären Druck ohne Dialog; Homing immer einzeln bestätigt. Ein neuer Druck einschließlich Vorbereitung widerruft die Freigabe serverseitig. Homing-Wartezeit30s, Einzelschritt5s. Der Freigabe-Reset nach einem neuen realen Druck bleibt separat zu prüfen.
+- Pause, Fortsetzen und Abbruch implementiert. Abbruch auch während Vorbereitung/Bettnivellierung vom Besitzer bestätigt; Pause/Fortsetzen noch separat physisch abzunehmen.
+- Dateiübertragung/Druckstart, Filamenttransport und Trocknungssteuerung noch nicht umgesetzt.
 - Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
 
 ## Gesamtplan (ursprüngliche Reihenfolge)
@@ -60,3 +61,7 @@ Materialbedarf und Kosten bleiben im Gesamtplan. Belastbare Verbrauchserfassung 
 ## Öffentliche Alpha vorbereiten
 
 Besitzer möchte am 03.11.2026 eine öffentliche GitHub-Freigabe nach den nächsten praktischen Steuerprüfungen vorbereiten. README muss exakt zur freizugebenden Version passen und vorhandene Funktionen, Grenzen und offene Nachweise unterscheiden. Vor Veröffentlichung Repository-Inhalt und Bild-/Artefaktdateien auf private Laufzeitdaten prüfen. Noch keine öffentliche Freigabe oder Änderung der Sichtbarkeit autorisiert.
+
+## Originaldatei-Archiv 0.28 – implementiert, Praxisabnahme offen
+
+Fertige Slicer-Sendepakete zusätzlich archivieren, vollständige Integritätsprüfung, private Originaldownloads, manuelle ausdrückliche Auftragszuordnung und unveränderte alte Berichtsversionen. Ein macOS-Anmeldehelfer mit dauerhafter Warteschlange unterstützt den beobachteten Anycubic-Sendecache. Synthetische Übertragung, NAS-Ausfallverhalten und vollständige Wiederherstellung geprüft; reale Helfereinrichtung und nächster Slicerauftrag müssen praktisch bestätigt werden. Ein Cachepfadwechsel kann Übernahmen verhindern und darf nicht als vollständige Erfassung ausgegeben werden. Nachdruckstart, automatischer Speicherbereinigungsplan und herstellerübergreifende Slicerunterstützung folgen separat.

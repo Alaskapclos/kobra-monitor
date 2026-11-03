@@ -32,6 +32,8 @@ class History:
         # samples from before a restart or a disconnected session.
         self.links={}; self.idle={}; self.idle_seen={}; self.last_sample={}
         from report_archive import ReportArchive
+        from file_archive import FileArchive
+        self.files=FileArchive(self)
         self.reports=ReportArchive(self)
         self.report_materials=None
         self.report_error=None

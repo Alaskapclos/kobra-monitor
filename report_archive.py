@@ -94,7 +94,7 @@ class ReportArchive:
             job = self.job(job_id)
             versions = [dict(r) for r in self.h.db.execute(
                 'SELECT version,created_at,reason,sha256 FROM report_versions WHERE job_id=? ORDER BY version DESC', (job_id,))]
-            return {'read_only': True, 'job': job, 'annotation': self.annotation(job_id), 'versions': versions}
+            return {'read_only': True, 'job': job, 'annotation': self.annotation(job_id), 'versions': versions, 'original': self.h.files.linked(job_id)}
 
     def save(self, job_id, body):
         with self.h.lock:
@@ -139,7 +139,8 @@ class ReportArchive:
             elif reason=='Druckende' and job['state']=='cancelled':reason='Druck abgebrochen'
             annotation = self.annotation(job_id)
             last = self.h.db.execute('SELECT * FROM report_versions WHERE job_id=? ORDER BY version DESC LIMIT 1', (job_id,)).fetchone()
-            if last and json.loads(last['payload'])['annotation'] == annotation:
+            original = self.h.files.linked(job_id)
+            if last and json.loads(last['payload'])['annotation'] == annotation and json.loads(last['payload']).get('original') == original:
                 self.write_files(job_id,last['version'])
                 return last['version']
             now = self.h.clock()
@@ -155,9 +156,9 @@ class ReportArchive:
                 evidence['events'].append({**dict(row), 'details': json.loads(row['details'])})
             payload = {'schema': 'kobra-customer-report-v1', 'generator_version':GENERATOR_VERSION, 'job': job, 'annotation': annotation,
                        'version': version, 'created_at': now, 'reason': reason, 'evidence': evidence,
-                       'materials': materials or {'basis': 'Keine zeitgleiche Spoolman-Zuordnung am Druckende gespeichert.'},
+                       'original': original, 'materials': materials or {'basis': 'Keine zeitgleiche Spoolman-Zuordnung am Druckende gespeichert.'},
                        'limits': ['Kein gemessener Grammverbrauch.', 'Keine automatische Bewertung der Bauteilqualität.',
-                                  'Original-G-Code wurde nicht gespeichert; kein Datei-Inhaltshash verfügbar.']}
+                                  'Originaldatei wurde manuell zugeordnet; die Druckerausführung dieses Inhalts ist damit nicht unabhängig belegt.' if original else 'Keine Originaldatei zugeordnet; kein Datei-Inhaltshash verfügbar.']}
             from print_report import render_report
             markdown = '# Kundenauftragsbericht\n\n'
             for label, key in [('Kundenauftrag', 'customer_order'), ('Position', 'position'), ('Teil', 'part')]:
@@ -179,6 +180,8 @@ class ReportArchive:
                 markdown += f'- Feste manuelle Zuordnung: Slot {int(slot)+1} -> Spoolman #{spool}.\n'
             for spool in material.get('inventory',[]):
                 markdown += '- Spoolman #'+str(spool['id'])+': '+' / '.join(str(spool.get(k) or 'nicht angegeben') for k in ('vendor','name','material'))+'; Buchrestgewicht: '+str(spool.get('remaining_weight') if spool.get('remaining_weight') is not None else 'unbekannt')+' g.\n'
+            if original:
+                markdown += '\n## Zugeordnete Originaldatei\n\nSHA-256: '+original['sha256']+'\n\nGröße: '+str(original['size'])+' Bytes. Manuelle Zuordnung.\n'
             markdown+='\n' 
             markdown += '\n'.join('- '+s for s in payload['limits'])+'\n'
             raw = canonical(payload)

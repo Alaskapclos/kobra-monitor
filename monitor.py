@@ -760,17 +760,27 @@ class Fleet:
 
 def build_app(monitor,access=None):
     allowed = {'/','/api/status','/api/report','/api/timeline','/api/jobs','/api/session','/about','/license','/notice','/assets/setup.js','/assets/setup.css','/health','/assets/monitor.css','/assets/monitor.js','/api/camera/frame','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/api/notifications','/api/diagnostics','/api/spools','/api/order-report','/api/report-export','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js','/assets/print-controls.js','/assets/motion-controls.js','/assets/temperature-controls.js','/favicon.ico'}
+    from archive_http import MACHINE_PATHS, OWNER_PATHS, machine_client, install as install_archive
+    archive = getattr(getattr(monitor, 'history', None), 'files', None)
+    allowed |= OWNER_PATHS | {'/assets/file-archive.js'}
     @web.middleware
     async def boundary(request, handler):
         public={'/','/about','/license','/notice','/health','/assets/monitor.css','/assets/monitor.js','/assets/setup.css','/assets/setup.js','/assets/camera.js','/assets/notifications.js','/assets/diagnostics.js','/assets/spools.js','/service-worker.js','/manifest.webmanifest','/assets/app-icon.svg','/favicon.ico','/api/session','/assets/orders.js','/assets/navigation.js','/assets/spool-workspace.js','/assets/controls.js','/assets/fan-controls.js','/assets/speed-controls.js','/assets/print-controls.js','/assets/motion-controls.js','/assets/temperature-controls.js'}
+        public.add('/assets/file-archive.js')
+        machine = archive is not None and access is not None and access.account is not None and machine_client(request, archive)
+        is_machine = request.method == 'POST' and request.path in MACHINE_PATHS
         is_login=access is not None and request.method=='POST' and request.path=='/api/session'
-        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools','/api/order-report','/api/controls')
+        is_setup=access is not None and request.method=='POST' and request.path in ('/api/setup','/api/order','/api/camera/release','/api/notifications','/api/spools','/api/order-report','/api/controls','/api/archive')
         is_account=access is not None and request.method=='POST' and request.path in ('/api/account','/api/logout')
         integrated=gateway_path(request.path)
-        valid_method=integrated or (request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
+        valid_method=is_machine or integrated or (request.method=='GET' and request.path in allowed) or is_login or is_setup or is_account
         if not valid_method:
             response = web.json_response({'error':'Nur Statusabfragen und lokale Einrichtung erlaubt.','read_only':True}, status=403)
-        elif access is not None and request.path not in public and not access.session(request):
+        elif is_machine and not machine:
+            response = web.json_response({'error':'Computerzugang ungültig.'}, status=401)
+        elif request.path in OWNER_PATHS and (access is None or access.account is None):
+            response = web.json_response({'error':'Besitzeranmeldung erforderlich.'}, status=401)
+        elif access is not None and request.path not in public and not machine and not access.session(request):
             response = web.json_response({'error':'Bitte anmelden.','read_only':True},status=401)
         elif access is not None and access.account is None and request.path not in public|{'/api/account','/api/logout'}:
             response = web.json_response({'error':'Bitte zuerst dein Benutzerkonto einrichten.','read_only':True},status=403)
@@ -794,6 +804,7 @@ def build_app(monitor,access=None):
             response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'; object-src 'none'"
         return response
     app = web.Application(middlewares=[boundary], client_max_size=8192)
+    if archive is not None: install_archive(app, archive, access, BASE)
     async def index(request): return web.FileResponse(BASE/'static/index.html')
     async def about(request):return web.FileResponse(BASE/'static/about.html')
     async def license_text(request):return web.FileResponse(BASE/'LICENSE',headers={'Content-Type':'text/plain; charset=utf-8'})

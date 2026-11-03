@@ -34,3 +34,10 @@ spoolman.json
 .spoolman-*
 
 report-archive/
+
+# Private original print files and computer pairing
+file-archive/
+.archive-incoming/
+archive-client.json
+archive-queue/
+*.gcode.3mf

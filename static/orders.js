@@ -28,6 +28,7 @@ window.kobraOrders=(()=>{
       detail=result;$('order-form').hidden=false;
       for(const key of keys)$('order-'+key).value=detail.annotation[key]||'';
       $('order-archive').disabled=!detail.job.ended_at;
+      window.kobraFiles?.forJob(detail);
       message('Änderungen erzeugen bei abgeschlossenen Aufträgen eine neue feste Berichtsversion.');versions();
       $('order-detail').scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){if(generation===request)message(e.message);}
@@ -60,6 +61,7 @@ window.kobraOrders=(()=>{
     catch(e){$('reports-message').textContent=e.message;}finally{button.disabled=false;}
   });
   return {
+    originalUpdated(result){if(detail?.job.id===result.job.id){detail=result;versions();}},
     setScope(ip){if(ip!==scope){scope=ip;selected.clear();request++;detail=null;$('order-detail').hidden=true;}},
     decorate(job,file,actions){
       const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.checked=selected.has(job.id);box.disabled=!job.report_version;label.className='report-select';

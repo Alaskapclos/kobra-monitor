@@ -16,6 +16,7 @@
   <script defer src="/assets/diagnostics.js"></script>
   <script defer src="/assets/spools.js"></script>
   <script defer src="/assets/orders.js"></script>
+  <script defer src="/assets/file-archive.js"></script>
   <script defer src="/assets/controls.js"></script>
   <script defer src="/assets/fan-controls.js"></script>
   <script defer src="/assets/speed-controls.js"></script>
@@ -73,7 +74,7 @@
       <a class="nav-item" href="#spools" data-view="spools">Spulen</a>
       <a class="nav-item" href="#settings" data-view="settings">Betrieb &amp; Hilfe</a>
     </nav>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. <span id="sidebar-mode">Ausschließlich lesend.</span></p><div class="sidebar-version">KOBRA MONITOR / 0.27.1 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. <span id="sidebar-mode">Ausschließlich lesend.</span></p><div class="sidebar-version">KOBRA MONITOR / 0.28 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg><span id="installation-mode">Drucker nur lesen</span></span></header>
@@ -154,6 +155,17 @@
       <div id="history-content" class="history-content"><p class="empty-state">Neue Drucke werden automatisch erkannt.</p></div>
       <nav class="history-pages" aria-label="Seiten der Druckhistorie"><button id="history-prev" class="timeline-button" type="button" disabled>← Neuere</button><span id="history-page">Seite 1 von 1</span><button id="history-next" class="timeline-button" type="button" disabled>Ältere →</button></nav>
     </section>
+    <section class="card notification-card" aria-labelledby="files-title">
+      <div class="section-head"><h2 id="files-title">Druckdatei-Archiv</h2><button id="files-refresh" class="timeline-button" type="button">Aktualisieren</button></div>
+      <p>Der Slicer sendet weiterhin direkt zum Drucker. Ein Helfer auf deinem Computer übernimmt die fertigen Originaldateien zusätzlich ins NAS-Archiv. Nur bestätigte Übertragungen zählen als archiviert.</p>
+      <p id="files-message" role="status" aria-live="polite">Archiv noch nicht geladen.</p><div id="files-list"></div>
+      <details><summary>Computer verbinden &amp; Archivstatus</summary>
+        <p>Der Computerzugang darf ausschließlich Originaldateien ablegen und seinen Status melden. Er erlaubt keine Druckersteuerung und keinen Abruf vorhandener Dateien. Die heruntergeladene Konfiguration enthält diesen privaten Zugang.</p>
+        <form id="files-pair"><label>Computername<input id="files-client-name" maxlength="80" required placeholder="Mein Slicer-Computer"></label><button class="timeline-button" type="submit">Computerzugang erstellen &amp; herunterladen</button></form>
+        <p>Der Helfer muss auf dem Slicer-Computer laufen. Bereits vorhandene Cache-Dateien werden bei der Ersteinrichtung übersprungen. Bei ausgeschaltetem Computer kann er keine neuen Dateien übernehmen. Lokale Kopien bleiben nach der Übertragung erhalten.</p>
+        <div id="files-clients"></div>
+      </details>
+    </section>
     <section id="order-detail" class="card notification-card" aria-labelledby="order-title" hidden>
       <div class="section-head"><h2 id="order-title">Auftrag bearbeiten</h2><button id="order-close" class="timeline-button" type="button">Schließen</button></div>
       <p id="order-file" class="timeline-file"></p>
@@ -165,6 +177,7 @@
         <label>Prüfername<input id="order-approver" maxlength="100" autocomplete="off"></label>
         <label class="order-note">Anmerkung<textarea id="order-note" maxlength="2000" rows="3"></textarea></label>
       </div><p>Druckabschluss und manuelle Qualitätsabnahme sind getrennte Angaben. Keine Verbrauchsbuchung.</p><button id="order-save" class="timeline-button" type="submit">Angaben speichern</button><button id="order-archive" class="timeline-button" type="button">Bericht archivieren</button></form>
+      <div id="order-original"></div>
       <p id="order-message" role="status" aria-live="polite"></p><h3>Archivierte Versionen</h3><div id="order-versions"></div>
     </section>
     <section id="timeline-card" class="card history-card timeline-card" aria-labelledby="timeline-title" hidden>
