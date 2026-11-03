@@ -23,6 +23,8 @@ class PrintJobState:
         project=raw.get('project') if kind=='info' else raw
         if kind=='info' and not isinstance(project,dict):
             # Free is not proof of an explicitly cancelled job.
+            if self.phase:
+                self.token=uuid.uuid4().hex;self.history_id=None
             self.phase=0;self.seen=float('-inf');return
         if not isinstance(project,dict):return
         phase=project.get('state') if kind=='info' else payload.get('state')

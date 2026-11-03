@@ -114,6 +114,9 @@ class PrintTelemetryTests(unittest.TestCase):
  def test_matching_explicit_stop_preserves_identity_and_new_print_rotates_it(self):
   self.report();before=self.p.token;self.p.receive('print',{'state':'stoped','data':{'taskid':-1,'filename':'part.3mf','print_time':30}},'epoch');self.assertEqual(self.p.phase,3);self.assertEqual(self.p.token,before)
   self.report();self.assertNotEqual(before,self.p.token)
+ def test_idle_boundary_rotates_identity_even_when_next_local_job_looks_identical(self):
+  self.report();before=self.p.signature();self.p.receive('info',{'data':{'state':'free','project':None}},'epoch')
+  self.report(elapsed=31);self.assertNotEqual(before,self.p.signature())
  def test_new_connection_never_reuses_old_context(self):
   self.report();before=self.p.token;self.report(epoch='new');self.assertNotEqual(before,self.p.token)
  def test_preparation_and_unknown_states_disarm(self):

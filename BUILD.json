@@ -2,7 +2,7 @@
   "version": "0.26.0-alpha.1",
   "read_only": false,
   "tests": {
-    "python": 274,
+    "python": 275,
     "bridge_read_only": 14,
     "javascript_cases": 170
   },
@@ -70,7 +70,7 @@
     "light_transport.py": "fb1ffe5d895045622796fc01efce472092eef41bd96545fa524b6b5b24acb132",
     "monitor.py": "8cd401f024a99a93f738f23cfae7a2aaf29f385778709745e1b90b147d05eef0",
     "notifications.py": "71dcf31dbadd7152868c86c51e73e72d2f0756cfec82d881e1a5bb5722057e66",
-    "print_job_control.py": "989d9460863c452c2c335f223f0928f9771a7aa95a63523fd42c549ef6762d9c",
+    "print_job_control.py": "c21b052f8c26cb5da9f45b6fde0bb5d696083717d5a7e3f69baf3fe1ce4cd54a",
     "print_report.py": "ad174f9897fbc60f1a1e7ef00d569684c03dd5860b5c68b7f244b9378775ae0d",
     "report_archive.py": "89d1153a2f0d789b084682e445f8cab5c5b8a9a784cca4f643d772e86119c21c",
     "requirements-lock.txt": "abd3042a7c8a00211220893861231bf4bd8439700d1bdc49729c186be4defd3f",
@@ -125,7 +125,7 @@
     "tests/test_notifications.js": "c9e881a6a82a22e347efdf9eebfe87405702997944058e17395e5921ac76aba2",
     "tests/test_notifications.py": "47d6237515c089e6838193a93354c7baf3ac9bc9232a2d7d49384729c0f0d7e8",
     "tests/test_print_controls.js": "31c516e6780b65746c7346ba307166ad685c0c009bd401d6fa043e5920363467",
-    "tests/test_print_controls.py": "582c704e4891a257580584dcd16a7f15eb16174286ad6a14e252031a86196d99",
+    "tests/test_print_controls.py": "1dc9c0bac17d9d4f998436be4fb4019438527fcecb06ada8b2edc176fd12dc33",
     "tests/test_printer_order.js": "4e8ff35314af36b98c674fc505da0934d077781791faa0c891302442a77d0ea0",
     "tests/test_printer_order.py": "f0ae02e9ef5942e3bf327acee27b06bbafe9c50d40998117527e3ec2d20cc931",
     "tests/test_printer_overview.js": "3f422d31c1b6d9ffd7531a1adcd227e6c12629b6fdf969d8867a260752055cfa",
