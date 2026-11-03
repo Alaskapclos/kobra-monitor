@@ -27,5 +27,6 @@ function harness(){
  h=harness();h.render();h.open();await Promise.all([h.ok(),h.ok()]);assert.equal(h.calls.filter(c=>c.action==='execute').length,1);
  h=harness();h.render();h.open();h.expire();await h.ok();assert.equal(h.calls.length,0);
  for(const change of [{connection:'offline'},{print_control:{enabled:false}},{print_control:{enabled:true,supported:true,phase:0,available:{}}}]){h=harness();h.render({...h.data,...change});h.open();assert(!h.elements['print-control-dialog'].open);assert.equal(h.calls.length,0);}
- console.log('14 print-control UI cases passed');
+ h=harness();h.data.print_control.phase=5;h.data.print_control.available={print_pause:false,print_resume:false,print_stop:true};h.previous(5);h.render();h.open('print_pause');assert(!h.elements['print-control-dialog'].open);h.open('print_stop');await h.ok();assert.deepEqual(h.calls.map(c=>c.action),['prepare_print','execute']);assert.equal(h.calls[0].operation,'print_stop');
+ console.log('15 print-control UI cases passed');
 })().catch(e=>{console.error(e);process.exit(1);});

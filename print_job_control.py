@@ -4,11 +4,15 @@ import math
 import re
 import uuid
 
+# Preparation is part of the active job; only Stop is offered in this phase.
+PREPARING_PHASES = frozenset({'busy','init','checking','preheating','auto_leveling'})
+ACTIVE_PHASE_CODES = (1,2,5)
+
 PRINT_ACTIONS = {'print_pause':('pause',2,(1,)),
                  'print_resume':('resume',1,(2,)),
-                 'print_stop':('stop',3,(1,2))}
+                 'print_stop':('stop',3,ACTIVE_PHASE_CODES)}
 PHASES = {'printing':1, 'paused':2, 'pause':2, 'canceled':3, 'cancelled':3,
-          'stoped':3, 'stopped':3, 'finished':4}
+          'stoped':3, 'stopped':3, 'finished':4, **{phase:5 for phase in PREPARING_PHASES}}
 
 class PrintJobState:
     def __init__(self,clock):
@@ -25,7 +29,7 @@ class PrintJobState:
             # Free is not proof of an explicitly cancelled job.
             if self.phase:
                 self.token=uuid.uuid4().hex;self.history_id=None
-            self.phase=0;self.seen=float('-inf');return
+            self.phase=0;self.seen=float('-inf');self.elapsed=None;return
         if not isinstance(project,dict):return
         phase=project.get('state') if kind=='info' else payload.get('state')
         if kind=='info' and project.get('pause')==1:phase='paused'
@@ -36,10 +40,15 @@ class PrintJobState:
         filename=filename if isinstance(filename,str) and 0<len(filename)<=1024 else None
         elapsed=project.get('print_time')
         elapsed=elapsed if type(elapsed) in (int,float) and math.isfinite(elapsed) and elapsed>=0 else None
+        # Firmware can retain the previous print's elapsed time during leveling.
+        # It must neither authorize an old job nor split the new preparation.
+        if phase in PREPARING_PHASES:elapsed=None
         changed=(connection!=self.connection or (task is not None and task!=self.task)
                  or (filename is not None and filename!=self.filename)
                  or (elapsed is not None and self.elapsed is not None and elapsed<self.elapsed)
-                 or (self.phase in (3,4) and PHASES.get(phase) in (1,2)))
+                 or (self.phase in (3,4) and PHASES.get(phase) in ACTIVE_PHASE_CODES)
+                 or (self.phase in (1,2) and phase in PREPARING_PHASES))
+        if phase in PREPARING_PHASES and changed:self.elapsed=None
         if changed:
             self.token=uuid.uuid4().hex;self.history_id=None;self.seen=float('-inf')
         if phase in ('pausing','resuming','stopping'):

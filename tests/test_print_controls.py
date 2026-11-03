@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 sys.path[:0]=[str(Path(__file__).resolve().parent.parent),str(Path(__file__).resolve().parent.parent/'vendor/kobra-bridge')]
 from controls import LightControls,ControlRefused
-from print_job_control import PrintJobState,PRINT_ACTIONS
+from print_job_control import PrintJobState,PRINT_ACTIONS,PREPARING_PHASES
 from light_transport import LightControlClient
 from monitor import Monitor
 from read_only_policy import ReadOnlyViolation
@@ -62,6 +62,12 @@ class PrintIntentTests(unittest.IsolatedAsyncioTestCase):
   async def send(*args):
    self.sent.append(args);self.data['light_on']=0;asyncio.create_task(finish())
   self.c.print_sender=send;p=await self.prepare();self.assertEqual((await self.c.execute('owner',p['id'],p['token']))['state'],'confirmed');self.assertEqual(len(self.sent),1)
+ async def test_stop_during_preparation_confirms_but_pause_and_resume_are_refused(self):
+  self.data['light_on']=5
+  for action in ('print_pause','print_resume'):
+   with self.assertRaises(ControlRefused):await self.prepare(action)
+  p=await self.prepare('print_stop');self.assertEqual(p['previous'],5)
+  self.assertEqual((await self.c.execute('owner',p['id'],p['token']))['state'],'confirmed');self.assertEqual(len(self.sent),1)
  async def test_other_session_and_parallel_control_are_rejected(self):
   p=await self.prepare()
   with self.assertRaises(ControlRefused):await self.c.execute('other',p['id'],p['token'])
@@ -130,8 +136,15 @@ class PrintTelemetryTests(unittest.TestCase):
   self.report('paused');self.assertEqual(before,self.p.signature());self.assertEqual(self.p.phase,2)
  def test_new_connection_never_reuses_old_context(self):
   self.report();before=self.p.token;self.report(epoch='new');self.assertNotEqual(before,self.p.token)
+ def test_all_known_preparation_stages_authorize_only_received_identity(self):
+  self.report('init',elapsed=2316);token=self.p.token
+  for state in PREPARING_PHASES:
+   self.report(state,elapsed=2316);self.assertEqual(self.p.phase,5);self.assertEqual(self.p.token,token);self.assertEqual(self.p.seen,self.clock)
+  self.report('printing',elapsed=0);self.assertEqual(self.p.token,token)
+ def test_unknown_phase_still_disarms(self):
+  self.report();self.report('unknown');self.assertEqual(self.p.phase,0);self.assertEqual(self.p.seen,float('-inf'))
  def test_preparation_and_unknown_states_disarm(self):
-  self.report();self.p.receive('print',{'state':'auto_leveling','data':{}},'epoch');self.assertEqual(self.p.seen,float('-inf'));self.assertEqual(self.p.phase,0)
+  self.report();self.p.receive('print',{'state':'auto_leveling','data':{}},'epoch');self.assertEqual(self.p.seen,float('-inf'));self.assertEqual(self.p.phase,5)
 
 class PrintMonitorTests(unittest.TestCase):
  def test_monitor_history_identity_and_current_epoch_are_required(self):
@@ -140,3 +153,13 @@ class PrintMonitorTests(unittest.TestCase):
    m=Monitor('192.0.2.1',tmp,tmp,SimpleNamespace(jobs=lambda ip:jobs),print_control=True);m.client=SimpleNamespace(mode_id='20025',control_connection_id=lambda:'epoch');m.telemetry.link(True)
    m.telemetry.print_job.receive('info',{'data':{'project':{'task_id':-1,'filename':'part.3mf','state':'printing'}}},'epoch');a=m.print_snapshot();self.assertTrue(a['online']);jobs[0]['id']='job-b';self.assertNotEqual(a['context'],m.print_snapshot()['context'])
    jobs[0]['filename']='other';self.assertIsNone(m.print_snapshot())
+
+ def test_real_s1_leveling_report_is_bound_to_active_history_job(self):
+  import json
+  fixture={'task_id':-1,'state':'auto_leveling','filename':'test.3mf','print_time':2316,'pause':0}
+  with tempfile.TemporaryDirectory() as tmp:
+   jobs=[dict(id='new-job',filename='test.3mf',ended_at=None,state='auto_leveling')]
+   m=Monitor('192.0.2.1',tmp,tmp,SimpleNamespace(jobs=lambda ip:jobs),print_control=True);m.client=SimpleNamespace(mode_id='20025',control_connection_id=lambda:'epoch');m.telemetry.link(True)
+   m.telemetry.print_job.receive('info',{'data':{'state':'busy','project':fixture}},'epoch')
+   a=m.print_snapshot();self.assertTrue(a['online']);self.assertEqual(a['light_on'],5);self.assertEqual(a['task_id'],'-1')
+   jobs[0]['filename']='old.3mf';self.assertIsNone(m.print_snapshot())

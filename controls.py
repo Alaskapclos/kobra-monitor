@@ -129,7 +129,7 @@ class LightControls:
     def _valid_value(control, value):
         return (type(value) is bool if control == 'chamber_light' else
                 type(value) is int and value in (1,2,3) if control == 'speed_mode' else
-                type(value) is int and value in (0,1,2,3,4) if control in PRINT_ACTIONS else
+                type(value) is int and value in (0,1,2,3,4,5) if control in PRINT_ACTIONS else
                 type(value) is int and 0 <= value <= TEMP_LIMITS[control] if control in TEMP_LIMITS else
                 control in FAN_FIELDS and type(value) is int and 0 <= value <= 100)
 

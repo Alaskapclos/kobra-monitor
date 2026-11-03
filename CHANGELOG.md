@@ -1,3 +1,8 @@
+## 0.26.1-alpha.1
+
+- Druckabbruch ab der eindeutig erfassten Vorbereitung, einschließlich Aufheizen und Bettnivellierung. Pause/Fortsetzen bleiben auf Printing/Pause begrenzt.
+- Alte, von der Firmware während der Vorbereitung mitgeführte Laufzeitwerte werden nicht als neuer Auftragswechsel gewertet. Vollständige frische Identität, Bestätigung und Schutz vor veralteten Dialogen bleiben erforderlich.
+
 ## 0.26.0-alpha.1
 
 - Pause, Fortsetzen und Druckabbruch direkt in der Übersicht mit eigenem Bestätigungsdialog für Drucker und Datei.

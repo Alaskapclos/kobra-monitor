@@ -34,7 +34,7 @@ from configuration import printer_ips, load_config, save_config
 from spools import Spools
 from spoolman_view import gateway, gateway_path
 from notifications import Notifications
-from print_job_control import PrintJobState, PRINT_ACTIONS
+from print_job_control import PrintJobState, PRINT_ACTIONS, ACTIVE_PHASE_CODES
 from controls import LightControls, ControlRefused, FAN_FIELDS, TEMP_LIMITS
 from light_transport import LightControlClient
 from diagnostics import summary as diagnostic_summary
@@ -423,7 +423,7 @@ class Monitor:
         t=self.telemetry
         with t.lock:
             p=t.print_job
-            if p.phase in (1,2):
+            if p.phase in ACTIVE_PHASE_CODES:
                 if len(jobs)!=1 or jobs[0]['filename']!=p.filename:return None
                 p.history_id=jobs[0]['id']
             if not p.history_id or not p.task or not p.filename:return None
