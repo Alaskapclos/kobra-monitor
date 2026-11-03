@@ -17,7 +17,7 @@ window.kobraMotionControls=(()=>{
   snapshot=data;extra=elapsed;connection=link;renderedAt=Date.now();
   $('motion-controls').hidden=data.motion_control?.enabled!==true;
   for(const b of buttons)b.disabled=busy||!fresh(data,elapsed,link);
-  $('motion-consent-state').textContent=confirmed(data)?'X/Y/Z freigegeben: Bis zum nächsten regulären Druck kommt keine weitere Bestätigungsfrage. Homing wird weiterhin einzeln bestätigt.':'Vor der ersten X/Y/Z-Fahrt nach einem Druck ist eine Bestätigung erforderlich.';
+  $('motion-consent-state').textContent=confirmed(data)?'X/Y/Z freigegeben: Bis zum nächsten regulären Druck kommt keine weitere Bestätigungsfrage. Homing und Motoren ausschalten werden weiterhin einzeln bestätigt.':'Vor der ersten X/Y/Z-Fahrt nach einem Druck ist eine Bestätigung erforderlich.';
   $('motion-availability').textContent=data.motion_control?.wait_s>0?`Wartezeit: ${data.motion_control.wait_s} s. Stillstand vor Ort prüfen.`:fresh(data,elapsed,link)?'Bereit für einzelne manuelle Fahrten.':'Nur bei aktuellem Leerlauf verfügbar; während Druck, Pause und Vorbereitung gesperrt.';
   if(active&&(!fresh(data,elapsed,link)||data.motion_control.context!==active.context)){close();say('Druckerzustand oder Verbindung geändert. Bitte erneut auswählen.');}
  }
@@ -33,12 +33,16 @@ window.kobraMotionControls=(()=>{
   if(busy||!fresh(snapshot,age(),connection))return;
   const step=Number($('motion-step').value),action=b.dataset.motion;
   if(![1,15,50].includes(step))return;
-  const desired=action.startsWith('home_')?1:Number(b.dataset.direction)*step;
+  const desired=action.startsWith('home_')||action==='motors_off'?1:Number(b.dataset.direction)*step;
   close();say('');active={ip:selected,action,desired,context:snapshot.motion_control.context};
   if(action.startsWith('axis_')&&confirmed(snapshot)){const chosen={...active};active=null;return run(chosen,false);}
-  $('motion-confirmation-note').hidden=action.startsWith('home_');
+  $('motion-confirmation-note').hidden=!action.startsWith('axis_');
+  const releasing=action==='motors_off';
+  $('motion-dialog-title').textContent=releasing?'Motoren ausschalten bestätigen':'Bewegung bestätigen';
+  $('motion-dialog-warning').textContent=releasing?'Nur direkt vor dem Drucker verwenden. Alle Achsen müssen stillstehen. Die Haltekraft der Motoren entfällt; Druckkopf und Druckbett können ihre Position verlieren. Nachfolgende Fahrten können eine erneute Referenzfahrt benötigen. Dies schaltet keine Heizungen aus und ist kein Not-Aus.':'Nur direkt vor dem Drucker verwenden. Kollisions- und Beschädigungsgefahr! Düse, Bett und freien Fahrweg prüfen. Referenzfahrten können mehrere Komponenten bewegen.';
+  $('motion-ok').textContent=releasing?'Motoren ausschalten':'Fahrt ausführen';
   $('motion-printer').textContent=snapshot.data?.printer_name||selected;
-  $('motion-action').textContent=action==='home_xy'?'Homing Druckkopf (X/Y)':action==='home_z'?'Homing Druckbett (Z)':`${action.slice(-1).toUpperCase()} ${desired>0?'+':''}${desired} mm`;
+  $('motion-action').textContent=action==='motors_off'?'Motoren ausschalten – Haltekraft entfällt':action==='home_xy'?'Homing Druckkopf (X/Y)':action==='home_z'?'Homing Druckbett (Z)':`${action.slice(-1).toUpperCase()} ${desired>0?'+':''}${desired} mm`;
   $('motion-present').checked=false;$('motion-ok').disabled=true;dialog.showModal();$('motion-cancel').focus();
  });
  $('motion-present').addEventListener('change',()=>{$('motion-ok').disabled=!$('motion-present').checked;});
@@ -49,7 +53,7 @@ window.kobraMotionControls=(()=>{
  async function run(chosen,present){
   const mark=++generation;
   const valid=()=>mark===generation&&selected===chosen.ip&&fresh(snapshot,age(),connection)&&snapshot.motion_control.context===chosen.context;
-  active=null;dialog.close();busy=true;render(snapshot,age(),connection);say('Bewegungsauftrag wird geprüft …');let intent=null,dispatched=false;
+  active=null;dialog.close();busy=true;render(snapshot,age(),connection);say(chosen.action==='motors_off'?'Motor-Aus-Auftrag wird geprüft …':'Bewegungsauftrag wird geprüft …');let intent=null,dispatched=false;
   try{
    intent=await api({action:'prepare_motion',ip:chosen.ip,operation:chosen.action,desired:chosen.desired,present,context:chosen.context,request_id:key()},valid);
    if(!valid()||intent.context!==chosen.context){if(intent.state==='prepared')await api({action:'cancel',id:intent.id});intent=null;throw Error('Druckerzustand geändert; bitte erneut auswählen.');}

@@ -73,7 +73,7 @@ class LightControlClient(KobraXClient):
 
     def send_motion_once(self,action,value,epoch,*,send_deadline,job_guard):
         if not callable(job_guard):raise ValueError('Current idle guard required')
-        return self._send_control_once('axis','move',motion_payload(action,value),epoch,
+        return self._send_control_once('axis','turnOff' if action=='motors_off' else 'move',motion_payload(action,value),epoch,
             send_deadline=send_deadline,motion=True,job_guard=job_guard)
 
     def send_print_once(self, action, task_id, expected_connection_id, *, send_deadline, job_guard):

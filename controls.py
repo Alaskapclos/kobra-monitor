@@ -88,7 +88,7 @@ class LightControls:
                         "WHERE state='prepared'", (self.clock(),))
 
         # Following a restart, conservatively lock recently sent movement intents.
-        for r in self.db.execute("SELECT ip FROM control_attempts WHERE control IN ('axis_x','axis_y','axis_z','home_xy','home_z') AND state IN ('sent','sending','uncertain')"):
+        for r in self.db.execute("SELECT ip FROM control_attempts WHERE control IN ('axis_x','axis_y','axis_z','home_xy','home_z','motors_off') AND state IN ('sent','sending','uncertain')"):
             self.motion_deadlines[r[0]]=self.monotonic()+30
 
     def motion_wait(self,ip):
@@ -282,6 +282,8 @@ class LightControls:
                 current=self.motion_snapshot(row['ip']) if self.motion_snapshot else None
                 if consent and current and current.get('print_cycle')==consent[2]:
                     self.motion_consents[(consent[0],consent[1])]=consent[2]
+                if row['control']=='motors_off':
+                    return await self._finish(actor,operation_id,'sent','Motor-Aus-Befehl einmal gesendet. Haltekraft und Lüfterlauf direkt am Drucker prüfen; Abschaltung nicht durch Telemetrie bestätigt.')
                 return await self._finish(actor,operation_id,'sent','Befehl einmal gesendet. Bewegung und Stillstand direkt am Drucker prüfen; nicht als abgeschlossene Fahrt bestätigt.')
             deadline = asyncio.get_running_loop().time() + self.confirmation_timeout
             while asyncio.get_running_loop().time() < deadline:

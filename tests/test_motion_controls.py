@@ -25,11 +25,12 @@ class MotionStateTests(unittest.TestCase):
    m.receive('info',{'data':{'state':'free'}},'e');m.receive('info',report,'e');self.assertFalse(m.snapshot('e',True)['online'])
  def test_payload_directions_and_home_are_fixed(self):
   for action,axis in MOTION_ACTIONS.items():
-   if action.startswith('home_'):self.assertEqual(motion_payload(action,1),{'axis':axis,'move_type':2,'distance':0})
+   if action=='motors_off':self.assertIsNone(motion_payload(action,1))
+   elif action.startswith('home_'):self.assertEqual(motion_payload(action,1),{'axis':axis,'move_type':2,'distance':0})
    else:
     for step in [1,15,50]:
      for sign in [-1,1]:self.assertEqual(motion_payload(action,sign*step),{'axis':axis,'move_type':int(sign<0 if action=='axis_z' else sign>0),'distance':step})
-  for action,value in [('axis_x',0),('axis_y',51),('axis_z',True),('axis_z',1.0),('home_xy',50),('motors_off',1),('gcode',1)]:
+  for action,value in [('axis_x',0),('axis_y',51),('axis_z',True),('axis_z',1.0),('home_xy',50),('motors_off',0),('motors_off',15),('gcode',1)]:
    with self.assertRaises(ValueError):motion_payload(action,value)
 
 class MotionCycleTests(unittest.TestCase):
@@ -79,10 +80,16 @@ class MotionTransportTests(unittest.TestCase):
  def test_narrow_frame_and_guard(self):
   c=self.client();c.send_motion_once('axis_x',-15,c.control_connection_id(),send_deadline=time.monotonic()+2,job_guard=lambda:True)
   topic,frame=decode(c._sock.sendall.call_args[0][0]);self.assertEqual(frame['type'],'axis');self.assertEqual(frame['action'],'move');self.assertEqual(frame['data'],{'axis':1,'move_type':0,'distance':15})
+ def test_motor_release_exact_payload_and_no_retry(self):
+  c=self.client();c.send_motion_once('motors_off',1,c.control_connection_id(),send_deadline=time.monotonic()+2,job_guard=lambda:True)
+  topic,frame=decode(c._sock.sendall.call_args[0][0]);self.assertTrue(topic.endswith('/axis'));self.assertEqual(frame['action'],'turnOff');self.assertIsNone(frame['data']);self.assertEqual(c._sock.sendall.call_count,1)
+  c._sock.sendall.reset_mock();c._sock.sendall.side_effect=OSError('partial')
+  with self.assertRaises(OSError):c.send_motion_once('motors_off',1,c.control_connection_id(),send_deadline=time.monotonic()+2,job_guard=lambda:True)
+  self.assertEqual(c._sock.sendall.call_count,1)
  def test_disabled_or_revoked_guard_never_writes(self):
   for enabled in [False,True]:
    c=self.client(enabled)
-   with self.assertRaises((PermissionError,ConnectionError)):c.send_motion_once('home_xy',1,c.control_connection_id(),send_deadline=time.monotonic()+2,job_guard=lambda:False)
+   with self.assertRaises((PermissionError,ConnectionError)):c.send_motion_once('motors_off',1,c.control_connection_id(),send_deadline=time.monotonic()+2,job_guard=lambda:False)
    c._sock.sendall.assert_not_called()
 
 class MotionAPITests(unittest.IsolatedAsyncioTestCase):
@@ -122,3 +129,22 @@ class MotionAPITests(unittest.IsolatedAsyncioTestCase):
   login=await self.call('/api/session',{'username':'Owner','password':'A synthetic long password!'},headers={})
   other={'Cookie':'kobra_session='+login.cookies['kobra_session'].value,'X-Kobra-CSRF':json.loads(login.text)['csrf']}
   self.assertEqual((await self.call('/api/controls',dict(self.motion_body(),present=False),headers=other)).status,400)
+
+ async def test_motor_release_requires_own_presence_even_after_axis_consent(self):
+  # Grant consent through the same authenticated path used by the browser.
+  p=json.loads((await self.call('/api/controls',self.motion_body())).text)
+  await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']))
+  self.controls.motion_deadlines.clear();self.writes.clear()
+  body=dict(self.motion_body(),operation='motors_off',present=False)
+  self.assertEqual((await self.call('/api/controls',body)).status,400)
+  body['present']=True;p=json.loads((await self.call('/api/controls',body)).text)
+  self.assertEqual(p['state'],'prepared')
+  r=json.loads((await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']))).text)
+  self.assertEqual(r['state'],'sent');self.assertEqual(len(self.writes),1);self.assertIn('Haltekraft',r['detail'])
+
+ async def test_motor_release_revoked_idle_does_not_send(self):
+  body=dict(self.motion_body(),operation='motors_off')
+  p=json.loads((await self.call('/api/controls',body)).text)
+  self.motion['online']=False
+  self.assertEqual((await self.call('/api/controls',dict(action='execute',id=p['id'],token=p['token']))).status,400)
+  self.assertEqual(self.writes,[])

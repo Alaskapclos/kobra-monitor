@@ -5,16 +5,17 @@ import json
 import time
 import uuid
 
-MOTION_ACTIONS = {'axis_x':1, 'axis_y':2, 'axis_z':3, 'home_xy':4, 'home_z':3}
+MOTION_ACTIONS = {'axis_x':1, 'axis_y':2, 'axis_z':3, 'home_xy':4, 'home_z':3, 'motors_off':None}
 STEPS = (1,15,50)
 PRINT_PHASES = frozenset({'init','checking','preheating','auto_leveling','busy','printing','paused','pause','pausing','resuming'})
 
 def valid_motion(action, value):
     return (type(value) is int and action in MOTION_ACTIONS and
-            (value == 1 if action.startswith('home_') else abs(value) in STEPS))
+            (value == 1 if action.startswith('home_') or action=='motors_off' else abs(value) in STEPS))
 
 def motion_payload(action, value):
     if not valid_motion(action,value):raise ValueError('Invalid manual movement')
+    if action=='motors_off':return None
     # UI Z signs describe the bed's visible movement, opposite to coordinates.
     direction=-value if action=='axis_z' else value
     return {'axis':MOTION_ACTIONS[action],

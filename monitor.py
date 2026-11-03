@@ -857,7 +857,7 @@ def build_app(monitor,access=None):
                     await item.refresh_motion()
                     current=item.motion_snapshot()
                     if not current or current['context']!=body['context']:raise ControlRefused('Druckerzustand geändert.')
-                    if body['present'] is not True and (operation.startswith('home_') or not service.motion_confirmed(actor,ip,current.get('print_cycle'))):
+                    if body['present'] is not True and (not operation.startswith('axis_') or not service.motion_confirmed(actor,ip,current.get('print_cycle'))):
                         raise ControlRefused('Bitte die Anwesenheit vor der ersten Fahrt nach einem Druck bestätigen.')
                 elif action=='prepare_print':
                     if not isinstance(operation,str) or operation not in PRINT_ACTIONS or item is None or not item.print_supported():raise ControlRefused('Druckaktion nicht freigegeben.')

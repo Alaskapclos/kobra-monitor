@@ -4,6 +4,11 @@
 - Eigene klare Homing-Schaltflächen für Druckkopf X/Y und Druckbett Z; Wartezeit nach Homing und Neustart auf30 Sekunden verkürzt.
 - Anwesenheit für X/Y/Z nur vor der ersten Fahrt bestätigen. Weitere Schritte derselben Anmeldung an diesem Drucker bis zum nächsten regulären Druck ohne Dialog; schon dessen Vorbereitung setzt die Freigabe zurück. Hinweis erklärt dies vor der Bestätigung. Homing bleibt einzeln bestätigt.
 
+## 0.28.1-alpha.1
+
+- Eigene Schaltfläche „Motoren ausschalten“ neben Homing. Nur im frischen Leerlauf mit eigener Anwesenheitsbestätigung bei jedem Aufruf und Hinweis auf entfallende Haltekraft.
+- Einmaliger begrenzter `axis/turnOff`-Versand mit bestehender Protokollierung, Kontextprüfung und Bewegungssperre. Keine automatische Motorabschaltung nach Homing; keine direkte Steuerung der Elektronikkühlung.
+
 ## 0.28.0-alpha.1
 
 - Privates Archiv für vollständige geslicte 3MF-Originale: atomarer Eingang, unabhängige SHA-256-/Größen-/ZIP-Prüfung, inhaltsadressierte unveränderliche Ablage und geschützter Download.

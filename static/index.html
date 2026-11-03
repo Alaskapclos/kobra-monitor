@@ -74,7 +74,7 @@
       <a class="nav-item" href="#spools" data-view="spools">Spulen</a>
       <a class="nav-item" href="#settings" data-view="settings">Betrieb &amp; Hilfe</a>
     </nav>
-    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. <span id="sidebar-mode">Ausschließlich lesend.</span></p><div class="sidebar-version">KOBRA MONITOR / 0.28 ALPHA</div></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span>Druckerdaten lokal<p>Direkt mit deinem Drucker verbunden. <span id="sidebar-mode">Ausschließlich lesend.</span></p><div class="sidebar-version">KOBRA MONITOR / 0.28.1 ALPHA</div></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Werkstatt <span>/</span> Druckerübersicht</div><span class="mode-badge"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/></svg><span id="installation-mode">Drucker nur lesen</span></span></header>
@@ -104,7 +104,7 @@
     <section id="motion-controls" class="card motion-card" aria-labelledby="motion-title" hidden>
       <div class="section-head"><div><div class="eyebrow muted">MANUELLE STEUERUNG</div><h2 id="motion-title">Achsen bewegen</h2></div><span class="subtle-pill">Nur im Leerlauf</span></div>
       <p class="motion-warning"><strong>Nur verwenden, wenn du direkt vor dem Drucker stehst.</strong> Kollisionen können den Drucker beschädigen. Düse, Druckbett und Fahrweg beobachten; Bauteile und Hindernisse vorher entfernen. Ein Kamerabild ersetzt die Anwesenheit nicht.</p>
-      <p id="motion-availability" role="status"></p><p id="motion-consent-state" class="device-status-note"></p><div class="motion-homing-actions"><button class="timeline-button" type="button" data-motion="home_xy" disabled>⌂ Homing Druckkopf (X/Y)</button><button class="timeline-button" type="button" data-motion="home_z" disabled>⌂ Homing Druckbett (Z)</button></div>
+      <p id="motion-availability" role="status"></p><p id="motion-consent-state" class="device-status-note"></p><div class="motion-homing-actions"><button class="timeline-button" type="button" data-motion="home_xy" disabled>⌂ Homing Druckkopf (X/Y)</button><button class="timeline-button" type="button" data-motion="home_z" disabled>⌂ Homing Druckbett (Z)</button><button class="timeline-button" type="button" data-motion="motors_off" disabled>Motoren ausschalten</button></div>
       <div class="motion-panel"><label for="motion-step">Schrittweite <select id="motion-step"><option value="1">1 mm</option><option value="15">15 mm</option><option value="50">50 mm</option></select></label>
         <div class="motion-xy" role="group" aria-label="X und Y bewegen">
           <button class="timeline-button motion-y-plus" type="button" data-motion="axis_y" data-direction="1" disabled>Y +</button>
