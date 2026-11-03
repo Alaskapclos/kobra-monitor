@@ -55,6 +55,13 @@ class PrintIntentTests(unittest.IsolatedAsyncioTestCase):
    self.data.update(light_on=1,light_revision=1,connection_id='epoch')
    async def send(*args):self.data.update(change)
    self.c.print_sender=send;p=await self.prepare();self.assertEqual((await self.c.execute('owner',p['id'],p['token']))['state'],'uncertain')
+ async def test_transition_waits_for_newer_final_state_without_resending(self):
+  self.c.confirmation_timeout=.3
+  async def finish():
+   await asyncio.sleep(.01);self.data.update(light_on=2,light_revision=2)
+  async def send(*args):
+   self.sent.append(args);self.data['light_on']=0;asyncio.create_task(finish())
+  self.c.print_sender=send;p=await self.prepare();self.assertEqual((await self.c.execute('owner',p['id'],p['token']))['state'],'confirmed');self.assertEqual(len(self.sent),1)
  async def test_other_session_and_parallel_control_are_rejected(self):
   p=await self.prepare()
   with self.assertRaises(ControlRefused):await self.c.execute('other',p['id'],p['token'])
@@ -117,6 +124,10 @@ class PrintTelemetryTests(unittest.TestCase):
  def test_idle_boundary_rotates_identity_even_when_next_local_job_looks_identical(self):
   self.report();before=self.p.signature();self.p.receive('info',{'data':{'state':'free','project':None}},'epoch')
   self.report(elapsed=31);self.assertNotEqual(before,self.p.signature())
+ def test_transition_preserves_identity_without_refreshing_authority(self):
+  self.report();before=self.p.signature();seen=self.p.seen;rev=self.p.revision;self.clock+=1
+  self.p.receive('print',{'state':'pausing','data':{}},'epoch');self.assertEqual(self.p.phase,0);self.assertEqual(before,self.p.signature());self.assertEqual(seen,self.p.seen);self.assertEqual(rev,self.p.revision)
+  self.report('paused');self.assertEqual(before,self.p.signature());self.assertEqual(self.p.phase,2)
  def test_new_connection_never_reuses_old_context(self):
   self.report();before=self.p.token;self.report(epoch='new');self.assertNotEqual(before,self.p.token)
  def test_preparation_and_unknown_states_disarm(self):

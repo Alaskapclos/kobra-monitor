@@ -42,7 +42,12 @@ class PrintJobState:
                  or (self.phase in (3,4) and PHASES.get(phase) in (1,2)))
         if changed:
             self.token=uuid.uuid4().hex;self.history_id=None;self.seen=float('-inf')
-        # Missing fields and intermediate states immediately disarm old actions.
+        if phase in ('pausing','resuming','stopping'):
+            # Transitional reports disarm new sends, but preserve identity while
+            # a previously sent action waits for its final state. They do not
+            # refresh the previous full report's authority or revision.
+            self.phase=0;return
+        # Missing fields and unknown states immediately disarm old actions.
         # Only a full status, never an acknowledgement/default, refreshes authority.
         next_phase=PHASES.get(phase,0)
         if not next_phase and self.phase:
