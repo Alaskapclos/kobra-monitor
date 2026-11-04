@@ -1,15 +1,44 @@
 # Kobra Monitor
 
-Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
+Eine lokale, standardmäßig lesende Übersicht für den **Anycubic Kobra S1 mit
 Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
 Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
 
-**Stand: 0.18.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
-der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
-Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
-zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
-UGREEN DXP4800GT mit UGOS läuft der amd64-Container mit zwei Druckern;
-Einrichtung und aktive Verlaufseinträge blieben beim Containerneustart erhalten.
+**Entwicklungsstand: 0.28.2-alpha.1 – Vorabversion.** Standardmäßig bleibt die Druckeranbindung lesend. Steuerungen müssen ausdrücklich pro Drucker freigegeben werden. Die Oberfläche funktioniert auf Desktop und Handy; am Handy sind die Bereiche untereinander angeordnet.
+
+## Enthaltene Funktionen
+
+- Mehrere lokale Drucker mit eigener Statuskarte, Fortschritt, Temperaturen, Datenfrische und gespeicherter Reihenfolge.
+- Geschützte Kameraansicht mit Vergrößerung und optionaler Mehrkameraübersicht.
+- Druckhistorie, Temperaturkurven, Druckberichte und Auftragszuordnung mit Export für die eigene Ablage.
+- Privates Originaldatei-Archiv für fertige `.gcode.3mf`-Pakete: SHA-256/ZIP-Prüfung, getrennte Versionen bei geändertem Inhalt, manuelle Auftragszuordnung und Originaldownload. Optionaler macOS-Slicerhelfer mit dauerhafter Offline-Warteschlange; [Einrichtung und Grenzen](docs/FILE_ARCHIVE.md).
+- Spoolman-Anbindung einschließlich eingebetteter nativer Spulenverwaltung und expliziter ACE-Slot-/Kennungszuordnung. Spoolman bleibt die Bestandsdatenbank.
+- Optionale Web-Push-Benachrichtigungen je Gerät für Druckereignisse und Verbindungsprobleme; Einrichtung über HTTPS und mit eigener Browserfreigabe.
+- Lokales Benutzerkonto, private Nutzung über VPN/HTTPS, Betriebsdiagnose und separat betreibbarer Sicherungsdienst.
+
+Die Originaldatei-Archivierung ist lokal mit synthetischen Dateien einschließlich HTTP-Übertragung und Sicherungswiederherstellung geprüft. Der nächste echte Slicerauftrag muss den beobachteten macOS-Cachepfad praktisch bestätigen. Nachdruck aus dem Archiv ist noch nicht implementiert.
+
+## Optionale Druckersteuerung
+
+| Funktion | Bedienung | Grenzen |
+| --- | --- | --- |
+| Kammerlicht | Direkter Schalter ohne Zusatzdialog | Neue Druckermeldung bestätigt den Zustand |
+| Drei Lüfter | Stufenauswahl und OK | Gemeldete Einstellungen, keine gemessenen Drehzahlen |
+| Speed Mode | Silent, Standard oder Sport und OK | Nur während eines aktuellen laufenden Drucks |
+| Düse und Druckbett | Getrennter Sollwertdialog und OK; 0 °C schaltet den Heizer aus | S1: Düse bis 320 °C, Bett bis 120 °C; Bestätigung des Sollwerts bedeutet nicht, dass die Temperatur erreicht ist |
+| Pause und Fortsetzen | Bestätigung mit Drucker und Datei | Nur im passenden frischen Druckzustand |
+| Manuelle Bewegung | X/Y/Z mit 1/15/50 mm, getrennte Referenzfahrten XY und Z, Warnhinweis und erste Anwesenheitsbestätigung bis zum nächsten Druck; Homing immer einzeln | Optional, nur im frischen Leerlauf; Versand ist keine Bestätigung der physischen Ausführung |
+| Druckabbruch | Auch bei Vorbereitung/Bettnivellierung, eigener Bestätigungsdialog | Der abgebrochene Druck kann nicht fortgesetzt werden |
+
+Freigaben und Protokollgrenzen: [Licht](docs/LIGHT_CONTROL.md), [Lüfter](docs/FAN_CONTROL.md), [Speed Mode](docs/SPEED_CONTROL.md), [Temperaturen](docs/TEMPERATURE_CONTROL.md), [Druckaktionen](docs/PRINT_CONTROL.md), [Achsen und Homing](docs/MOTION_CONTROL.md).
+
+Die Freigabelisten `KOBRA_LIGHT_CONTROL_IPS`, `KOBRA_FAN_CONTROL_IPS`, `KOBRA_SPEED_CONTROL_IPS`, `KOBRA_TEMPERATURE_CONTROL_IPS`, `KOBRA_PRINT_CONTROL_IPS` und `KOBRA_MOTION_CONTROL_IPS` sind standardmäßig leer. Eine Funktion erhält damit keine automatische Freigabe für alle eingerichteten Drucker. Anmeldung, aktuelle Zustandsdaten, gebundener Zielauftrag und Einzelversand bleiben erforderlich. Bei unklarem Ausgang gibt es keinen automatischen Wiederholungsversuch.
+
+## Unterstützter und geprüfter Umfang
+
+Stock-Anycubic-Kobra-S1 mit LAN-Modus (Modellkennung 20025). Zwei echte Drucker wurden gleichzeitig unter macOS und auf einem UGREEN DXP4800GT mit UGOS/amd64 betrieben. Licht, die drei Lüfter, Speed Mode und Solltemperaturen wurden vom Besitzer am ersten S1 praktisch bestätigt. Druckabbruch einschließlich Vorbereitung sowie manuelle Achsen, korrigierte Z-Tischrichtung und Homing wurden vom Besitzer an diesem S1 praktisch bestätigt. Pause und Fortsetzen sind implementiert und synthetisch geprüft; ihre gesonderte physische Abnahme steht noch aus. Der Reset der manuellen Anwesenheitsfreigabe bei einem neuen Druck wurde synthetisch geprüft und ist als eigener realer Ablauf noch nicht bestätigt. Andere Druckermodelle, Firmwares, NAS und ARM64 sind damit nicht als getestet zugesagt.
+
+Nicht enthalten: Dateiübertragung zum Drucker und Druckstart, Filamenttransport und Trocknungssteuerung. Spoolman-Verbrauch wird nicht automatisch gebucht. ACE-Prozentangaben sind keine gemessenen Gramm. Die lokale Ausführung des Drucks ist vom Monitor unabhängig; eine Überwachungslücke ist kein Druckabbruch. Der Monitor ersetzt keine Sicherheitsfunktionen des Druckers.
 
 ![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
 
@@ -23,7 +52,7 @@ PyPI. Der Python-Installer für Windows sollte den Python Launcher mit installie
    - macOS: `Start-Kobra-Monitor.command`
    - Windows: `Start-Kobra-Monitor.cmd`
    - Linux: `sh Start-Kobra-Monitor.sh`
-3. Der Browser öffnet die lokale Oberfläche und meldet diesen Browser automatisch an.
+3. Der Browser öffnet die lokale Oberfläche. Beim ersten Start deinen Benutzernamen und dein Passwort festlegen; später mit diesem Konto anmelden.
 4. Im Assistenten pro Drucker eine IP-Adresse eingeben. Weitere Geräte mit **Drucker hinzufügen** ergänzen und **Speichern und verbinden** wählen. Der Assistent zeigt den Verbindungsstand pro Gerät.
 5. Unter **Einrichten** lassen sich die Adressen später ändern.
 
@@ -82,6 +111,8 @@ vorhandene VPN auf ihn zu. Es gibt keinen vorgeschriebenen VPN-Anbieter.
 
 [Anleitung und Grenzen des Fernzugriffs](docs/REMOTE_ACCESS.md).
 Kein Portforwarding aus dem öffentlichen Internet auf den Monitor.
+
+Für die ersten Schritte im Browser: [Kurzanleitung für den Alltag](docs/BEDIENUNG.md).
 
 ## Drucker anordnen
 
@@ -184,3 +215,11 @@ Unter **Betriebsstatus → Öffnen** prüfst du Verbindungsfrische, Kameraaufber
 Jede Druckerkarte zeigt Druckstatus, Fortschritt, geschätzte Restzeit sowie Düse und Druckbett. Eine Karte auswählen öffnet die vertrauten Details darunter. Karten bleiben per Ziehen oder Tastatur sortierbar. Fortschritt und Restzeit erscheinen nur bei aktuellen Druck-/Pausendaten; während der Vorbereitung werden möglicherweise zwischengespeicherte Werte ausgeblendet. Veraltete Druckdaten und Temperaturen werden getrennt behandelt. Bei Verbindungsverlust werden die Livewerte in der Karte ausgeblendet.
 
 Der größere Projektplan steht in [ROADMAP.md](ROADMAP.md). Einrichtung der optionalen Spulenverwaltung: [Spoolman-Anbindung](docs/SPOOLMAN.md). Noch keine automatische Verbrauchsbuchung oder NFC-Zuordnung.
+
+## Kundenaufträge und Berichte
+
+Navigation mit getrennten Arbeitsbereichen, optionale Kundenauftragsnummern und manuelle Qualitätsabnahme, feste Berichtsversionen sowie PDF-/JSON-/Markdown- und ZIP-Export: [Bedienung und Archivgrenzen](docs/CUSTOMER_REPORTS.md). Keine Druckersteuerung oder automatische Verbrauchsbuchung.
+
+Die originale Spoolman-Oberfläche kann ab 0.20 geschützt unter **Spulen → Spulen verwalten** eingebettet werden. [Einrichtung und Updates](docs/SPOOLMAN_EMBEDDED.md). Manuelle Änderungen schreiben in Spoolman; die Drucker bleiben lesend.
+
+Manuelle Bewegung: siehe [Bedienung und Grenzen](docs/MOTION_CONTROL.md). Vor jedem Fahrbefehl direkt am Drucker stehen, freien Fahrweg und Abstand zwischen Düse und Druckbett prüfen. Die Standardinstallation aktiviert keine Achsensteuerung.

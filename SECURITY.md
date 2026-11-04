@@ -3,9 +3,24 @@
 Diese Alpha ist für vertrauenswürdige Heim-/Druckernetze und privaten Zugriff
 über VPN bestimmt. Keine Freigabe direkt im öffentlichen Internet.
 
-- MQTT-Publish und die endgültige Serialisierung sind auf fünf bestehende
-  Statusabfragen begrenzt. Automatische Kamera-, ACE- und Spoolman-Schreibaktionen
-  sind deaktiviert. Die lokalen HTTP-Routen enthalten keine Druckersteuerung.
+- Der allgemeine Druckerclient und die Bridge bleiben auf begrenzte Statusabfragen beschränkt.
+  Optionale Steuerungen nutzen separate, pro S1 ausdrücklich freizugebende Wege für Licht,
+  Lüfter, Speed Mode, Solltemperaturen, Pause/Fortsetzen/Abbruch sowie manuelle Achsen/Homing.
+  Diese Freigabelisten sind standardmäßig leer. Kein allgemeiner G-Code, Datei-Upload,
+  Druckstart, Filamenttransport oder automatisches Kamera-/ACE-/Spoolman-Schreiben.
+- Steuerzugriffe erfordern Besitzeranmeldung, CSRF-Token und passenden Browser-Ursprung.
+  Aktuelle Telemetrie und die konkrete Verbindung werden unmittelbar vor einem einmaligen
+  Versand geprüft. Zustands-/Auftragsänderungen verwerfen alte Bestätigungen. Kein
+  automatischer Wiederholungsversuch bei unklarem Ausgang. Ein Schaltprotokoll wird vor
+  Versand im privaten Datenbestand gespeichert und mitgesichert.
+- Licht schaltet direkt. Lüfter, Speed Mode, Temperaturen und Druckaktionen erfordern eine
+  Bestätigung. Manuelle Achsen sind nur im frischen Leerlauf verfügbar: erste X/Y/Z-Fahrt
+  mit Anwesenheitsbestätigung, danach weitere Schritte derselben Anmeldung an diesem Drucker
+  bis zum nächsten erkannten regulären Druck ohne weiteren Dialog. Schon dessen Vorbereitung
+  setzt die Freigabe zurück. Homing benötigt immer eine eigene Bestätigung. Die Anwesenheit
+  wird vom Bediener erklärt, nicht technisch nachgewiesen; weder Kamera noch Wartezeiten
+  stellen eine Kollisions- oder Stillstandsgarantie dar. Bewegungsversand wird nicht als
+  bestätigter mechanischer Abschluss ausgegeben.
 - Ein lokales Besitzerkonto mit Benutzername und Passwort. scrypt (N=32768,
   r=8, p=3), zufälliger 16-Byte-Salt, 32-Byte-Prüfwert; kein Klartextpasswort.
   Ersteinrichtung/Altdaten-Umstieg nur mit dem geschützten Einrichtungsschlüssel;
@@ -48,3 +63,13 @@ Passwortparameter: [OWASP Password Storage Cheat Sheet](https://cheatsheetseries
 Kamera ab 0.12: ausschließlich GET auf den vorhandenen Stock-FLV-Stream eingerichteter Drucker. Keine startCapture-/stopCapture-Publishes, keine Freigabe zusätzlicher MQTT-Kommandos. Kamera-Bildroute benötigt dieselbe Kontositzung. Decoder akzeptiert nur HTTP/TCP, festes FLV-Format und keine Redirects. Maximal zwei geteilte JPEG-Decoder, inaktive Leser werden beendet; alte Bilder werden nicht als live ausgegeben. Der Browser lädt Bilddaten vom angemeldeten Monitor, einschließlich HTTPS. Keine Aufzeichnung auf Datenträger. FFmpeg verarbeitet Druckerdaten innerhalb desselben eingeschränkten Containers; nur in vertrauenswürdigem Druckernetz betreiben.
 
 Die Kameraübersicht verwaltet zufällige lokale Ansichtskennungen. POST `/api/camera/release` ist nur mit Konto, CSRF und passender Origin erlaubt und räumt ausschließlich Monitor-Leser auf. Keine MQTT- oder Druckerbefehle; keine Änderung von Drucker/Kamera-Einstellungen.
+
+## Eingebettetes Spoolman ab 0.20
+
+Die originale Spoolman-Anwendung unter `/spoolman/` benötigt dieselbe Besitzeranmeldung. Ihre manuellen Bestandsänderungen sind absichtlich möglich; keine automatische Verbrauchsbuchung und keine Druckersteuerung. Native API-Schreibzugriffe benötigen einen ausdrücklich mit dem Monitor-Host übereinstimmenden Origin-Header und ein Sitzungscookie. Die Originaloberfläche kann keinen Monitor-CSRF-Header setzen; hierfür wird der strikte Origin-Abgleich zusammen mit SameSite-Strict verwendet. Cookies, Zugangsdaten, CORS- und externe Weiterleitungsfreigaben werden nicht durchgereicht. Spoolman ist unter demselben Ursprung vertrauenswürdiger Anwendungscode. Details: [Einbettung](docs/SPOOLMAN_EMBEDDED.md).
+
+## Originaldatei-Archiv ab 0.28
+
+Computerzugänge sind getrennte, zufällige Bearer-Schlüssel mit ausschließlich zwei POST-Rechten (`/api/archive/ingest`, `/api/archive/heartbeat`). In der Datenbank liegt nur SHA-256 des Schlüssels. Ein Schlüssel erlaubt weder Dateiauslesen noch Besitzerfunktionen oder Druckerbefehle. Browser-Origin-/Fetch-Site-Anfragen werden für diesen Maschinenpfad abgelehnt. Die Besitzerverwaltung und Originaldownloads bleiben sitzungsgeschützt; Verwaltungsänderungen verlangen Origin/CSRF. Computerschlüssel können widerrufen werden und liegen privat im Helferprofil; vollständige NAS-Sicherungen enthalten ihre Hashes.
+
+Uploadgröße, entpackte Summe, Eintragsanzahl, Speicherreserve und Archivkapazität sind begrenzt. Keine ZIP-Extraktion oder G-Code-Ausführung. Nur ein Eingang gleichzeitig; temporäre Eingänge werden nie als Originale angezeigt. Nach vollständiger CRC-/Größen-/Hash-Prüfung wird vor dem Katalogeintrag atomar und dauerhaft gespeichert. Kein öffentlicher Dateipfad. Der Helfer prüft TLS, lehnt Weiterleitungen/Proxies ab und erlaubt unverschlüsseltes HTTP nur an lokale IP-Adressen. Ausführliche Grenzen und private Datenpfade: [Originaldatei-Archiv](docs/FILE_ARCHIVE.md).

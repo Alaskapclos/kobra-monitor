@@ -30,7 +30,7 @@ def local_url(value):
         return ''
     try:
         u = urlsplit(value)
-        if u.scheme not in ('http', 'https') or u.username or u.password or u.query or u.fragment or u.path:
+        if u.scheme not in ('http', 'https') or u.username or u.password or u.query or u.fragment or u.path not in ('', '/spoolman'):
             raise ValueError()
         if not u.hostname or not 1 <= (u.port or (443 if u.scheme == 'https' else 80)) <= 65535:
             raise ValueError()
@@ -40,7 +40,7 @@ def local_url(value):
                 raise ValueError()
         return value
     except ValueError:
-        raise ValueError('Lokale Adresse ohne Pfad oder Zugangsdaten verwenden, z. B. http://192.168.1.20:7912. Im gemeinsamen Docker-Netz ist http://spoolman:8000 möglich.') from None
+        raise ValueError('Lokale Adresse ohne Zugangsdaten verwenden; als Pfad ist /spoolman möglich, z. B. http://192.168.1.20:7912. Im gemeinsamen Docker-Netz ist http://spoolman:8000 möglich.') from None
 
 
 def weight(value):

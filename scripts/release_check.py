@@ -1,20 +1,21 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Check the prospective repository contents, not local runtime directories."""
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
 
 root=Path(__file__).resolve().parent.parent
 try:
-    result=subprocess.run(['git','ls-files','-z'],cwd=root,capture_output=True,check=True)
+    result=subprocess.run(['git','ls-files','--cached','--others','--exclude-standard','-z'],cwd=root,capture_output=True,check=True)
     paths=[root/value for value in result.stdout.decode().split('\0') if value]
 except (OSError,subprocess.CalledProcessError):
     paths=[p for p in root.rglob('*') if p.is_file() and not any(v in ('.git','.venv','.state','data','__pycache__') for v in p.relative_to(root).parts)]
 errors=[]
 for file in paths:
     name=str(file.relative_to(root));parts=file.relative_to(root).parts
-    if any(v in ('.state','.venv','data','backups','.backups','__pycache__') for v in parts) or file.name.startswith('kobra-backup-') or file.name.startswith('.account-') or file.name.startswith('.push-') or file.name in ('.env','access-token','account.json','spoolman.json','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
+    if any(v in ('.state','.venv','data','backups','.backups','report-archive','file-archive','.archive-incoming','archive-queue','__pycache__') for v in parts) or file.name.startswith('kobra-backup-') or file.name.startswith('.account-') or file.name.startswith('.push-') or file.name in ('.env','access-token','account.json','spoolman.json','archive-client.json','.DS_Store') or file.suffix in ('.key','.pem','.crt','.sqlite3','.log'):
         errors.append('Runtime/private file: '+name)
     body=file.read_bytes()
     for key_type in ('','RSA ','EC '):
@@ -22,6 +23,12 @@ for file in paths:
     if (str(Path.home())+'/').encode() in body:errors.append('Personal absolute path: '+name)
 for name in ('LICENSE','NOTICE.md','SOURCES.json','README.md','SECURITY.md','compose.yaml','.github/workflows/ci.yml'):
     if not (root/name).exists():errors.append('Missing '+name)
+version=(root/'VERSION').read_text().strip()
+for name in ('compose.yaml','deploy/ugos/compose.yaml','deploy/ugos/backups.compose.yaml','.github/workflows/ci.yml'):
+    file=root/name
+    if file.exists():
+        for image_version in re.findall(r'kobra-monitor:([0-9][0-9A-Za-z.\-]+)',file.read_text()):
+            if image_version != version:errors.append('Image version mismatch: '+name)
 if errors:
     print('\n'.join(errors));sys.exit(1)
 print(f'Release content check passed ({len(paths)} files). This does not replace comprehensive secret scanning.')

@@ -26,7 +26,7 @@ nicht mit entfernen.
 Für die Vorlage müssen fünf Werte aus der bestehenden Installation eingesetzt
 werden: Image-Tag, tatsächlicher Datenvolume-Name, absoluter Projektordner,
 Gruppen-ID des Projektordners (UGOS zeigt beim Projektformular PGID an) sowie
-das importierte Sicherungsimage `kobra-monitor:0.8.0-alpha.1`. Beispielwerte sind
+das importierte Sicherungsimage passend zur eingesetzten Monitor-Version. Beispielwerte sind
 keine voreingestellten persönlichen Ziele. Das vorhandene Monitor-Volume muss
 als **external** referenziert werden; andernfalls würde ein leeres Volume gesichert.
 Die zusätzliche Gruppe erlaubt das Lesen der bereits vorhandenen Compose-Datei
@@ -50,7 +50,7 @@ eine konsistente Kopie der Datenbank einschließlich bereits bestätigter WAL-Da
 Auf einem Rechner aus dem Projektordner:
 
 ```sh
-python backup.py create --data-dir .state --destination /separater/sicherungsordner --image kobra-monitor:0.8.0-alpha.1
+python backup.py create --data-dir .state --destination /separater/sicherungsordner --image kobra-monitor:DEINE-VERSION
 python backup.py inspect /separater/sicherungsordner/kobra-backup-ZEIT-ID.zip
 ```
 
@@ -109,3 +109,13 @@ werkzeug ab 0.9 verwenden; ein Downgrade auf die frühere Code-Anmeldung würde
 das neue Kontomodell nicht durchsetzen und ist nicht unterstützt.
 
 Seit 0.14 gehören auch `push-vapid.pem`, Geräteanmeldungen und Benachrichtigungswarteschlange zur vollständigen Sicherung. Sie sind privat. Eine wiederhergestellte Kopie zum Prüfen nicht als zweiten sendenden Monitor starten.
+
+## Welche Daten gehören zusammen?
+
+- **Monitor:** Historie, Konto, Einrichtung, gespeicherte Druckerreihenfolge und Spulenverknüpfungen liegen im Monitor-Datenordner. Ab Version 0.14 gehören auch die Push-Geräte/Queue in der Datenbank und der private Schlüssel `push-vapid.pem` dazu. Diese Dateien sind vertraulich.
+- **Spoolman:** Spulen, Filamente, Hersteller und Gewichte liegen im eigenen Spoolman-Datenvolume. Das Monitor-Archiv enthält diesen Bestand nicht. Native Spoolman-Sicherungen zusätzlich prüfen und getrennt aufbewahren.
+- **Installation:** Passendes Monitor-/Sicherungsimage und die aktive Compose-Datei aufbewahren. Das Manifest nennt das Wiederherstellungsimage. VPN-/NAS-Einstellungen sind separat zu dokumentieren.
+
+Eine isolierte Wiederherstellung prüft Daten, ohne die produktive Installation zu ersetzen. Dabei keine zweite Monitor-Instanz mit denselben Druckeradressen starten. Ein vorhandenes Archiv allein belegt noch keinen erfolgreichen Wiederherstellungstest.
+
+Der Standarddienst erstellt nach jeweils 24 Stunden eine Sicherung; es ist keine fest eingestellte Uhrzeit. Den nächsten Termin aus dem letzten erfolgreichen regulären Stand ableiten. Manuelle Sonderstände sind getrennt zu behandeln. Ein Kopieren auf einen anderen Rechner muss zusätzlich eingerichtet werden; der NAS-Dienst überträgt keine laufenden externen Kopien.

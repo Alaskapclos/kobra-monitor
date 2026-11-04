@@ -15,5 +15,8 @@
     "test_read_only.py"
   ],
   "additional_camera_cache_change": "2026-10-31: JPEG full-range pixel format and single encoder thread; device command whitelist unchanged",
-  "camera_cache_file_sha256": "24152eb51307d7b04f13c8ef6634efa618034709f7924969aa6ab82ed03e8cc9"
+  "camera_cache_file_sha256": "24152eb51307d7b04f13c8ef6634efa618034709f7924969aa6ab82ed03e8cc9",
+  "additional_peripheral_status_change": "Allow only light/query with null data for chamber-light reports; all control actions remain blocked.",
+  "read_only_policy_sha256": "69caf8a3b68c7bdf4d94a7d530a38af9e9a9bfdec63ea5f57f6bc04a2c0ddb59",
+  "additional_fan_query_change": "Allow fan/query with null data only; settings and control verbs remain blocked. Verified through production client policy."
 }

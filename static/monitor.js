@@ -25,7 +25,7 @@ let archivePage = 0;
 let archiveRequest = 0;
 let archiveDebounce = null;
 const printerButtons = new Map();
-const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',cancelled:'Abgebrochen'};
+const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',preparing:'Vorbereitung',pausing:'Wird pausiert …',resuming:'Wird fortgesetzt …',stopping:'Wird abgebrochen …',cancelled:'Abgebrochen'};
 
 function renderSlots(data, seen, stale) {
   const area = $('slots');
@@ -40,7 +40,7 @@ function renderSlots(data, seen, stale) {
     const card = document.createElement('div'); card.className = `slot${active?' active':''}${stale?' stale':''}`;
     const top = document.createElement('div'); top.className = 'slot-top';
     const label = document.createElement('span'); label.className = 'slot-number'; label.textContent = `SLOT ${Number(slot.global_index??slot.index)+1}`; top.append(label);
-    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent='Geladen'; top.append(tag); }
+    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent=stale?'Zuletzt geladen':'Geladen'; top.append(tag); }
     const spool = document.createElement('div'); spool.className='spool';
     const rgb = Array.isArray(slot.color) && slot.color.length>=3 && slot.color.slice(0,3).every(x=>number(x)&&x>=0&&x<=255) ? slot.color.slice(0,3) : [180,190,166];
     spool.style.borderColor = `rgb(${rgb.join(',')})`;
@@ -54,17 +54,45 @@ function renderSlots(data, seen, stale) {
   }
 }
 
+function renderDeviceStatus(snapshot, extraAge, connection) {
+  const readings=snapshot.device_status||{}, limit=number(snapshot.stale_after_s)?snapshot.stale_after_s:90;
+  const modes={1:'Silent',2:'Standard',3:'Sport'};
+  for(const key of ['fan_speed','aux_fan_speed','box_fan_level','light_on','speed_mode']) {
+    const target=$('device-'+key), stamp=$('device-'+key+'-age');if(!target||!stamp)continue;
+    const reading=readings[key], valid=reading&&number(reading.age_s)&&reading.age_s>=0&&
+      (key==='light_on'?typeof reading.value==='boolean':number(reading.value));
+    const track=$('device-'+key+'-track'), fill=$('device-'+key+'-bar');
+    if(track){track.hidden=true;if(fill)fill.style.width='0%';}
+    const light=key==='light_on'?$('device-light-icon'):null;if(light)light.dataset.state='unknown';
+    if(!valid){target.textContent='Nicht gemeldet';stamp.textContent='';target.classList.toggle('device-reading-stale',false);continue;}
+    const age=reading.age_s+extraAge, old=connection!=='online'||age>limit||reading.current_session===false;
+    const v=reading.value;
+    target.textContent=key==='light_on'?(v?'An':'Aus'):key==='speed_mode'?(modes[v]||`Unbekannter Modus (${v})`):key==='box_fan_level'?`Stufe ${v} / 100`:`${v} %`;
+    stamp.textContent=(old?'Veraltet · ':'')+ageText(age);target.classList.toggle('device-reading-stale',old);
+    if(light)light.dataset.state=old?'stale':v?'on':'off';
+    if(track&&fill&&!old&&v>=0&&v<=100){fill.style.width=`${v}%`;track.hidden=false;}
+  }
+}
+
 function renderPrinter(snapshot) {
   const extraAge = Math.max(0,(Date.now()-lastFetchAt)/1000);
   const ages = snapshot.section_age_s || {};
-  const sectionAge = name => number(ages[name]) ? ages[name]+extraAge : null;
+  const limit=number(snapshot.stale_after_s)&&snapshot.stale_after_s>=0?snapshot.stale_after_s:90;
+  const sectionAge = name => number(ages[name])&&ages[name]>=0 ? ages[name]+extraAge : null;
   const seen = name => number(sectionAge(name));
-  const stale = name => !seen(name) || sectionAge(name)>snapshot.stale_after_s;
+  const stale = name => connection!=='online' || !seen(name) || sectionAge(name)>limit;
   const data = snapshot.data || {};
   const age = number(snapshot.age_s)?snapshot.age_s+extraAge:null;
   let connection = snapshot.connection;
-  if (connection==='online' && number(age) && age>snapshot.stale_after_s) connection='stale';
+  if (connection==='online' && number(age) && age>limit) connection='stale';
   if (requestFailed || extraAge>10) connection='offline';
+  renderDeviceStatus(snapshot,extraAge,connection);
+  window.kobraLightControls?.render(snapshot,extraAge,connection);
+  window.kobraFanControls?.render(snapshot,extraAge,connection);
+  window.kobraSpeedControls?.render(snapshot,extraAge,connection);
+  window.kobraTemperatureControls?.render(snapshot,extraAge,connection);
+  window.kobraPrintControls?.render(snapshot,extraAge,connection);
+  window.kobraMotionControls?.render(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';
@@ -73,24 +101,25 @@ function renderPrinter(snapshot) {
   banner.hidden=connection==='online';
   banner.textContent=requestFailed||extraAge>10 ? 'Der lokale Monitor ist nicht erreichbar. Letzte bekannte Werte werden angezeigt. Starte den Monitor bei Bedarf erneut.' : connection==='stale' ? 'Die Verbindung liefert keine frischen Daten. Angezeigte Werte sind veraltet; die Verbindung wird automatisch erneuert.' : snapshot.message || 'Verbindung zum Drucker wird aufgebaut. Messwerte erscheinen, sobald sie eintreffen.';
   const knownPrint=seen('print');
-  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init'].includes(data.print_state);
-  $('print-state').textContent=knownPrint?(stateNames[data.print_state]||'Status unbekannt'):'Wird verbunden…';
-  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')||connection==='offline'?'Letzter bekannter Druckerstatus.':active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
-  $('remaining').textContent=active?duration(data.remain_time):'—';
-  $('layer').textContent=active&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
-  const progress=active&&number(data.progress)?Math.max(0,Math.min(1,data.progress)):null;
+  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init','preparing','pausing','resuming','stopping'].includes(data.print_state);
+  const advancing=!stale('print')&&['printing','paused'].includes(data.print_state);
+  $('print-state').textContent=!knownPrint?'Wird verbunden…':stale('print')?'Status veraltet':stateNames[data.print_state]||'Status unbekannt';
+  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')?`Letzter bekannter Druckerstatus: ${stateNames[data.print_state]||'unbekannt'}.`:active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
+  $('remaining').textContent=advancing?duration(data.remain_time):'—';
+  $('layer').textContent=advancing&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
+  const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?data.progress:null;
   $('progress-value').textContent=progress===null?'—':`${Math.round(progress*100)}%`;
-  $('progress-caption').textContent=active?'Fortschritt':knownPrint?'Kein aktiver Druck':'Kein Messwert';
+  $('progress-caption').textContent=stale('print')?'Keine aktuellen Druckdaten':advancing?'Fortschritt':['pausing','resuming','stopping'].includes(data.print_state)?'Rückmeldung wird abgewartet':active?'Vorbereitung':knownPrint?'Kein aktiver Druck':'Kein Messwert';
   $('progress-circle').setAttribute('stroke-dashoffset',String(414.69*(1-(progress??0))));
   const previous=snapshot.last_project;
-  $('file-label').textContent=active?'AKTUELLE DRUCKDATEI':previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
+  $('file-label').textContent=active?(stale('print')?'ZULETZT GEMELDETE DRUCKDATEI':'AKTUELLE DRUCKDATEI'):previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
   $('filename').textContent=active?fileName(data.filename):previous?fileName(previous.filename):'Kein aktiver Druckauftrag.';
   $('print-freshness').textContent=seen('print')?`${stale('print')?'Veraltet · ':''}${ageText(sectionAge('print'))}`:'Warte auf Druckerstatus';
   for (const [prefix,max] of [['nozzle',320],['bed',120]]) {
     const current=seen('temperature')?data[`${prefix}_temp`]:null;
     const target=seen('temperature')?data[`${prefix}_target`]:null;
     $(prefix+'-temp').textContent=value(current); $(prefix+'-target').textContent=value(target);
-    $(prefix+'-mode').textContent=!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
+    $(prefix+'-mode').textContent=!seen('temperature')?'—':stale('temperature')?'Letzter bekannter Wert':!number(current)||!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
     $(prefix+'-bar').style.width=`${number(current)?Math.max(0,Math.min(100,current/max*100)):0}%`;
   }
   $('temp-freshness').textContent=seen('temperature')?`${stale('temperature')?'Veraltet · ':''}${ageText(sectionAge('temperature'))}`:'Warte auf Temperaturen';
@@ -206,6 +235,15 @@ function renderPickerOverview(button,view){
 }
 
 function render(snapshot) {
+  const lightEnabled=snapshot.controls?.chamber_light===true;
+  const fanEnabled=snapshot.controls?.fans===true;
+  const motionEnabled=snapshot.controls?.motion===true;
+  const printEnabled=snapshot.controls?.print_job===true;
+  const temperatureEnabled=snapshot.controls?.temperature===true;
+  const speedEnabled=snapshot.controls?.speed_mode===true;
+  if($('installation-mode'))$('installation-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Druckersteuerung freigegeben':temperatureEnabled?'Druckersteuerung freigegeben':speedEnabled?'Druckersteuerung freigegeben':fanEnabled?'Licht-/Lüftersteuerung freigegeben':lightEnabled?'Lichtsteuerung freigegeben':'Drucker nur lesen';
+  if($('footer-mode'))$('footer-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Status und Druckersteuerung':temperatureEnabled?'Status und Druckersteuerung':speedEnabled?'Status und Druckersteuerung':fanEnabled?'Status, Licht und Lüfter':lightEnabled?'Status und Kammerlicht':'Status ohne Eingriff';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=motionEnabled?'Manuelle Fahrten und weitere Druckersteuerungen einstellbar.':printEnabled?'Druckaktionen, Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':temperatureEnabled?'Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':speedEnabled?'Licht, Lüfter und Speed Mode einstellbar.':fanEnabled?'Licht und Lüfter gezielt einstellbar.':lightEnabled?'Kammerlicht direkt schaltbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
@@ -257,7 +295,12 @@ function render(snapshot) {
   $('printer-order-status').hidden=printers.length<2;
   const chosen=printers.find(p=>p.ip===selectedIp);
   if(chosen)renderPrinter(chosen);
-  window.kobraSpools?.setPrinters(printers,chosen?.ip);
+  // Cached status keeps aging even while no new response arrives.
+  const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
+  const spoolPrinters=printers.map(p=>({...p,
+    connection:requestFailed||extraAge>10?'offline':p.connection,
+    section_age_s:Object.fromEntries(Object.entries(p.section_age_s||{}).map(([key,age])=>[key,number(age)?age+extraAge:age]))}));
+  window.kobraSpools?.setPrinters(spoolPrinters,chosen?.ip);
   window.kobraCamera?.setPrinters?.(printers);
   window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available,snapshot.camera_message);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();
@@ -271,9 +314,10 @@ function render(snapshot) {
 }
 
 function renderHistory(jobs,ip) {
+  window.kobraOrders?.setScope(ip);
   const container=$('history-content');if(!container)return;
   const selected=jobs.filter(job=>job.ip===ip);
-  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at})=>({id,filename,state,progress,observed_start,first_seen,ended_at}))]);
+  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version})=>({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version}))]);
   if(signature===historySignature)return;
   historySignature=signature;
   container.replaceChildren();
@@ -298,13 +342,14 @@ function renderHistory(jobs,ip) {
     if(!job.ended_at&&number(job.progress))state.textContent+=` · ${Math.round(job.progress)} %`;
     const actions=document.createElement('div');actions.className='history-actions';
     const report=document.createElement('a');report.className='report-link';
-    report.textContent='Bericht laden';report.href='/api/report?job='+encodeURIComponent(job.id);
+    report.textContent='Aufzeichnung als Text';report.href='/api/report?job='+encodeURIComponent(job.id);
     report.setAttribute('download','');
-    report.setAttribute('aria-label','Bericht laden: '+fileName(job.filename));
+    report.setAttribute('aria-label','Aufzeichnung als Text: '+fileName(job.filename));
     const view=document.createElement('button');view.type='button';view.className='timeline-button';
     view.textContent='Verlauf ansehen';view.dataset.job=job.id;
     view.setAttribute('aria-controls','timeline-card');view.setAttribute('aria-expanded',String(timelineJob===job.id));
     view.addEventListener('click',()=>openTimeline(job));
+    window.kobraOrders?.decorate(job,file,actions);
     actions.append(state,view,report);
     row.append(file,dates,actions);container.append(row);
   }
@@ -318,8 +363,9 @@ async function refresh() {
     if(response.status===401){window.kobraAuth?.login();return;}
     if (!response.ok) throw new Error('Keine Statusdaten');
     const result=await response.json();
-    if (result.read_only!==true) throw new Error('Read-only-Modus nicht bestätigt');
+    if (result.read_only!==true && !(result.read_only===false&&(result.controls?.chamber_light===true||result.controls?.fans===true||result.controls?.speed_mode===true||result.controls?.temperature===true||result.controls?.print_job===true||result.controls?.motion===true))) throw new Error('Unbekannter Betriebsmodus');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
+    if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {
     requestFailed=true;
     if (lastResponse) render(lastResponse);
@@ -503,3 +549,7 @@ $('history-filter').addEventListener('change',filterArchive);
 $('history-prev').addEventListener('click',()=>{archivePage=Math.max(0,archivePage-1);refreshArchive();});
 $('history-next').addEventListener('click',()=>{archivePage++;refreshArchive();});
 setInterval(()=>{if(!requestFailed && !document.hidden)refreshArchive();},10000);
+
+window.addEventListener('kobra-report-changed',()=>{historySignature=null;refreshArchive();});
+
+window.addEventListener('kobra-control-changed',refresh);

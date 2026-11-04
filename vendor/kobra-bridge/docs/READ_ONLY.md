@@ -50,3 +50,5 @@ the printer from another process. Existing TLS verification behavior is unchange
 Run `python test_read_only.py` for offline regression tests, or `sh test.sh` for
 the existing suite plus these tests. The offline tests use fake sockets and never
 connect to a printer. No HTTP or MQTT control operation is needed for verification.
+
+Additional read-only status query: `light/query` with null data. No `light/control`, settings or other data are allowed.

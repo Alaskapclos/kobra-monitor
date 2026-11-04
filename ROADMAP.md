@@ -1,6 +1,6 @@
 # Projektplan und aktueller Stand
 
-Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit Einschätzen“ und den späteren Nutzerentscheidungen. Dies ist die gemeinsame Arbeitsgrundlage; geplante Punkte sind keine zugesicherten fertigen Funktionen.
+Fortgeschrieben am 03.11.2026; ursprünglicher Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit Einschätzen“ und den späteren Nutzerentscheidungen. Dies ist die gemeinsame Arbeitsgrundlage; geplante Punkte sind keine zugesicherten fertigen Funktionen.
 
 ## Leitlinien
 
@@ -10,7 +10,7 @@ Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit 
 - Spoolman-eigene NFC-/RFID-/QR-Funktionen bevorzugen. ReSpool nur bei nachgewiesenem Zusatzbedarf; Nutzer hat am 31.10.2026 ausdrücklich weniger Tools gewünscht. NFC/OpenPrintTag-Kompatibilität vor eigener Implementierung prüfen.
 - Einfache Einrichtung auf Rechner oder NAS/Server. Privates GitHub-Repository zunächst beibehalten.
 - Fernzugriff über eigenes VPN/Tailscale und Benutzerkonto; keine öffentliche Druckerfreigabe.
-- Aktueller Betrieb ausschließlich lesend gegenüber den Druckern. Der Nutzer hat am 01.11.2026 festgelegt: zuerst die Lesefunktionen vollständig abschließen; erst danach den Steuerbereich beginnen. Spoolman-Verbrauchsbuchungen sind eine gesonderte Schreibfunktion, keine Lesefunktion.
+- Standardmäßig lesender Betrieb. Seit 02.11.2026 sind Kammerlicht und die drei Lüfter optional pro S1 freigegeben. Licht ohne Zusatzdialog; Lüfterstufe erst nach OK. Physische Abnahme aller vorhandenen Steuerungen auf PC und Handy durch den Besitzer bestätigt. Weitere Steuerfunktionen benötigen eine eigene begrenzte Implementierung; keine allgemeine beschreibbare Bridge. Spoolman-Verbrauchsbuchungen bleiben eine gesonderte Schreibfunktion.
 
 ## Bereits umgesetzt und praktisch geprüft
 
@@ -18,7 +18,18 @@ Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie un
 
 Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 mit Manifest, Prüfsummen und isolierter Vollwiederherstellung erfolgreich geprüft; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
 
-## Nächste Schritte in dieser Reihenfolge
+## Aktueller Steuerbereich (Stand 0.27.1)
+
+- Kammerlicht: direkter Schalter neben der Glühbirne, physisch bestätigt.
+- Bauteil-, Zusatz- und Kammerlüfter: Einstellen direkt am Wert, Stufendialog mit OK/Abbrechen, physisch auf PC und Handy bestätigt.
+- Speed Mode: Auswahl von Silent, Standard und Sport mit OK-Bestätigung direkt am Wert, nur während eines aktuellen laufenden Drucks. Vom Besitzer praktisch bestätigt.
+- Speed Mode vom Besitzer bei laufendem Druck praktisch bestätigt (02.11.2026). Solltemperaturen für Düse und Bett mit eigener OK-Bestätigung in 0.25 implementiert; vom Besitzer direkt am Drucker bestätigt.
+- Manuelle X/Y/Z-Schritte und getrennte Homing-Tasten für Druckkopf X/Y und Druckbett Z in 0.27.1 installiert und vom Besitzer praktisch bestätigt. Z-Plus bewegt den Tisch hoch, Z-Minus herunter. Erste X/Y/Z-Fahrt mit Anwesenheitsbestätigung, weitere Fahrten bis zum nächsten regulären Druck ohne Dialog; Homing immer einzeln bestätigt. Ein neuer Druck einschließlich Vorbereitung widerruft die Freigabe serverseitig. Homing-Wartezeit30s, Einzelschritt5s. Der Freigabe-Reset nach einem neuen realen Druck bleibt separat zu prüfen.
+- Pause, Fortsetzen und Abbruch implementiert. Abbruch auch während Vorbereitung/Bettnivellierung vom Besitzer bestätigt; Pause/Fortsetzen noch separat physisch abzunehmen.
+- Dateiübertragung zum Drucker/Druckstart, Filamenttransport und Trocknungssteuerung noch nicht umgesetzt. Das zusätzliche NAS-Originalarchiv ist separat unter 0.28 beschrieben.
+- Frische, exakte Ziel-/Verbindungsprüfung, Einmalversand, kein automatischer Wiederholungsversuch und Schaltprotokoll bleiben verbindlich.
+
+## Gesamtplan (ursprüngliche Reihenfolge)
 
 1. **Spoolman-Grundlage:** bestehendes offizielles OSS unverändert als eigenen Dienst betreiben; Bestand lesend anbinden, Spulen manuell ACE-Slots zuordnen. Herkunft/Frische der Gewichtsangaben sichtbar halten. Spoolman-Daten separat sichern; Monitor-Zuordnung im bisherigen Backup erhalten.
 2. **Spulen im Alltag:** native Spoolman-Verwaltung zugänglich machen; Spulenwechsel und doppelte Zuordnungen verständlich lösen. Vorhandene Daten aus anderen Diensten nur über belegte Export-/Importmöglichkeiten übernehmen.
@@ -37,12 +48,20 @@ Der frühe Spike führte zunächst zu einem bewährten lesenden Monitor. Cloud-E
 
 Lokale ACE-SKU wird übernommen; explizit bestätigte eindeutige Kennungen sind dauerhaft mit Spoolman-IDs verknüpfbar. Wiedererkennung bei Slotwechsel mit Frische-/Duplikat-/Konfliktprüfung implementiert. Praktischer Einzelspulentest auf Stock-S1 mit vollständiger ReSpool-Kennung und Slot-Rückwechsel ohne Zuordnungskorrektur bestätigt; erster Wechsel erforderte das Lösen einer alten festen Bindung. Kein Tag-Schreiben, keine Spoolman-Verbrauchsbuchung. Zuerst Bedienung und Lesefunktionen gemäß folgender Abnahme abschließen. Optionale Slicer-Bedarfsdaten sind Schätzungen; Verbrauchsbuchung und Steuerung folgen als eigene spätere Schritte. Monatliche App-Abos sind keine Voraussetzung.
 
-## Abnahme des Lesebetriebs vor dem Steuerbereich
+## Historische Abnahmegrundlage des Lesebetriebs vor dem Steuerbereich
 
 1. Spulenanzeige: automatische Erkennung klar von fester Slotbindung unterscheiden; Doppelbindungen verhindern. Nachweise für getestete Kombinationen und Grenzen dokumentieren.
 2. Spulendaten: Frische, Verlust des Bestands und Wiederanlauf mit vorhandenen Verknüpfungen prüfen. Native Spoolman-Sicherung eines echten Bestands ist separat isoliert geprüft (alle neun Tabellen, Schema, Integrität und Datenbeziehungen). Nächtlichen Ablauf noch separat belegen; einmalige Mac-Kopie bytegleich und isoliert geprüft, fortlaufende externe Kopien nicht eingerichtet. Monitorbackup allein genügt nicht. Weitere NFC-/QR-Formate nur nach belegtem Bedarf und Kompatibilitätsnachweis.
 3. Betrieb: Status/Temperaturen/Kamera bei Verbindungsverlust klar als veraltet kennzeichnen; Wiederverbindung, Mehrfachbrowser und kleine Bildschirme prüfen. Fehler-/Ausfallmeldungen zunächst mit isolierten Testdaten prüfen; Druckerfehler nicht künstlich auslösen.
 4. Einrichtung und Dokumentation: Rechner/NAS, VPN-Zugang, Sicherung/Wiederherstellung und bekannte Grenzen nachvollziehbar beschreiben; automatisierte Prüfungen und gezielte Praxistests abschließen.
-5. Abschluss mit dem Nutzer: verbleibende Einschränkungen gemeinsam bewerten. Erst danach den getrennten Steuerbereich planen und freigeben. Keine Steuerbefehle im aktuellen Ausbau.
+5. Abschluss mit dem Nutzer: verbleibende Einschränkungen gemeinsam bewerten. Erst danach den getrennten Steuerbereich planen und freigeben. Diese historische Vorgabe wurde durch die gesonderte Licht-/Lüfterfreigabe vom 02.11.2026 erweitert; weitere Funktionen bleiben getrennt freizugeben.
 
 Materialbedarf und Kosten bleiben im Gesamtplan. Belastbare Verbrauchserfassung ist hierfür eine gesonderte Datenfrage; ACE-Prozentwerte liefern keinen gemessenen Grammverbrauch.
+
+## Öffentliche Alpha vorbereiten
+
+Besitzer möchte am 03.11.2026 eine öffentliche GitHub-Freigabe nach den nächsten praktischen Steuerprüfungen vorbereiten. README muss exakt zur freizugebenden Version passen und vorhandene Funktionen, Grenzen und offene Nachweise unterscheiden. Vor Veröffentlichung Repository-Inhalt und Bild-/Artefaktdateien auf private Laufzeitdaten prüfen. Noch keine öffentliche Freigabe oder Änderung der Sichtbarkeit autorisiert.
+
+## Originaldatei-Archiv 0.28 – implementiert, Praxisabnahme offen
+
+Fertige Slicer-Sendepakete zusätzlich archivieren, vollständige Integritätsprüfung, private Originaldownloads, manuelle ausdrückliche Auftragszuordnung und unveränderte alte Berichtsversionen. Ein macOS-Anmeldehelfer mit dauerhafter Warteschlange unterstützt den beobachteten Anycubic-Sendecache. Synthetische Übertragung, NAS-Ausfallverhalten und vollständige Wiederherstellung geprüft; reale Helfereinrichtung und nächster Slicerauftrag müssen praktisch bestätigt werden. Ein Cachepfadwechsel kann Übernahmen verhindern und darf nicht als vollständige Erfassung ausgegeben werden. Nachdruckstart, automatischer Speicherbereinigungsplan und herstellerübergreifende Slicerunterstützung folgen separat.

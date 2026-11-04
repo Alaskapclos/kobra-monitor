@@ -151,7 +151,7 @@ class ApplicationTests(unittest.IsolatedAsyncioTestCase):
     async def test_login_recovers_automatically_after_a_network_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             service=monitor.Monitor('192.168.1.101',tmp,tmp)
-            client=SimpleNamespace(_sock=object(),_running=True,query_info=Mock(),query_multicolor_box=Mock())
+            client=SimpleNamespace(_sock=object(),_running=True,publish=Mock(),query_info=Mock(),query_multicolor_box=Mock())
             attempts=[]
             async def connect():
                 attempts.append(True)
@@ -249,7 +249,7 @@ class FleetTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as tmp:
             service=monitor.Monitor('192.168.1.101',tmp,tmp)
             service.telemetry.seen['print']=time.monotonic()-120
-            client=SimpleNamespace(_sock=object(),_running=True,query_info=Mock(),query_multicolor_box=Mock())
+            client=SimpleNamespace(_sock=object(),_running=True,publish=Mock(),query_info=Mock(),query_multicolor_box=Mock())
             async def connect():
                 service.client=client
                 service.bridge=fake_bridge()
