@@ -2,12 +2,12 @@
   "version": "0.28.2-alpha.1",
   "read_only": false,
   "tests": {
-    "python": 320,
+    "python": 322,
     "bridge_read_only": 14,
-    "javascript_cases": 195
+    "javascript_cases": 196
   },
   "ci_evidence": {
-    "result": "Pending checks for this release; local test evidence is separate."
+    "result": "GitHub run 41786833774 did not start jobs: account billing or spending-limit restriction. Local macOS tests pass; no Linux image built."
   },
   "source_sha256": {
     ".dockerignore": "bc9b96c26b1ddd923cf7e593a6d591490b5a297a8fa247a7573de11df9700bc4",
@@ -100,7 +100,7 @@
     "static/navigation.js": "d449d8ee670fd7a8e11f002a142d2d1e061054ddf0273c94645686736f3c02ca",
     "static/notifications.js": "d92b3fdedd835161d0d4904f8968f5dd3d2c33bbc3948347e00c775bc17ab0a9",
     "static/orders.js": "43125bcadc485c027ba3a7c3847fa9b472708a60a508d39ade01cdf73ac1cb0f",
-    "static/print-controls.js": "4fde728133de66f9df56e01089753353f80117faff3f660a225b0bbb6ad7dc1c",
+    "static/print-controls.js": "f78e1961c1757b4c2b46a78825b4900e3ff31b586b0808fe9d7aace5762d38ad",
     "static/service-worker.js": "b016b2a80431e7c185f7bf6e1380aeb3c3ff6f46605c46c816e3b015736766dd",
     "static/setup.css": "0c5a7579cc53e02329ca66248ab8d1fc089f46e8fc551c2d4d02793b7decbb48",
     "static/setup.js": "e815124f4f02225784d654b3699f287a41ffaaed79b6727a57537504bb7fe22c",
@@ -136,8 +136,8 @@
     "tests/test_navigation.js": "ff6eff136d8209d51e3031c7905eb0204e8eccd22b5d19f1519e6d971533a864",
     "tests/test_notifications.js": "c9e881a6a82a22e347efdf9eebfe87405702997944058e17395e5921ac76aba2",
     "tests/test_notifications.py": "47d6237515c089e6838193a93354c7baf3ac9bc9232a2d7d49384729c0f0d7e8",
-    "tests/test_print_controls.js": "8d10db5705dde33fa5b95d0ab6b60e69b1e8ee93d9254adc56ca5a945ed67dde",
-    "tests/test_print_controls.py": "d4d8781d5f111f5318c6400041971c29450a6cc6b6d2c3f1aafe014e4aeed12b",
+    "tests/test_print_controls.js": "e929975e20cc251556406ffc43103b7301bf50021fcd31a25f17a9de91ae533d",
+    "tests/test_print_controls.py": "10627204622d896d287dc966e63d3b7c50bafc4c9cd6fff8088e3027347aa287",
     "tests/test_printer_order.js": "4e8ff35314af36b98c674fc505da0934d077781791faa0c891302442a77d0ea0",
     "tests/test_printer_order.py": "f0ae02e9ef5942e3bf327acee27b06bbafe9c50d40998117527e3ec2d20cc931",
     "tests/test_printer_overview.js": "3f422d31c1b6d9ffd7531a1adcd227e6c12629b6fdf969d8867a260752055cfa",

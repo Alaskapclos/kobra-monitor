@@ -17,6 +17,7 @@ window.kobraPrintControls=(()=>{
  function close(){generation++;active=null;if(dialog.open)dialog.close();}
  function render(data,elapsed=0,link=data.connection){
   if(selected!==data.ip){close();say('');selected=data.ip;}
+  if(!busy&&snapshot?.print_control?.context!==data.print_control?.context)say('');
   snapshot=data;extra=elapsed;connection=link;renderedAt=Date.now();
   $('print-controls').hidden=data.print_control?.enabled!==true;
   for(const action of Object.keys(labels)){

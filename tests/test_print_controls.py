@@ -93,6 +93,28 @@ class PrintIntentTests(unittest.IsolatedAsyncioTestCase):
  async def test_pending_timeout_does_not_repeat_command(self):
   p=await self.pending_resume();await asyncio.sleep(.5)
   self.assertEqual(self.c._row(p['id'],'owner')['state'],'uncertain');self.assertEqual(len(self.sent),1)
+ async def test_new_print_action_supersedes_pending_receipt(self):
+  p=await self.pending_resume()
+  self.data.update(light_on=1,light_revision=2,transition=None)
+  q=await self.prepare('print_stop')
+  async def stop(*args):self.sent.append(args);self.data.update(light_on=3,light_revision=3)
+  self.c.print_sender=stop
+  self.assertEqual((await self.c.execute('owner',q['id'],q['token']))['state'],'confirmed')
+  await asyncio.sleep(.12)
+  self.assertEqual(self.c._row(p['id'],'owner')['state'],'uncertain');self.assertEqual(len(self.sent),2)
+ async def test_shutdown_and_restart_never_resume_pending_send(self):
+  data=dict(self.data,light_on=2);sent=[];path=Path(self.tmp.name)/'restart-db'
+  async def send(*args):sent.append(args);data.update(light_on=0,transition='resuming',transition_age_s=0)
+  def service():return LightControls(path,lambda ip:None,lambda *args:None,enabled=True,print_snapshot=lambda ip:dict(data),print_sender=send,confirmation_timeout=.02)
+  c=service()
+  p=await c.prepare('owner','192.0.2.1',1,str(uuid.uuid4()),'print_resume')
+  self.assertEqual((await c.execute('owner',p['id'],p['token']))['state'],'awaiting')
+  c.close();await asyncio.sleep(0)
+  c=service()
+  try:
+   self.assertEqual((await c.receipt('owner',p['id']))['state'],'uncertain')
+   await c.execute('owner',p['id'],p['token']);self.assertEqual(len(sent),1)
+  finally:c.close()
  async def test_other_session_and_parallel_control_are_rejected(self):
   p=await self.prepare()
   with self.assertRaises(ControlRefused):await self.c.execute('other',p['id'],p['token'])
