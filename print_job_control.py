@@ -20,12 +20,14 @@ class PrintJobState:
         self.token=uuid.uuid4().hex
         self.task=None;self.filename=None;self.connection=None;self.elapsed=None
         self.phase=0;self.seen=float('-inf');self.revision=0;self.history_id=None
+        self.transition=None;self.transition_seen=float('-inf')
 
     def receive(self,kind,payload,connection):
         if kind not in ('info','print'):return
         raw=payload['data']
         project=raw.get('project') if kind=='info' else raw
         if kind=='info' and not isinstance(project,dict):
+            self.transition=None
             # Free is not proof of an explicitly cancelled job.
             if self.phase:
                 self.token=uuid.uuid4().hex;self.history_id=None
@@ -34,6 +36,7 @@ class PrintJobState:
         phase=project.get('state') if kind=='info' else payload.get('state')
         if kind=='info' and project.get('pause')==1:phase='paused'
         if phase in (None,'done') and kind=='print':return # command ack is not state
+        self.transition=None
         task=project.get('task_id') if kind=='info' else project.get('taskid')
         task=str(task) if type(task) in (str,int) and re.fullmatch(r'-1|[1-9][0-9]{0,19}',str(task)) else None
         filename=project.get('filename')
@@ -55,6 +58,7 @@ class PrintJobState:
             # Transitional reports disarm new sends, but preserve identity while
             # a previously sent action waits for its final state. They do not
             # refresh the previous full report's authority or revision.
+            self.transition=phase;self.transition_seen=self.clock()
             self.phase=0;return
         # Missing fields and unknown states immediately disarm old actions.
         # Only a full status, never an acknowledgement/default, refreshes authority.

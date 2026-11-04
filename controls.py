@@ -34,10 +34,10 @@ class LightControls:
     """
     def __init__(self, database, snapshot, sender=None, *, enabled=False,
                  clock=time.time, monotonic=time.monotonic,
-                 token_lifetime=20, confirmation_timeout=8, fan_snapshot=None, fan_sender=None, speed_snapshot=None, speed_sender=None, temperature_snapshot=None, temperature_sender=None, print_snapshot=None, print_sender=None, motion_snapshot=None, motion_sender=None):
+                 token_lifetime=20, confirmation_timeout=8, print_transition_timeout=180, fan_snapshot=None, fan_sender=None, speed_snapshot=None, speed_sender=None, temperature_snapshot=None, temperature_sender=None, print_snapshot=None, print_sender=None, motion_snapshot=None, motion_sender=None):
         if type(enabled) is not bool or (sender is not None and not callable(sender)):
             raise ValueError('Explicit boolean mode and a callable sender required')
-        for value, maximum in ((token_lifetime, 60), (confirmation_timeout, 30)):
+        for value, maximum in ((token_lifetime, 60), (confirmation_timeout, 30), (print_transition_timeout,300)):
             if type(value) not in (int, float) or not math.isfinite(value) or not 0 < value <= maximum:
                 raise ValueError('Invalid control timeout')
         self.fan_snapshot, self.fan_sender = fan_snapshot, fan_sender
@@ -56,6 +56,9 @@ class LightControls:
         self.deadlines = {}
         self.token_lifetime = token_lifetime
         self.confirmation_timeout = confirmation_timeout
+        self.print_transition_timeout=print_transition_timeout
+        self.print_watchers=set()
+        self.closed=False
         self.lock = asyncio.Lock()
         self.db = sqlite3.connect(str(database), isolation_level=None)
         self.db.row_factory = sqlite3.Row
@@ -82,7 +85,7 @@ class LightControls:
         # A restart cannot know whether a socket write reached the printer.
         self.db.execute("UPDATE control_attempts SET state='uncertain', token='', "
                         "detail='Dienst neu gestartet; nicht erneut gesendet.', updated=? "
-                        "WHERE state='sending'", (self.clock(),))
+                        "WHERE state IN ('sending','awaiting')", (self.clock(),))
         self.db.execute("UPDATE control_attempts SET state='expired', token='', "
                         "detail='Vorbereitung durch Neustart verworfen.', updated=? "
                         "WHERE state='prepared'", (self.clock(),))
@@ -103,7 +106,62 @@ class LightControls:
             self.motion_pending_consents[operation_id]=(actor,row['ip'],cycle)
 
     def close(self):
-        self.db.close()
+        self.closed=True
+        try:
+            if self.print_watchers:
+                self.db.execute("UPDATE control_attempts SET state='uncertain', detail='Dienst beendet; Rückmeldung nicht abschließend bestätigt.', updated=? WHERE state='awaiting'",(self.clock(),))
+        finally:
+            for task in self.print_watchers:task.cancel()
+            self.db.close()
+
+    def _print_transition(self,row):
+        data=self.print_snapshot(row['ip']) if self.print_snapshot else None
+        expected={'print_pause':'pausing','print_resume':'resuming','print_stop':'stopping'}[row['control']]
+        age=data.get('transition_age_s') if isinstance(data,dict) else None
+        return bool(isinstance(data,dict) and data.get('online') is True
+            and data.get('connection_id')==row['connection_id']
+            and data.get('context')==row['target_context']
+            and data.get('transition')==expected
+            and type(age) in (int,float) and math.isfinite(age) and 0<=age<=15)
+
+    async def _await_print(self,actor,row):
+        """Observe a received transition; never authorize or repeat a send."""
+        result=await self._finish(actor,row['id'],'awaiting',
+            'Befehl einmal gesendet. Der Drucker führt die Aktion aus; abschließende Rückmeldung wird abgewartet. Nicht erneut ausführen.')
+        task=asyncio.create_task(self._watch_print(actor,row))
+        self.print_watchers.add(task)
+        task.add_done_callback(self.print_watchers.discard)
+        return result
+
+    async def _watch_print(self,actor,row):
+        deadline=asyncio.get_running_loop().time()+self.print_transition_timeout
+        try:
+            while asyncio.get_running_loop().time()<deadline:
+                if self._row(row['id'],actor)['state']!='awaiting':return
+                raw=self.print_snapshot(row['ip']) if self.print_snapshot else None
+                if not isinstance(raw,dict):
+                    raise ControlRefused('Druckauftrag nicht mehr eindeutig verfügbar.')
+                if (raw.get('online') is not True or raw.get('connection_id')!=row['connection_id']
+                        or raw.get('context')!=row['target_context']):
+                    raise ControlRefused('Verbindung oder Druckauftrag während der Rückmeldung gewechselt.')
+                try:data=self._fresh(row['ip'],row['control'])
+                except ControlRefused:data=None
+                if data and (data['connection_id']!=row['connection_id'] or data['context']!=row['target_context']):
+                    raise ControlRefused('Verbindung oder Druckauftrag gewechselt.')
+                if data and data['light_revision']>row['sent_revision'] and data['light_on']==row['desired']:
+                    await self._finish(actor,row['id'],'confirmed','Neuer Zustand vom Drucker gemeldet.',expected_state='awaiting')
+                    return
+                if data and data['light_on'] in (3,4):
+                    raise ControlRefused('Druck wurde zwischenzeitlich beendet.')
+                await asyncio.sleep(.1)
+        except asyncio.CancelledError:
+            if not self.closed:
+                await self._finish(actor,row['id'],'uncertain','Prüfung unterbrochen; nicht automatisch erneut gesendet.',expected_state='awaiting')
+            raise
+        except Exception:
+            pass
+        if not self.closed:
+            await self._finish(actor,row['id'],'uncertain','Ausgang nicht bestätigt. Nicht automatisch erneut gesendet.',expected_state='awaiting')
 
     def _row(self, operation_id, actor):
         row = self.db.execute('SELECT * FROM control_attempts WHERE id=? AND actor=?',
@@ -256,6 +314,8 @@ class LightControls:
                                 (self.clock(), str(exc), operation_id))
                 raise
             # Commit BEFORE transport. A failure to write the audit prevents sending.
+            if row['control'] in PRINT_ACTIONS:
+                self.db.execute("UPDATE control_attempts SET state='uncertain', updated=?, detail='Weitere Druckaktion angefordert; vorherige Rückmeldung nicht abschließend bestätigt.' WHERE ip=? AND state='awaiting'",(self.clock(),row['ip']))
             self.db.execute("UPDATE control_attempts SET state='sending', token='', "
                             "sent_revision=?, updated=?, detail='Versand angefordert; "
                             "Rückmeldung wird geprüft.' WHERE id=?",
@@ -286,8 +346,22 @@ class LightControls:
                     return await self._finish(actor,operation_id,'sent','Motor-Aus-Befehl einmal gesendet. Haltekraft und Lüfterlauf direkt am Drucker prüfen; Abschaltung nicht durch Telemetrie bestätigt.')
                 return await self._finish(actor,operation_id,'sent','Befehl einmal gesendet. Bewegung und Stillstand direkt am Drucker prüfen; nicht als abgeschlossene Fahrt bestätigt.')
             deadline = asyncio.get_running_loop().time() + self.confirmation_timeout
+            observed_transition=False
             while asyncio.get_running_loop().time() < deadline:
-                data = self._fresh(row['ip'], row['control'])
+                if row['control'] in PRINT_ACTIONS and self._print_transition(row):
+                    observed_transition=True
+                    await asyncio.sleep(.1)
+                    continue
+                try:data = self._fresh(row['ip'], row['control'])
+                except ControlRefused:
+                    if observed_transition:
+                        raw=self.print_snapshot(row['ip'])
+                        if (isinstance(raw,dict) and raw.get('online') is True
+                                and raw.get('connection_id')==row['connection_id']
+                                and raw.get('context')==row['target_context']):
+                            await asyncio.sleep(.1)
+                            continue
+                    raise
                 if data['connection_id'] != row['connection_id']:
                     raise ControlRefused('Verbindung nach Versand gewechselt.')
                 if (row['control'] == 'speed_mode' or row['control'] in TEMP_LIMITS or row['control'] in PRINT_ACTIONS or row['control'] in MOTION_ACTIONS) and data['context'] != row['target_context']:
@@ -297,6 +371,8 @@ class LightControls:
                     return await self._finish(actor, operation_id, 'confirmed',
                                               'Neuer Zustand vom Drucker gemeldet.')
                 await asyncio.sleep(.1)
+            if row['control'] in PRINT_ACTIONS and observed_transition:
+                return await self._await_print(actor,self._row(operation_id,actor))
         except asyncio.CancelledError:
             await self._finish(actor, operation_id, 'uncertain',
                                'Prüfung unterbrochen; nicht automatisch erneut gesendet.')
@@ -306,8 +382,10 @@ class LightControls:
         return await self._finish(actor, operation_id, 'uncertain',
                                   'Ausgang nicht bestätigt. Nicht automatisch erneut gesendet.')
 
-    async def _finish(self, actor, operation_id, state, detail):
+    async def _finish(self, actor, operation_id, state, detail, *, expected_state=None):
         async with self.lock:
+            if expected_state is not None and self._row(operation_id,actor)['state']!=expected_state:
+                return self._public(self._row(operation_id,actor))
             self.db.execute('UPDATE control_attempts SET state=?, updated=?, detail=? WHERE id=?',
                             (state, self.clock(), detail, operation_id))
             return self._public(self._row(operation_id, actor))

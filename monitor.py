@@ -35,7 +35,7 @@ from spools import Spools
 from spoolman_view import gateway, gateway_path
 from notifications import Notifications
 from motion_control import MotionState, MOTION_ACTIONS, valid_motion
-from print_job_control import PrintJobState, PRINT_ACTIONS, ACTIVE_PHASE_CODES
+from print_job_control import PrintJobState, PRINT_ACTIONS, ACTIVE_PHASE_CODES, PREPARING_PHASES
 from controls import LightControls, ControlRefused, FAN_FIELDS, TEMP_LIMITS
 from light_transport import LightControlClient
 from diagnostics import summary as diagnostic_summary
@@ -88,6 +88,11 @@ class Telemetry:
         if payload.get('code') not in (None, 200) or not isinstance(payload.get('data'), dict):
             return
         raw = payload['data']
+        project=raw.get('project') if kind=='info' else raw
+        received_phase=(project.get('state') if kind=='info' else payload.get('state')) if isinstance(project,dict) else None
+        if kind=='info' and isinstance(project,dict) and project.get('pause')==1:received_phase='paused'
+        visible_phase=({'busy':'preparing'}.get(received_phase,received_phase)
+                       if received_phase in PREPARING_PHASES or received_phase in ('pausing','resuming','stopping') else None)
         with self.lock:self.print_job.receive(kind,payload,connection_id)
         self.track_speed_job(kind, payload, connection_id)
         # Read received fields directly; bridge defaults are not measurements.
@@ -162,6 +167,7 @@ class Telemetry:
         elif kind == 'tempature' and 'curr_nozzle_temp' in raw:
             groups.append('temperature')
         elif kind == 'print' and ('progress' in raw or 'filename' in raw
+                or visible_phase is not None
                 or payload.get('state') in ('printing','paused','finished','free','canceled','stoped')):
             groups.append('print')
         elif kind == 'multiColorBox' and isinstance(raw.get('multi_color_box'),list):
@@ -181,6 +187,8 @@ class Telemetry:
             for group in groups:
                 for key in fields.get(group, ()):
                     self.data[key] = copy.deepcopy(state.get(key))
+            if 'print' in groups and visible_phase is not None:
+                self.data['print_state']=visible_phase
             if 'ace' in groups:
                 slot_fields = ('index','global_index','box_id','type','color','status','edit_status','consumables_percent')
                 has_boxes = bool(raw['multi_color_box'])
@@ -436,6 +444,8 @@ class Monitor:
                     'connection_id':epoch,'light_on':p.phase,'light_revision':p.revision,
                     'light_age_s':max(0,p.clock()-p.seen),
                     'context':hashlib.sha256(json.dumps(signature).encode()).hexdigest(),
+                    'transition':p.transition,
+                    'transition_age_s':max(0,p.clock()-p.transition_seen),
                     'signature':signature,'task_id':p.task,'filename':p.filename}
 
     async def refresh_print(self):

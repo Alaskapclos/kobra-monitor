@@ -26,4 +26,5 @@ p=fixture();p.data.print_state='auto_leveling';p.data.progress=.99;draw(p);asser
 p=fixture();p.section_age_s={};draw(p);assert.equal(text('nozzle-temp'),'—');assert.equal(text('nozzle-mode'),'—');assert.equal(text('remaining'),'—');
 p=fixture();p.section_age_s.temperature=-1;draw(p);assert.equal(text('nozzle-temp'),'—');assert.equal(text('nozzle-mode'),'—');
 p=fixture();p.data.progress=0;p.data.nozzle_temp=0;p.data.nozzle_target=0;draw(p);assert.equal(text('progress-value'),'0%');assert.equal(text('nozzle-temp'),'0');assert.equal(text('nozzle-mode'),'Heizung aus');
-console.log('12 detail freshness cases passed: offline, recovery, monitor loss, section freshness, stale ACE, preparation, missing/invalid ages and real zero values');
+for(const [phase,label] of [['resuming','Wird fortgesetzt …'],['pausing','Wird pausiert …'],['stopping','Wird abgebrochen …'],['preparing','Vorbereitung']]){p=fixture();p.data.print_state=phase;draw(p);assert.equal(text('print-state'),label);assert.equal(text('progress-value'),'—');assert.equal(text('remaining'),'—');}
+console.log('13 detail freshness cases passed: offline, recovery, monitor loss, section freshness, stale ACE, preparation, missing/invalid ages and real zero values');

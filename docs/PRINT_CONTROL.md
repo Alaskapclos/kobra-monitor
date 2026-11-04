@@ -13,3 +13,5 @@ Synthetische Prüfungen ersetzen keinen physischen Versuch. Die erste reale Paus
 Protokollquellen:
 - https://github.com/Nino6689/anycubic-cloud-api/blob/main/src/anycubic_cloud_api/lan/commands.py (lokale Pause/Resume/Stop-Verben mit taskid)
 - Gebündelter kobrax_client.py: pause_print/resume_print/stop_print nutzen dieselben begrenzten Formen; normale Wege bleiben durch Leseschutz gesperrt.
+
+Seit 0.28.2: Meldet derselbe Drucker nach dem einmaligen Versand ausdrücklich `pausing`, `resuming` oder `stopping`, wird nach dem kurzen unmittelbaren Prüfzeitraum nur die Rückmeldung weiter beobachtet, höchstens drei Minuten. Die Oberfläche fragt dafür den bestehenden Vorgangsbeleg ab. Ein Übergang ist keine Erfolgsbestätigung und gibt keine neue Steuerung frei. Nur eine neuere vollständige Endzustandsmeldung derselben Verbindung und Auftragsidentität bestätigt den Vorgang. Bei Dienstende, Verbindungs-/Auftragswechsel, Fristablauf oder einer weiteren Druckaktion bleibt der alte Vorgang unbestätigt; weder Wiederholung noch Wiederaufnahme des Versands nach Neustart.

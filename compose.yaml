@@ -1,7 +1,7 @@
 services:
   monitor:
     build: .
-    image: kobra-monitor:0.28.1-alpha.1
+    image: kobra-monitor:0.28.2-alpha.1
     restart: unless-stopped
     init: true
     environment:

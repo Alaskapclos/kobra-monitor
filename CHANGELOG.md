@@ -1,3 +1,9 @@
+## 0.28.2-alpha.1
+
+- Nach expliziter Übergangsmeldung wartet die Drucksteuerung bis zu drei Minuten auf den endgültigen Zustand; der Befehl bleibt einmalig. Neue vollständige Rückmeldung, gleiche Verbindung und derselbe Auftrag sind weiter Voraussetzung für eine Bestätigung.
+- Vorbereitung und Übergänge werden auch dann korrekt angezeigt, wenn die Bridge allgemein „printing“ meldet. Währenddessen keine alten Prozent-, Restzeit- oder Schichtwerte.
+- Offene Rückmeldungen werden bei Neustart, Verbindungs-/Auftragswechsel oder einer weiteren Druckaktion nicht nachträglich als erfolgreich ausgegeben.
+
 ## 0.27.1-alpha.1
 
 - Z-Tasten entsprechen der Tischbewegung: Plus nach oben, Minus nach unten; X und Y unverändert.

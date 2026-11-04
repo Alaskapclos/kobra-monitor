@@ -52,7 +52,15 @@ window.kobraPrintControls=(()=>{
    intent=await api({action:'prepare_print',ip:chosen.ip,operation:chosen.action,context:chosen.context,request_id:key()},valid);
    if(!valid()||intent.context!==chosen.context||intent.previous!==chosen.before){if(intent.state==='prepared')await api({action:'cancel',id:intent.id});intent=null;throw Error('Druckauftrag oder Zustand geändert; bitte erneut auswählen.');}
    if(intent.state!=='prepared'){if(mark===generation)say(intent.detail);return;}
-   const result=await api({action:'execute',id:intent.id,token:intent.token},valid,()=>{dispatched=true;});intent=null;
+   let result=await api({action:'execute',id:intent.id,token:intent.token},valid,()=>{dispatched=true;});intent=null;
+   const observing=()=>mark===generation&&selected===chosen.ip;
+   const deadline=Date.now()+210000;
+   while(result.state==='awaiting'&&observing()){
+    say(result.detail);await new Promise(resolve=>setTimeout(resolve,1000));
+    if(!observing())return;
+    if(Date.now()>deadline)throw Error('Abschließende Rückmeldung steht noch aus. Verlauf prüfen; nicht erneut senden.');
+    result=await api({action:'receipt',id:result.id},observing);
+   }
    if(mark===generation)say(result.state==='confirmed'?messages[chosen.action]:result.detail);window.dispatchEvent(new Event('kobra-control-changed'));
   }catch(error){if(intent&&!dispatched)api({action:'cancel',id:intent.id}).catch(()=>{});if(mark===generation)say(error.message+(dispatched?' Ausgang unklar; kein automatischer Wiederholungsversuch.':''));}
   finally{busy=false;if(snapshot)render(snapshot,age(),connection);}

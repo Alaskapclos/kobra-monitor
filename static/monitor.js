@@ -25,7 +25,7 @@ let archivePage = 0;
 let archiveRequest = 0;
 let archiveDebounce = null;
 const printerButtons = new Map();
-const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',cancelled:'Abgebrochen'};
+const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',preparing:'Vorbereitung',pausing:'Wird pausiert …',resuming:'Wird fortgesetzt …',stopping:'Wird abgebrochen …',cancelled:'Abgebrochen'};
 
 function renderSlots(data, seen, stale) {
   const area = $('slots');
@@ -101,7 +101,7 @@ function renderPrinter(snapshot) {
   banner.hidden=connection==='online';
   banner.textContent=requestFailed||extraAge>10 ? 'Der lokale Monitor ist nicht erreichbar. Letzte bekannte Werte werden angezeigt. Starte den Monitor bei Bedarf erneut.' : connection==='stale' ? 'Die Verbindung liefert keine frischen Daten. Angezeigte Werte sind veraltet; die Verbindung wird automatisch erneuert.' : snapshot.message || 'Verbindung zum Drucker wird aufgebaut. Messwerte erscheinen, sobald sie eintreffen.';
   const knownPrint=seen('print');
-  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init'].includes(data.print_state);
+  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init','preparing','pausing','resuming','stopping'].includes(data.print_state);
   const advancing=!stale('print')&&['printing','paused'].includes(data.print_state);
   $('print-state').textContent=!knownPrint?'Wird verbunden…':stale('print')?'Status veraltet':stateNames[data.print_state]||'Status unbekannt';
   $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')?`Letzter bekannter Druckerstatus: ${stateNames[data.print_state]||'unbekannt'}.`:active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
@@ -109,7 +109,7 @@ function renderPrinter(snapshot) {
   $('layer').textContent=advancing&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
   const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?data.progress:null;
   $('progress-value').textContent=progress===null?'—':`${Math.round(progress*100)}%`;
-  $('progress-caption').textContent=stale('print')?'Keine aktuellen Druckdaten':advancing?'Fortschritt':active?'Vorbereitung':knownPrint?'Kein aktiver Druck':'Kein Messwert';
+  $('progress-caption').textContent=stale('print')?'Keine aktuellen Druckdaten':advancing?'Fortschritt':['pausing','resuming','stopping'].includes(data.print_state)?'Rückmeldung wird abgewartet':active?'Vorbereitung':knownPrint?'Kein aktiver Druck':'Kein Messwert';
   $('progress-circle').setAttribute('stroke-dashoffset',String(414.69*(1-(progress??0))));
   const previous=snapshot.last_project;
   $('file-label').textContent=active?(stale('print')?'ZULETZT GEMELDETE DRUCKDATEI':'AKTUELLE DRUCKDATEI'):previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';

@@ -8,7 +8,7 @@ sys.path[:0]=[str(Path(__file__).resolve().parent.parent),str(Path(__file__).res
 from controls import LightControls,ControlRefused
 from print_job_control import PrintJobState,PRINT_ACTIONS,PREPARING_PHASES
 from light_transport import LightControlClient
-from monitor import Monitor
+from monitor import Monitor,Telemetry
 from read_only_policy import ReadOnlyViolation
 from test_light_transport import decode
 
@@ -68,6 +68,31 @@ class PrintIntentTests(unittest.IsolatedAsyncioTestCase):
    with self.assertRaises(ControlRefused):await self.prepare(action)
   p=await self.prepare('print_stop');self.assertEqual(p['previous'],5)
   self.assertEqual((await self.c.execute('owner',p['id'],p['token']))['state'],'confirmed');self.assertEqual(len(self.sent),1)
+ async def pending_resume(self):
+  self.sent.clear()
+  self.data.update(light_on=2)
+  self.c.print_transition_timeout=.4
+  async def send(*args):
+   self.sent.append(args);self.data.update(light_on=0,transition='resuming',transition_age_s=0)
+  self.c.print_sender=send;p=await self.prepare('print_resume')
+  result=await self.c.execute('owner',p['id'],p['token'])
+  self.assertEqual(result['state'],'awaiting')
+  await self.c.execute('owner',p['id'],p['token']);self.assertEqual(len(self.sent),1)
+  return p
+ async def test_late_resume_is_observed_once_and_requires_new_revision(self):
+  p=await self.pending_resume()
+  self.data.update(light_on=1,transition=None)
+  await asyncio.sleep(.12);self.assertEqual(self.c._row(p['id'],'owner')['state'],'awaiting')
+  self.data.update(light_revision=2)
+  await asyncio.sleep(.12);self.assertEqual(self.c._row(p['id'],'owner')['state'],'confirmed');self.assertEqual(len(self.sent),1)
+ async def test_pending_resume_rejects_disconnect_job_change_and_natural_end(self):
+  for change in ({'online':False},{'context':'b'*64},{'connection_id':'other'},{'light_on':4,'light_revision':2}):
+   self.data.update(online=True,context='a'*64,connection_id='epoch',light_on=2,light_revision=1)
+   p=await self.pending_resume();self.data.update(change)
+   await asyncio.sleep(.12);self.assertEqual(self.c._row(p['id'],'owner')['state'],'uncertain')
+ async def test_pending_timeout_does_not_repeat_command(self):
+  p=await self.pending_resume();await asyncio.sleep(.5)
+  self.assertEqual(self.c._row(p['id'],'owner')['state'],'uncertain');self.assertEqual(len(self.sent),1)
  async def test_other_session_and_parallel_control_are_rejected(self):
   p=await self.prepare()
   with self.assertRaises(ControlRefused):await self.c.execute('other',p['id'],p['token'])
@@ -134,6 +159,10 @@ class PrintTelemetryTests(unittest.TestCase):
   self.report();before=self.p.signature();seen=self.p.seen;rev=self.p.revision;self.clock+=1
   self.p.receive('print',{'state':'pausing','data':{}},'epoch');self.assertEqual(self.p.phase,0);self.assertEqual(before,self.p.signature());self.assertEqual(seen,self.p.seen);self.assertEqual(rev,self.p.revision)
   self.report('paused');self.assertEqual(before,self.p.signature());self.assertEqual(self.p.phase,2)
+ def test_ack_does_not_erase_received_transition(self):
+  self.report();self.p.receive('print',{'state':'resuming','data':{}},'epoch')
+  self.p.receive('print',{'state':'done','data':{}},'epoch')
+  self.assertEqual(self.p.transition,'resuming');self.assertEqual(self.p.phase,0)
  def test_new_connection_never_reuses_old_context(self):
   self.report();before=self.p.token;self.report(epoch='new');self.assertNotEqual(before,self.p.token)
  def test_all_known_preparation_stages_authorize_only_received_identity(self):
@@ -163,3 +192,12 @@ class PrintMonitorTests(unittest.TestCase):
    m.telemetry.print_job.receive('info',{'data':{'state':'busy','project':fixture}},'epoch')
    a=m.print_snapshot();self.assertTrue(a['online']);self.assertEqual(a['light_on'],5);self.assertEqual(a['task_id'],'-1')
    jobs[0]['filename']='old.3mf';self.assertIsNone(m.print_snapshot())
+
+class PrintVisiblePhaseTests(unittest.TestCase):
+ def test_explicit_phase_overrides_bridge_printing_without_guessing_from_zero(self):
+  t=Telemetry('192.0.2.1');bridge=SimpleNamespace(_state={'print_state':'printing','progress':0})
+  for phase,expected in [('auto_leveling','auto_leveling'),('busy','preparing'),('resuming','resuming'),('pausing','pausing'),('stopping','stopping'),('printing','printing')]:
+   t.receive('info',{'data':{'project':{'state':phase,'task_id':-1,'filename':'part.3mf'}}},bridge,'epoch')
+   self.assertEqual(t.data['print_state'],expected)
+  t.receive('print',{'state':'resuming','data':{}},bridge,'epoch')
+  self.assertEqual(t.data['print_state'],'resuming')
