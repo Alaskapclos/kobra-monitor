@@ -92,8 +92,11 @@ Beim Update einer Code-Installation statt Schritt 2–3 den bisherigen Code im
 Browser unter „Bestehende Installation … umstellen“ einmal eingeben. Danach ist
 der Code kein Anmeldeweg mehr. [Passwort vergessen / Konto ändern](INSTALLATION.md#benutzerkonto).
 
-Der Monitor veranlasst keine Pause, keinen Start, keinen Upload und keine
-Heizung oder Bewegung. Eine nicht erreichbare Druckeradresse erscheint offline.
+Im Standard-Lesebetrieb veranlasst der Monitor keine Pause, keinen Start, keinen Upload und keine
+Heizung oder Bewegung. Optionale Steuerungen benötigen getrennte, explizite Freigaben pro Drucker.
+Der Archiv-Upload/Start ist ein gesondert freizugebender Erprobungsweg. Ein erster realer
+Stock-S1-Start und erfolgreicher Abschluss sind vom Besitzer bestätigt; andere Konfigurationen bleiben separat zu prüfen; siehe [Archivwiederholung](REPRINT.md). Ein Dienststart löst keine
+dieser Aktionen automatisch aus. Eine nicht erreichbare Druckeradresse erscheint offline.
 
 ## 5. Prüfliste für weitere Installationen
 

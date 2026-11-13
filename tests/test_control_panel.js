@@ -1,0 +1,26 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../static/monitor.js'),'utf8');
+const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{attrs:{},handlers:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener(k,v){this.handlers[k]=v;}});return nodes.get(id);};
+const classes=new Set(),events={};let commands=0,cancelled=0;
+const dialog={id:'motion-dialog',open:true,dispatchEvent(){cancelled++;this.open=false;},close(){this.open=false;}};
+const context=vm.createContext({$:node,Event,document:{body:{classList:{add:c=>classes.add(c),remove:c=>classes.delete(c)}},querySelectorAll:()=>dialog.open?[dialog]:[]},window:{kobraAuth:{authenticated:true},addEventListener:(k,v)=>events[k]=v},refresh:()=>commands++});
+vm.runInContext(source.slice(source.indexOf('let controlPanelIp='),source.indexOf('function renderSlots(')),context);
+vm.runInContext(source.slice(source.indexOf("$('control-panel-toggle').addEventListener")),context);
+const first={ip:'test-one',connection:'online',motion_control:{enabled:true,supported:true}};
+context.updateControlPanel(first);assert(!classes.has('controls-open'));assert.equal(node('control-panel-toggle').attrs['aria-expanded'],'false');
+node('control-panel-toggle').handlers.click();assert(classes.has('controls-open'));assert.equal(node('control-panel-toggle').attrs['aria-expanded'],'true');
+context.updateControlPanel(first);assert(classes.has('controls-open'));
+context.updateControlPanel({...first,ip:'test-two'});assert(!classes.has('controls-open'));assert.equal(cancelled,1);
+node('control-panel-toggle').handlers.click();assert(classes.has('controls-open'));events.hashchange();assert(!classes.has('controls-open'));
+node('control-panel-toggle').handlers.click();context.updateControlPanel({...first,connection:'offline'});assert(!classes.has('controls-open'));node('control-panel-toggle').handlers.click();assert(!classes.has('controls-open'));
+context.updateControlPanel(first);node('control-panel-toggle').handlers.click();context.updateControlPanel({...first,motion_control:{enabled:false,supported:true}});assert(!classes.has('controls-open'));assert(node('control-panel-toggle').hidden);
+// Other controls are independent of the motion panel and keep their own dialogs.
+context.updateControlPanel({...first,motion_control:{enabled:false,supported:false},light_control:{enabled:true,supported:true}});assert(node('control-panel-toggle').hidden);
+context.updateControlPanel(first);node('control-panel-toggle').handlers.click();dialog.id='fan-control-dialog';dialog.open=true;const prior=cancelled;context.closeControlPanel();assert.equal(cancelled,prior);assert(dialog.open);
+assert.match(node('control-panel-toggle').textContent,/Achsen & Homing öffnen/);
+const html=fs.readFileSync(path.join(__dirname,'../static/index.html'),'utf8');
+assert.equal((html.match(/data-control-area/g)||[]).length,1);assert.match(html,/<section data-control-area id="motion-controls"/);assert.match(html,/aria-controls="motion-controls"/);
+const css=fs.readFileSync(path.join(__dirname,'../static/monitor.css'),'utf8');assert.match(css,/body:not\(\.controls-open\) #motion-controls/);assert(!css.includes('body:not(.controls-open) [data-control-area]'));
+assert.equal(commands,0);
+console.log('11 control panel cases passed: initially closed, explicit toggle, polling stability, printer switch, navigation, disconnect and permission loss, motion-only permission, independent fan dialog, motion labels and gate scope; no commands');

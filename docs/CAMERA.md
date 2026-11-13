@@ -8,7 +8,7 @@ Die Kamera nutzt dieselbe Anmeldung wie Status und Verlauf. Auf Handy und Rechne
 
 Getestetes Ziel: Stock-Kobra-S1 mit bereits erreichbarem FLV-Stream an Port 18088. Es werden keine startCapture-/stopCapture-Befehle gesendet. Eine ausgeschaltete oder nicht bereitgestellte Kamera wird nicht automatisch aktiviert. Der Leseschutz der MQTT-Verbindung bleibt unverändert.
 
-Das Docker-/NAS-Paket installiert FFmpeg aus Debian. Native Installationen benötigen aktuelles FFmpeg mit HTTP-Option `max_redirects` im Suchpfad; anschließend den Monitor neu starten. Ohne passenden Decoder bleibt die Schaltfläche deaktiviert. Der Kamerapfad lehnt HTTP-Weiterleitungen und andere Eingabeprotokolle ab. Er akzeptiert ausschließlich eingerichtete Drucker, keine frei eingegebenen Stream-URLs.
+Das Docker-/NAS-Paket installiert FFmpeg aus Debian. Die nativen Komplettpakete enthalten FFmpeg ebenfalls. Nur ein eigener Quellstart benötigt aktuelles FFmpeg mit HTTP-Option `max_redirects` im Suchpfad; anschließend den Monitor neu starten. Ohne passenden Decoder bleibt die Schaltfläche deaktiviert. Der Kamerapfad lehnt HTTP-Weiterleitungen und andere Eingabeprotokolle ab. Er akzeptiert ausschließlich eingerichtete Drucker, keine frei eingegebenen Stream-URLs.
 
 Maximal vier Drucker werden gleichzeitig dekodiert. Mehrere Browser mit demselben Drucker teilen sich einen Decoder. Dies begrenzt Last und Verbindungen zum Drucker. Aufnahmen, Ton, Kameraaktivierung, Bewegungs- und Drucksteuerung gehören nicht zu dieser Funktion.
 

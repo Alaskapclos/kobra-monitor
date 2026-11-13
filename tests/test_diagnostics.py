@@ -25,7 +25,7 @@ class DiagnosticTests(unittest.TestCase):
                        'data':{'printer_name':'Private printer','filename':'Private job.gcode'},
                        'section_age_s':{'temperature':4}}
         self.telemetry.snapshot=Mock(side_effect=lambda:self.snapshot)
-    def tearDown(self):self.fleet.history.close();self.tmp.cleanup()
+    def tearDown(self):self.fleet.reprints.close();self.fleet.history.close();self.tmp.cleanup()
     def test_report_has_only_allowlisted_operational_values(self):
         report=summary(self.fleet,clock=lambda:160)
         self.assertEqual(report['uptime_seconds'],60)

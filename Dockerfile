@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
     && useradd --uid 10001 --gid monitor --no-create-home monitor \
     && mkdir /data && chown monitor:monitor /data
 COPY --chown=monitor:monitor . .
+# Application code is public; installer helpers run as the invoking host UID.
+# Runtime credentials and databases live separately in /data, never here.
+RUN chmod -R a+rX /app
 USER monitor
 VOLUME ["/data"]
 EXPOSE 7125

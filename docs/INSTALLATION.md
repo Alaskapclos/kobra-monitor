@@ -9,9 +9,13 @@
 - **NAS:** vorgesehen für Geräte mit Docker/Compose und erreichbarem Druckernetz.
   Keine Zusage für NAS ohne Container-Unterstützung oder bestimmte Modelle.
 
-macOS und ein amd64-Container auf UGREEN DXP4800GT wurden mit echten Druckern
-geprüft. Die vorherige Version bestand CI-Tests auf Windows, Linux und macOS.
-ARM64 und weitere NAS-Modelle sind noch nicht praktisch geprüft.
+Die vier nativen Desktop-Testpakete 0.42 sind nach Besitzerbericht funktionierend. Das Docker-Testpaket 0.43 ist auf einer eigenen Linux-VM mit künstlichen Daten geprüft. Das ersetzt keine Abnahme beliebiger NAS-/Betriebssystemkombinationen; Linux ARM64 und Raspberry Pi sind noch offen. [Paketübersicht](PLATFORM_SUPPORT.md).
+
+## Fertiges Paket oder Quellstart?
+
+Für Windows und Mac zuerst die [nativen Paketanleitungen](INSTALLERS.md) verwenden. Diese Komplettpakete enthalten Python, Spoolman und FFmpeg. Die unten beschriebenen Python-Starter sind dagegen ein Entwickler-/Quellstart und installieren nicht dieselbe Komplettsuite.
+
+Für ein gemeinsames Monitor-/Spoolman-/Sicherungsprojekt unter Linux AMD64 die [Docker-Testinstallation](LINUX_TEST_INSTALLER.md) nutzen. Der nächste Abschnitt beschreibt das einzelne Monitor-Projekt aus dem Quellcode; er ersetzt nicht den Suite-Installer und übernimmt keine vorhandenen Suite-Volumes automatisch.
 
 ## Docker / Compose
 
@@ -36,7 +40,7 @@ Bei einer NAS-GUI diese Compose-Datei als Projekt importieren und ein dauerhafte
 Datenvolume verwenden. Wird stattdessen ein vorhandener Ordner eingebunden,
 muss Benutzer 10001 darin schreiben können. Keine pauschalen 777-Rechte vergeben.
 
-## Desktop / native Python-Installation
+## Quellstart mit eigener Python-Umgebung
 
 Die Starter erstellen `.venv` und installieren die Versionen aus
 `requirements-lock.txt`. Ein Hash der Lockdatei sorgt beim nächsten Start für
@@ -75,15 +79,19 @@ keine fremden Druckeradressen als Standard und keinen automatischen Netzwerkscan
 
 ## Sicherung und Update
 
-Sichere den vollständigen Datenordner bei gestopptem Monitor. Er enthält die
+Für den täglichen Betrieb empfiehlt sich der getrennte [Sicherungsdienst](BACKUPS.md), der ohne Unterbrechung konsistente Sicherungen erstellt. Spoolman benötigt eine eigene Sicherung.
+
+Für eine manuelle Dateikopie sichere den vollständigen Datenordner bei gestopptem Monitor. Er enthält die
 SQLite-Datenbanken, Druckerzuordnung, `account.json` mit dem Passwort-Prüfwert
 und den geheimen Einrichtungsschlüssel. Für eine
 Sicherung während des Betriebs ist die SQLite-Backup-API zu verwenden; eine
 alleinige Kopie von `history.sqlite3` bei laufendem WAL-Betrieb kann unvollständig sein.
 
-Update: Monitor stoppen, Quellcode ersetzen, Datenordner erhalten, Starter erneut
+Für den reinen Quellstart: Monitor stoppen, Quellcode ersetzen, Datenordner erhalten, Starter erneut
 öffnen. Für Docker: Quellcode aktualisieren und `docker compose up -d --build`.
 **Kein `down -v`**, wenn die Historie erhalten bleiben soll.
+
+Die nativen Komplettpakete verwenden stattdessen den begrenzten, ausdrücklich bestätigten [Profilübernahmeweg](NATIVE_UPGRADE.md). Ein separates bereits übernommenes Profil muss bewusst gewählt werden. Ein allgemeiner automatischer Updater ist noch nicht fertig.
 
 ## Benutzerkonto
 
@@ -130,3 +138,11 @@ Sicherungszeitpunkts. Ein komfortabler UGOS-Wiederherstellungsdialog steht aus.
 Temporäre Druckerzertifikate liegen außerhalb des Datenordners und werden beim
 geordneten Beenden entfernt. Nach einem harten Absturz kann temporäres Material
 bis zur Betriebssystembereinigung bestehen bleiben.
+
+## Zusätzliche Archiv-Startfreigabe im Erprobungsstand 0.36
+
+`KOBRA_ARCHIVE_START_IPS` ist eine eigene, standardmäßig leere Freigabeliste für bereits
+eingerichtete S1. Sie erweitert weder die bestehenden Steuerlisten automatisch noch erlaubt sie
+allgemeine Datei-Uploads oder beliebigen G-Code. Originalpaket-Upload und Stock-S1-Start sind
+noch praktisch abzunehmen. Die Freigabe deshalb nur gezielt für eine kontrollierte Erprobung
+aktivieren; ein normales Update lässt sie leer. [Voraussetzungen und Bedienung](REPRINT.md).

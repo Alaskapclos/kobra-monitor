@@ -18,6 +18,11 @@ class SpoolValidation(unittest.TestCase):
     def test_zero_weight_and_missing_weight_are_distinct_and_private_fields_dropped(self):
         items=normalize(SPOOLS+[{'id':43,'comment':'private','remaining_weight':float('nan'),'filament':{}},{'id':44,'archived':True}])
         self.assertEqual(items[0]['remaining_weight'],0);self.assertIsNone(items[1]['remaining_weight']);self.assertNotIn('comment',items[1]);self.assertEqual(len(items),2)
+    def test_initial_weight_is_explicit_and_validated_without_one_kilo_assumption(self):
+        for value,expected in [(1000,1000),(750,750),(0,0),(None,None),(-1,None),(True,None),(float('inf'),None)]:
+            item=normalize([{'id':1,'initial_weight':value,'filament':{'weight':1000}}])[0]
+            self.assertEqual(item['initial_weight'],expected)
+        self.assertIsNone(normalize([{'id':1,'filament':{'weight':1000}}])[0]['initial_weight'])
     def test_malformed_inventory_and_duplicate_ids_rejected(self):
         for value in [{},[None],[{'id':True}],[{'id':1,'filament':[]}],SPOOLS+SPOOLS]:
             with self.subTest(value=value),self.assertRaises(ValueError):normalize(value)
@@ -170,3 +175,29 @@ class IdentityAccess(unittest.IsolatedAsyncioTestCase):
         self.service.monitors={}
         body['spool_id']=None
         self.assertEqual((await self.call('POST','/api/spools',body,headers)).status,200)
+
+
+class AmountSourceTests(unittest.IsolatedAsyncioTestCase):
+    asyncSetUp = SpoolService.asyncSetUp
+    asyncTearDown = SpoolService.asyncTearDown
+
+    async def test_preference_persists_separately_from_spool_assignments(self):
+        await self.s.assign(IP,0,42,[IP],{0})
+        await self.s.set_amount_source(IP,'spoolman',[IP])
+        restored=Spools(self.tmp.name)
+        self.assertEqual(restored.amount_sources,{IP:'spoolman'})
+        self.assertEqual(restored.mappings,{IP:{'0':42}})
+        await self.s.set_amount_source(IP,'ace',[IP])
+        self.assertEqual(self.s.state()['amount_sources'],{IP:'ace'})
+
+    async def test_unknown_printer_invalid_source_and_invalid_saved_preferences_rejected(self):
+        for ip,source in [('8.8.8.8','ace'),(IP,'measured'),(IP,None)]:
+            with self.assertRaises(ValueError):await self.s.set_amount_source(ip,source,[IP])
+        for values in [[],{'8.8.8.8':'ace'},{IP:True}]:
+            with self.assertRaises(ValueError):Spools.validate_amount_sources(values)
+        self.assertEqual(self.s.amount_sources,{})
+
+    async def test_failed_save_rolls_back_preference(self):
+        with patch.object(self.s,'save',side_effect=OSError):
+            with self.assertRaises(ValueError):await self.s.set_amount_source(IP,'spoolman',[IP])
+        self.assertEqual(self.s.amount_sources,{})

@@ -1,10 +1,20 @@
 # Import the matching linux/amd64 image in UGOS Docker before deployment.
 services:
   monitor:
-    image: kobra-monitor:0.18.2-alpha.1
+    image: kobra-monitor:0.43.0-alpha.6
     platform: linux/amd64
     restart: unless-stopped
     init: true
+    environment:
+      KOBRA_ARCHIVE_START_IPS: "${KOBRA_ARCHIVE_START_IPS:-}"
+      KOBRA_DRYING_CONTROL_IPS: ${KOBRA_DRYING_CONTROL_IPS:-}
+      KOBRA_DRYING_TEMPERATURE_LIMITS: ${KOBRA_DRYING_TEMPERATURE_LIMITS:-}
+      KOBRA_MOTION_CONTROL_IPS: "${KOBRA_MOTION_CONTROL_IPS:-}"
+      KOBRA_PRINT_CONTROL_IPS: "${KOBRA_PRINT_CONTROL_IPS:-}"
+      KOBRA_TEMPERATURE_CONTROL_IPS: "${KOBRA_TEMPERATURE_CONTROL_IPS:-}"
+      KOBRA_SPEED_CONTROL_IPS: "${KOBRA_SPEED_CONTROL_IPS:-}"
+      KOBRA_FAN_CONTROL_IPS: "${KOBRA_FAN_CONTROL_IPS:-}"
+      KOBRA_LIGHT_CONTROL_IPS: "${KOBRA_LIGHT_CONTROL_IPS:-}"
     ports:
       - "${KOBRA_BIND_ADDRESS:?Setze die private NAS-IP in der Projektkonfiguration}:7125:7125"
     volumes:

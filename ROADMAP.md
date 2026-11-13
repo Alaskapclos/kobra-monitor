@@ -1,48 +1,33 @@
 # Projektplan und aktueller Stand
 
-Abgleich vom 01.11.2026 mit dem ursprünglichen Gespräch „Tool Schwierigkeit Einschätzen“ und den späteren Nutzerentscheidungen. Dies ist die gemeinsame Arbeitsgrundlage; geplante Punkte sind keine zugesicherten fertigen Funktionen.
+Stand **0.43.0-alpha.2**,09.11.2026. Desktop-Testpakete 0.42 und Docker-Testpaket 0.43 sind getrennte eingefrorene Nachweise. Historische Entwicklungsstände und ursprüngliche Reihenfolge: [Projektverlauf](docs/ROADMAP_HISTORY.md). Geplante Funktionen sind keine fertigen Zusagen.
 
-## Leitlinien
+## Verbindliche Leitlinien
 
-- Stock-Firmware zuerst; Rinkhals/Klipper optional, keine Voraussetzung.
-- Bestehende OSS-Projekte und APIs nutzen. OrcaSlicer bleibt unverändert.
-- Spoolman ist die zentrale Spulendatenbank; der Monitor hält nur Verknüpfungen.
-- Spoolman-eigene NFC-/RFID-/QR-Funktionen bevorzugen. ReSpool nur bei nachgewiesenem Zusatzbedarf; Nutzer hat am 31.10.2026 ausdrücklich weniger Tools gewünscht. NFC/OpenPrintTag-Kompatibilität vor eigener Implementierung prüfen.
-- Einfache Einrichtung auf Rechner oder NAS/Server. Privates GitHub-Repository zunächst beibehalten.
-- Fernzugriff über eigenes VPN/Tailscale und Benutzerkonto; keine öffentliche Druckerfreigabe.
-- Aktueller Betrieb ausschließlich lesend gegenüber den Druckern. Der Nutzer hat am 01.11.2026 festgelegt: zuerst die Lesefunktionen vollständig abschließen; erst danach den Steuerbereich beginnen. Spoolman-Verbrauchsbuchungen sind eine gesonderte Schreibfunktion, keine Lesefunktion.
+- Standard-Firmware und vorhandene Schnittstellen. Keine Modifikationen an Drucker, ACE oder Slicer und keine Rinkhals-/Klipper-Abhängigkeit.
+- Monitor als zentrale Beobachtungs-, Steuerungs-, Spulen- und Berichtszentrale. Neue Modelle in Orca oder Anycubic Slicer Next slicen und erstmals senden; erfolgreiche Archivdrucke bewusst über den Monitor wiederholen.
+- Spoolman bleibt zentrale Bestandsdatenbank. Der Monitor hält Zuordnungen und Herkunft der Angaben; keine parallele Bestandsdatenbank ohne begründeten Bedarf.
+- Private Nutzung mit lokalem Konto und VPN/HTTPS. Standardmäßig lesende Druckeranbindung; jede Steuerfunktion gesondert pro Drucker freigeben. Kein automatisches Wiederholen unklar ausgegangener Befehle.
+- Einfache Komplettinstallation und Updates. Native Downloads für Windowsx64, WindowsARM64, macOSIntel und AppleSilicon; Server/NAS als gemeinsames Projekt mit getrennten Monitor-/Spoolman-/Sicherungscontainern.
 
-## Bereits umgesetzt und praktisch geprüft
+## Umgesetzt
 
-Lokaler Zwei-Drucker-Betrieb, Stock-S1-Status/Temperaturen/ACE, Druckhistorie und Berichte, NAS-Betrieb und isolierte Sicherungswiederherstellung, Benutzerkonto, HTTPS über Tailscale, einfache Druckereinrichtung, gespeicherte Reihenfolge, Kameraübersicht, Web-Push-Testempfang auf iPhone und Android, Betriebsstatus und Druckerkarten mit Einzelwerten.
+Zwei Stock-Kobra-S1 im LAN, Status/Temperaturen/ACE-Klima und Spulen, Kameraübersicht, Historie, feste Kundenberichte, Originaldatei-Archiv und Vorschau, Konto/VPN/Push, eingebettete Spoolman-Verwaltung und eindeutige SKU-/Slotzuordnung. Licht, Lüfter, Speed Mode, Solltemperaturen, Pause/Fortsetzen/Abbruch, Achsen/Homing und Motoren-Aus sind begrenzt optional implementiert. ACE-Trocknung besitzt einen gesonderten bestätigten Dialog.
 
-Offene praktische Nachweise: erste reguläre 24-Stunden-Sicherung am 01.11.2026 mit Manifest, Prüfsummen und isolierter Vollwiederherstellung erfolgreich geprüft; Druckende-Push wurde inzwischen vom Nutzer auf einem Handy bestätigt; Plattform nicht angegeben. Fehler-/Abbruch-/Verbindungsverlust-Meldungen aus realen Ereignissen bleiben separat zu prüfen. Sonderstände ersetzen den täglichen Zyklus nicht.
+Archivwiederholung mit getrenntem Übertragen/Starten ist am zweiten Stock-S1 einschließlich erfolgreichem Abschluss vom Besitzer bestätigt. Die beobachtete Kennungsaufspaltung wurde in0.37 korrigiert; frühere Fragmente und Quellberichte bleiben erhalten.0.38 ergänzt einen lesenden Materialhinweis gegen aktuellen eindeutig zugeordneten Spoolman-Buchbestand; keine automatische Buchung oder Verbrauchsmessung.
 
-## Nächste Schritte in dieser Reihenfolge
+Linuxbau/NAS-Update0.38 mit getrennter Vor-/Nachwiederherstellung und produktiver Anmeldung geprüft. Aktuelle Nachweise und praktische Grenzen: [VALIDATION.md](docs/VALIDATION.md).
 
-1. **Spoolman-Grundlage:** bestehendes offizielles OSS unverändert als eigenen Dienst betreiben; Bestand lesend anbinden, Spulen manuell ACE-Slots zuordnen. Herkunft/Frische der Gewichtsangaben sichtbar halten. Spoolman-Daten separat sichern; Monitor-Zuordnung im bisherigen Backup erhalten.
-2. **Spulen im Alltag:** native Spoolman-Verwaltung zugänglich machen; Spulenwechsel und doppelte Zuordnungen verständlich lösen. Vorhandene Daten aus anderen Diensten nur über belegte Export-/Importmöglichkeiten übernehmen.
-3. **ReSpool/NFC/QR:** tatsächliche Tag-Identitäten und Lesedaten der Stock-Drucker prüfen. ReSpool-ID ↔ Spoolman-ID ↔ ACE-Slot verbinden; aktuelle Spoolman-Tag-Funktionen wiederverwenden. OpenPrintTag-/Anycubic-/ReSpool-Tags nicht ohne Test als untereinander austauschbar behandeln. QR über Spoolman nutzen.
-4. **Verbrauchsbuchung:** verlässlichen Verbrauch je Spule und Druck nachweisen; Vorbereitung, Farbwechsel/Spülung, Abbruch, Wiederanlauf und Doppelbuchungen berücksichtigen. ACE-Prozentwerte nicht als gemessene Gramm oder Buchungsgrundlage ausgeben. Fehlende Daten transparent lassen.
-5. **Materialprüfung und Kosten:** benötigtes Material mit verfügbaren Spulen abgleichen; Kosten aus belegtem Verbrauch und hinterlegten Preisen.
-6. **Original-Orca/Moonraker:** Schnittstellen mit vorhandenen Komponenten nutzen; Upload/Start zunächst getrennt testen und nur nach entsprechender Nutzerfreigabe für aktive Druckfunktionen ermöglichen.
-7. **Warteschlange und Druckerwahl:** Jobs, Material-Matching, Reservierungen, intelligente Druckerwahl. Nicht automatisch auf unpassenden oder belegten Druckern starten.
-8. **Wartung und Integrationen:** Wartungsintervalle, Home Assistant, optionale Klipper/Rinkhals-Erweiterungen und größere Flotten.
+## Jetzt: öffentliche Alpha vorbereiten
 
-## Abweichungen von der ursprünglichen Architektur
+1. Dokumentation und Freigabecheckliste auf den tatsächlichen aktuellen Funktions-/Prüfstand bringen; vergangene Arbeitsstände getrennt aufbewahren.
+2. Verbleibende echte Tests: Achsenfreigabe-Reset nach regulärem Druck und ACE-Trocknungsstart/-stopp. Keine künstlichen Druckerstörungen erzeugen.
+3. Die vier nativen 0.42-Pakete sind gebaut und vom Besitzer als funktionierend bestätigt. Öffentliche Liefer-/Signierungsprüfung und die Grenzen der Einzelgeräteabnahmen dokumentieren. Docker 0.43 ist mit künstlichen Daten geprüft. Linux ARM64/Raspberry Pi bleibt zurückgestellt. Komfortable Updates, vollständige Sicherungs-/Wiederherstellungsführung und Datenerhalt bei Deinstallation abnehmen. [Plattformmatrix](docs/PLATFORM_SUPPORT.md).
+4. Endgültigen Releaseumfang einfrieren, passende Quellen/Binärpakete bauen, Lizenzen und Signierung/Notarisierung abschließen, private Daten in Dateien/Git-Historie ausschließen und erst nach Veröffentlichungsauftrag freigeben. [Checkliste](docs/RELEASE.md).
 
-Der frühe Spike führte zunächst zu einem bewährten lesenden Monitor. Cloud-Ersatz, Inventar und Druckmanagement bleiben das größere Ziel. Die dokumentierten GPL-/Apache-Anpassungen an vorhandenen Komponenten sind ein Zwischenstand; eine spätere saubere Upstream-/Adapter-Aufteilung bleibt zu prüfen. Ein Upstream-Kontakt oder Pull Request wurde noch nicht versendet. Öffentliche Kommunikation erfolgt nur nach ausdrücklichem Auftrag.
+## Nach der ersten begrenzten Alpha
 
-## Stand 0.18
-
-Lokale ACE-SKU wird übernommen; explizit bestätigte eindeutige Kennungen sind dauerhaft mit Spoolman-IDs verknüpfbar. Wiedererkennung bei Slotwechsel mit Frische-/Duplikat-/Konfliktprüfung implementiert. Praktischer Einzelspulentest auf Stock-S1 mit vollständiger ReSpool-Kennung und Slot-Rückwechsel ohne Zuordnungskorrektur bestätigt; erster Wechsel erforderte das Lösen einer alten festen Bindung. Kein Tag-Schreiben, keine Spoolman-Verbrauchsbuchung. Zuerst Bedienung und Lesefunktionen gemäß folgender Abnahme abschließen. Optionale Slicer-Bedarfsdaten sind Schätzungen; Verbrauchsbuchung und Steuerung folgen als eigene spätere Schritte. Monatliche App-Abos sind keine Voraussetzung.
-
-## Abnahme des Lesebetriebs vor dem Steuerbereich
-
-1. Spulenanzeige: automatische Erkennung klar von fester Slotbindung unterscheiden; Doppelbindungen verhindern. Nachweise für getestete Kombinationen und Grenzen dokumentieren.
-2. Spulendaten: Frische, Verlust des Bestands und Wiederanlauf mit vorhandenen Verknüpfungen prüfen. Native Spoolman-Sicherung eines echten Bestands ist separat isoliert geprüft (alle neun Tabellen, Schema, Integrität und Datenbeziehungen). Nächtlichen Ablauf noch separat belegen; einmalige Mac-Kopie bytegleich und isoliert geprüft, fortlaufende externe Kopien nicht eingerichtet. Monitorbackup allein genügt nicht. Weitere NFC-/QR-Formate nur nach belegtem Bedarf und Kompatibilitätsnachweis.
-3. Betrieb: Status/Temperaturen/Kamera bei Verbindungsverlust klar als veraltet kennzeichnen; Wiederverbindung, Mehrfachbrowser und kleine Bildschirme prüfen. Fehler-/Ausfallmeldungen zunächst mit isolierten Testdaten prüfen; Druckerfehler nicht künstlich auslösen.
-4. Einrichtung und Dokumentation: Rechner/NAS, VPN-Zugang, Sicherung/Wiederherstellung und bekannte Grenzen nachvollziehbar beschreiben; automatisierte Prüfungen und gezielte Praxistests abschließen.
-5. Abschluss mit dem Nutzer: verbleibende Einschränkungen gemeinsam bewerten. Erst danach den getrennten Steuerbereich planen und freigeben. Keine Steuerbefehle im aktuellen Ausbau.
-
-Materialbedarf und Kosten bleiben im Gesamtplan. Belastbare Verbrauchserfassung ist hierfür eine gesonderte Datenfrage; ACE-Prozentwerte liefern keinen gemessenen Grammverbrauch.
+- Kontrollierte Verbrauchsbuchung je physischer Spule und Auftrag: Spülung, Abbruch, Wiederanlauf und Doppelbuchungen berücksichtigen. ACE-Prozente sind kein gemessener Grammverbrauch.
+- Statistik und belegte Kostenrechnung einschließlich leerer archivierter Spulen. Der Materialhinweis aus0.38 bleibt davon getrennt.
+- NFC/QR und ReSpool-Automatisierung nur über belegte Schnittstellen; kein direkter automatischer Bibliotheksabgleich zugesagt. Bestehende Originaltags nicht ungefragt überschreiben; keine Pflicht zu monatlichen App-Abos.
+- Warteschlange, Materialreservierung und weitere Modelle erst nach eigenem Kompatibilitäts-/Praxistest. Keine automatischen Starts auf ungeprüften oder belegten Druckern.

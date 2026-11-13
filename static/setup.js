@@ -12,7 +12,7 @@ window.kobraAuth=(()=>{
     const first=$('setup-'+name).querySelector('input:not([hidden]),textarea,button');if(first)first.focus();
   }
   function controls(){for(const id of ['account-open','logout'])$(id).hidden=!(authenticated&&accountConfigured);}
-  function login(){window.kobraCamera?.close();authenticated=false;csrf='';controls();step('login');}
+  function login(){window.kobraAceControls?.resetSession();window.kobraCamera?.close();window.kobraPreview?.close();window.kobraReprints?.resetSession();authenticated=false;csrf='';controls();step('login');}
   function account(){
     if(!authenticated){login();return;}
     $('account-name').value=accountName;$('account-password').value='';$('account-confirm').value='';$('account-current').value='';
@@ -55,9 +55,9 @@ window.kobraAuth=(()=>{
     const area=$('setup-connections');area.replaceChildren();
     for(const ip of printers){const row=document.createElement('div'),name=document.createElement('strong'),status=document.createElement('span'),item=connectionFor(ip);row.className='setup-connection';name.textContent=(item?.data?.printer_name||item?.data?.model_name||'Drucker')+' · '+ip;status.textContent=connectionText(ip);status.className=item?.connection==='online'?'is-online':'';row.append(name,status);area.append(row);}
   }
-  function configure(){if(!authenticated){login();return;}if(!accountConfigured){account();return;}$('setup-printer-list').replaceChildren();for(const ip of printers.length?printers:[''])addPrinter(ip);$('setup-cancel').hidden=!printers.length;step('printers');}
+  function configure(){if(!authenticated){login();return;}if(!accountConfigured){account();return;}$('setup-printer-list').replaceChildren();for(const ip of printers.length?printers:[''])addPrinter(ip);$('setup-cancel').hidden=!printers.length;step('printers');window.dispatchEvent(new Event('kobra-setup-opened'));}
   $('setup-add-printer').addEventListener('click',()=>addPrinter('',true));
-  function accept(result){authenticated=true;csrf=result.csrf;accountConfigured=result.account_configured!==false;accountName=result.username||'';controls();if(!accountConfigured){account();return false;}showPanel(false);return true;}
+  function accept(result){authenticated=true;csrf=result.csrf;accountConfigured=result.account_configured!==false;accountName=result.username||'';controls();if(!accountConfigured){account();return false;}showPanel(false);window.dispatchEvent(new Event('kobra-authenticated'));return true;}
   async function establish(credentials){
     const response=await fetch('/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials),signal:AbortSignal.timeout(10000)});
     const result=await response.json();if(!response.ok)throw new Error(result.error||'Anmeldung fehlgeschlagen.');
@@ -142,6 +142,27 @@ window.kobraAuth=(()=>{
     if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
     const result=await response.json();if(!response.ok)throw new Error(result.error||'Spulenverwaltung nicht erreichbar.');return result;
   }
-  return {reorder,releaseCameras,notificationRequest,spoolRequest,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
+  async function orderReport(body,job){
+    const response=await fetch('/api/order-report'+(job?'?job='+encodeURIComponent(job):''),{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    if(response.status===413)throw new Error('Die Auftragsangaben sind zu groß. Bitte kürzen.');
+    if(response.ok&&body?.action==='bundle')return response.blob();
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Auftragsarchiv nicht erreichbar.');return result;
+  }
+  async function archiveRequest(body){
+    const response=await fetch('/api/archive',{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Dateiarchiv nicht erreichbar.');return result;
+  }
+  async function reprintRequest(body){
+    const response=await fetch('/api/reprints',{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(body?.action==='transfer'?145000:30000)});
+    if(response.status===401){login();throw new Error('Bitte erneut anmelden.');}
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Archivwiederholung nicht erreichbar.');return result;
+  }
+  async function nativeControls(body){
+    const response=await fetch('/api/native-controls',{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json','X-Kobra-CSRF':csrf}:{},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(10000)});
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Steuerungsfreigaben nicht erreichbar.');return result;
+  }
+  return {nativeControls,reprintRequest,archiveRequest,orderReport,reorder,releaseCameras,notificationRequest,spoolRequest,ready:boot(),get authenticated(){return authenticated&&accountConfigured;},login,configure,
     setPrinters(ips,states=[]){printers=ips||[];printerStates=states;renderConnections();if(authenticated&&accountConfigured&&!printers.length&&panel.hidden)configure();}};
 })();

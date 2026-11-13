@@ -1,259 +1,47 @@
-# Prüfstand der Alpha
+# Prüfstand
 
-| Bereich | Status |
-| --- | --- |
-| Frische Python-Installation, macOS / Python 3.14.6 | Bestanden; eigener neuer venv aus Lockdatei |
-| Eigene Python-Tests | 81 bestanden; aktueller lokaler Prüflauf 31.10.2026 |
-| Zusätzliche Leseschutztests der Bridge | 14 bestanden |
-| JavaScript-Darstellung | Elf Prüffälle bestanden; Syntax geprüft |
-| Browser-Ersteinrichtung | Anmeldung, ungültige Adresse, zwei Adressen und Abschluss geprüft; Drucker-I/O in der Testansicht abgeschaltet |
-| Geschützter lokaler Dienst nach dem Update | Anmeldung im Browser, zwei Geräte online, bestehende Historie übernommen; aktiver Auftrag blieb erhalten |
-| Reale Hardware vor der Einrichtungserweiterung | Zwei Kobra S1 mit Firmware 2.7.2.7; ein vollständiger Druck einschließlich Vorbereitung/Ende |
-| macOS / Python 3.11 und 3.14 | GitHub-CI bestanden |
-| Linux / Windows, jeweils Python 3.11 und 3.14 | GitHub-CI bestanden; keine reale Druckerhardware an diesen Runnern |
-| Docker / Compose, linux/amd64 | GitHub-CI: Build und Container-Starttest bestanden; Abbild auf UGOS importiert und gestartet |
-| UGREEN DXP4800GT / UGOS, amd64 | Zwei Kobra S1 live: Status, Temperaturen und ACE; Containerneustart erhält Einrichtung, Zugangscode und beide aktiven Auftrags-IDs |
-| Andere NAS / arm64 / Image-Update | Noch nicht praktisch geprüft |
-| Bestehendes Tailscale, Mobilfunkzugriff | Nutzer bestätigte erfolgreiche Anmeldung und Zugriff; keine Änderung der VPN-Konfiguration |
-| Tailscale Serve / HTTPS | Gültiges Zertifikat, Zugriff ohne Sitzung gesperrt; Nutzer bestätigt Mobilfunkzugriff mit VPN und Nichterreichbarkeit ohne VPN. Keine vollständige ACL-Prüfung |
-| Historienumzug Mac → UGOS | Einmalig betreut geprüft: vier geschlossene Aufträge importiert, zwei überlappende Aufträge um frühere Beobachtung ergänzt, aktuelle NAS-Zustände erhalten |
-| Historienbackup / Wiederherstellung | SQLite-Backup vor/nach Import; tatsächliche NAS-Sicherung in separater Kopie geöffnet, alle sechs Berichte und Zeitverläufe lesbar; vollständige Installationsbackups einschließlich Konto isoliert wiederhergestellt (siehe spätere Abschnitte) |
-| Brokerzertifikatsprüfung | Deaktiviert; bekannte Sicherheitsgrenze der Alpha |
-| Physischer WLAN-Ausfall während eines Drucks | Noch kein gezielt ausgelöster Hardwaretest |
+Stand **09.11.2026**. Quell-/Paketkandidat 0.43.0-alpha.4. Dieser Stand trennt eingefrorene Paketprüfungen, Besitzerberichte und offene Nachweise. Ältere Angaben stehen in [VALIDATION_HISTORY.md](VALIDATION_HISTORY.md).
 
-Die CI startet ohne reale Drucker und prüft Container/Healthcheck mit leerer
-Ersteinrichtung. Der [GitHub-Lauf 41109579545](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41109579545)
-prüfte Quellcode-Commit `5223629616b33fe822e6bc9b47e6ae785164d601`: alle sieben Jobs grün.
-Spätere reine Dokumentationsänderungen sind davon getrennt.
+## Neuer nativer Paketkandidat
 
-Der NAS-Praxistest erfolgte am 30.10.2026 mit dem aus diesem Lauf exportierten
-Abbild `kobra-monitor:0.7.0-alpha.1`. Nach einem gezielten Neustart nur dieses
-Containers waren beide laufenden Aufträge weiterhin aktiv und hatten jeweils
-denselben Historieneintrag, ohne zusätzliche Aufträge oder falschen Abschluss.
-Die kurze Unterbrechung des Monitors ist eine Beobachtungslücke; die
-Drucke wurden bereits laufend entdeckt, nicht vollständig vom NAS beobachtet.
-Die genaue UGOS-Version wurde nicht erfasst. Der Mac-Monitor lief parallel
-mit eigener Historie weiter. Ein Image-Austausch und ein NAS-Neustart wurden
-nicht getestet.
+549 Python-Prüffälle einschließlich separater Übernahme eines gestoppten 0.42-Profils, 14 Bridge-Grenzprüfungen und alle 27 JavaScript-Testdateien bestanden. Intel-Krypto und Windows-ARM-Krypto/PostgreSQL wurden neutral gebaut und unabhängig geprüft. Der eigene Intel-Kamerabau mit vollständiger Originalquelle bestand synthetische Bild-, HTTP-/Umleitungsschutz- und parallele H.264-Prüfungen. Native Mac-Programmläufe mit künstlichen Daten prüfen 0.42→0.43, Neustart, Spoolman und Sicherung/Wiederherstellung. Die exakte endgültige Paketkennung und deren Nachweis gehören zur jeweiligen Lieferdatei. Neue Windows-Gesamtpakete benötigen ihren eigenen Lauf auf Windows; die frühere Besitzerabnahme von 0.42 wird nicht übertragen. Kein produktives NAS-Update.
 
-## Vor einem öffentlichen Alpha-Release
+## Eingefrorene Paketstände
 
-1. Erledigt: GitHub-CI mit sieben erfolgreichen Jobs.
-2. Erledigt: NAS-Start und Containerneustart mit zwei Druckern; noch offen:
-   Image-Update mit bestehendem Volume und konsistente Sicherung/Wiederherstellung.
-3. Zugriff von einem zweiten Gerät über VPN/HTTPS sowie Ablehnung ohne Sitzung
-   testen. Proxy muss den Host-Header erhalten. Gerät außerhalb des VPN darf die
-   private Adresse nicht erreichen.
-4. Zugangscode, private Daten und Git-Historie vor Veröffentlichung prüfen.
-5. Read-only-Grenze, Broker-TLS-Grenze und tatsächliche Plattformabdeckung nennen.
+| Paketstand | Tatsächlicher Nachweis | Grenze |
+| --- | --- | --- |
+| Desktop 0.42, alle vier Architekturen | Vollständige ZIP-/Dateimanifestprüfung und Architekturprüfung; Quelle identisch. Besitzer bestätigt funktionierenden Windows x64, Windows ARM64, Intel Mac und Apple Silicon | Keine unabhängige vollständige Einzelgeräte-/Betriebssystemmatrix. Diese Binärpakete enthalten ihren damaligen Quellstand und damalige Docs. |
+| Mac 0.42 | ARM nativ und Intel unter Rosetta: Konto, Spoolman mit Testspule 470 g, Start/Stop/Mehrfachstartschutz, explizite 0.40→0.42-Übernahme, Sicherung und isolierte Paarwiederherstellung, Daten nach Neustart; Originalprofile/Programme unverändert | Nur künstliche Testdaten. Freigabe-API mit leerer Druckerliste; gesonderte synthetische Freigabedatei nur im gestoppten Profil gesichert/zurückgelesen. Keine echten Druckerbefehle. |
+| Windows ARM 0.42 | Native Quellbauten für die fehlenden ARM-Abhängigkeiten; vollständiger Laufzeit-/Importnachweis und späterer Besitzerbericht einschließlich dauerhafter Freigaben nach Neustart | Signierung und öffentlicher Liefernachweis sind separat. Nicht mit Linux ARM64 gleichsetzen. |
+| Docker 0.43.0-alpha.1 | Unter Python 3.11 und 3.14 je 547 Tests und je 14 Bridge-Grenzprüfungen; alle 27 JS-Testdateien. 312 App-Dateien bytegleich zum eingefrorenen Quellpaket, exakte Bild-/Archivprüfung nach Transfer und Entpacken | Keine echten Druckerverbindungen oder NAS-Aktualisierung in diesem Bau. |
+| Gemeinsame Docker-Suite 0.43 | Neuinstallation über Installer, Besitzeranmeldung, geschütztes eingebettetes Spoolman, Wiederaufnahme ohne Container-Neuanlage, Abweisung doppelter Installation, Neustart mit Daten, Sicherung und Start der Wiederherstellung in frischen Volumes | Künstlicher Bestand: eine Spule mit 470 g Buchrest, ein historischer Auftrag. Kein allgemeiner Test auf beliebigen NAS-Systemen. |
+| Docker-LAN-Konfiguration 0.43 | Nur Monitor mit zusätzlichem Netz; Spoolman intern, Initialisierung/Sicherung ohne Netzwerk; lesender Standard | Leere Druckerliste. Der Netzkonfigurationstest ersetzt keine reale Erreichbarkeits-/Kameraabnahme. |
+| Produktiver NAS-Nachweis 0.38 | Vor-/Nachsicherung isoliert geprüft, produktive Anmeldung, echte S1-Daten, Hilfe/Assets, Erhalt von Konten, Aufträgen, Berichten, Originalen und Zuordnungen | Historischer eigener Nachweis. Neue Docs oder Docker-Suite aktualisieren die produktive Installation nicht automatisch. |
 
-Keine Pause/Stop/Temperatur-/Bewegungs-/Upload-/Filamentbefehle für diese Tests.
+0.43.0-alpha.2 wird als eigener Kandidat mit überarbeiteter Dokumentation vorbereitet. Seine endgültige Quell-/Paketprüfung wird separat festgehalten; kein Build wird allein durch Änderung der Versionsnummer als geprüft erklärt.
 
-## Nachfolgender Betriebsumzug
+## Reale Besitzerbestätigungen
 
-Die Mac-Historie wurde am selben Tag nach konsistenten Sicherungen mit der
-NAS-Historie zusammengeführt. Überlappende Aufträge wurden anhand von
-Druckeradresse, identischem Dateinamen und überlappender Beobachtungszeit
-zugeordnet. Nur Beobachtungen vor der ursprünglichen NAS-Erkennung wurden
-ergänzt; NAS-Auftrags-IDs, aktueller Fortschritt und Endzustände blieben erhalten.
-Herkunft und Quellprüfsumme stehen als Importereignisse in der Datenbank.
-Ein Test auf einer Kopie prüfte Wiederholbarkeit ohne zusätzliche Einträge und
-Zurückrollen bei mehrdeutiger Zuordnung. Die tatsächliche NAS-Sicherung nach
-dem Import wurde anschließend separat geöffnet. Der Mac-Monitor wurde erst
-nach dieser Kontrolle beendet; das NAS zeichnete ohne Neustart weiter auf.
+- Stock-Kobra-S1 im lokalen Netz; kein allgemeiner Nachweis für andere Anycubic-Modelle.
+- Licht, Lüfter, Speed Mode, Temperaturen, Abbruch einschließlich Vorbereitung, X/Y/Z mit passender Z-Tischrichtung, Homing und Motoren-Aus bestätigt. Motoren-Aus beendete im gemeinsam beobachteten Fall den nach Homing laufenden Elektroniklüfter.
+- Pause/Fortsetzen am zweiten S1 mit korrigierter Rückmeldung und tatsächlicher normaler Druckfortsetzung bestätigt.
+- Erste X/Y/Z-Anwesenheitsbestätigung und anschließende Fahrten funktionieren laut Besitzer. Automatischer Reset bei neuem Druck ist automatisiert geprüft; der vollständige reale Reset-Ablauf bleibt offen.
+- Originaldatei aus einem echten macOS-Anycubic-Slicer-Next-Sendecache erfasst, zugeordnet und gesichert/zurückgelesen; kein universeller Slicer-/Cachepfadnachweis.
+- Archivwiederholung am zweiten Stock-S1 gestartet und erfolgreich abgeschlossen; passendes Ergebnis am 08.11.2026 vom Besitzer bestätigt. Keine unabhängige visuelle Qualitätsprüfung des Bauteils.
+- iPhone-/Android-Push-Testempfang bestätigt; echter Druckende-Push auf einem Handy bestätigt, Plattform für dieses Ereignis nicht belegt. Keine pauschale Abnahme aller Meldungstypen.
+- Individuelle ReSpool-SKU mit tatsächlichem Slot-Rückwechsel geprüft. Gemeinsame Hersteller-SKU bleibt Artikelkennung, nicht einzelne Spulenidentität.
+- Desktop-Funktionsbestätigungen vom 09.11.2026 wie oben; daraus keinen vollständigen Hardware- oder Restoretest jedes einzelnen Pakets ableiten.
 
-Das war ein betreuter Einzelumzug, keine im Einrichtungsassistenten verfügbare
-Importfunktion. Ursprüngliche Beobachtungslücken bleiben bestehen. Die danach eingerichtete vollständige Sicherung ist im folgenden Abschnitt dokumentiert.
+## Offen und bewusst begrenzt
 
-## Sicherungsdienst 0.8.0-alpha.1
+Physischer ACE-Trocknungsstart/-stopp samt Rückmeldung und Achsenfreigabe-Reset nach einem neuen regulären Druck bleiben gesonderte Tests. Die Funktionen beginnen ohne Freigabe und müssen bis zu eigener Abnahme als Erprobung gelten. Keine künstlichen Druckerstörungen erzeugen.
 
-65 Python-Tests (darunter zehn neue Sicherungs-/Wiederherstellungstests) und
-14 Leseschutztests bestanden lokal. Der zusätzliche Container-CI-Test prüft
-Sicherung und Wiederherstellung bei nur lesend eingebundenem Monitor-Volume
-und abgeschaltetem Netzwerk des Sicherungscontainers. Der [GitHub-Lauf 41120149518](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41120149518)
-für Code-Commit `1eaef09deec750fe03938dcbbbecd1255e130102` bestand mit allen
-sieben Jobs. Zunächst wurde der getrennte Sicherungscontainer auf 0.8.0-alpha.1 eingerichtet;
-der anschließende Monitorwechsel ist unten dokumentiert.
+Linux ARM64 und Raspberry Pi sind nicht gebaut/abgenommen. Öffentliche Binärlieferprüfung, Herausgebersignierung, Mac-Notarisierung, komfortable Versionsupdates, NAS-GUI-Installation und ein allgemeiner Wiederherstellungs-/Deinstallationsassistent sind nicht als fertig erklärt.
 
-Auf UGOS wurde eine echte vollständige Sicherung mit sieben Aufträgen,
-Druckerzuordnung, Zugangscode und aktiver Monitor-Compose-Datei erzeugt.
-Sie wurde im netzlosen Sicherungscontainer in einen getrennten Ordner
-wiederhergestellt und zusätzlich auf dem Mac zurückgelesen. Einrichtung und
-Zugangscode stimmen überein; alle sieben Berichte und Zeitverläufe sind lesbar.
-Die Prüfsumme der externen Kopie stimmt mit dem NAS-Original überein.
+Drucker-TLS ist verschlüsselt, ohne verifizierte Brokeridentität. Nur vertrauenswürdiges Druckernetz, Fernzugriff über eigenes VPN/HTTPS. Kein öffentlicher Port.
 
-Das Quellvolume ist nur lesend eingebunden; der Sicherungscontainer hat nur
-eine Loopback-Netzwerkschnittstelle. Für das Lesen des UGOS-Projektordners
-war dessen vorhandene Gruppen-ID 10 erforderlich; die zusätzliche Gruppe ist
-nur dem Sicherungscontainer zugewiesen. NAS-Dateirechte wurden nicht erweitert.
-Eine erneute Prüfung der Fälligkeit mit dem echten Archiv erzeugte keinen
-zusätzlichen Stand. Tagesrhythmus und Aufbewahrung über mehrere Tage wurden
-mit kontrollierter Testzeit geprüft; der erste reale 24-Stunden-Termin ist
-noch nicht verstrichen. Ein echter NAS-Ausfall/Ersatzgeräte-Test steht aus.
+ACE-Prozente und Spoolman-Buchgewichte sind getrennte Quellen; keine automatische Verbrauchsmessung oder Buchung. Verbindungsverlust ist kein Druckende, Befehlsversand ist kein Ausführungs-/Stillstandsnachweis. Kamera ersetzt keine Anwesenheit bei Bewegung.
 
-## Tatsächlicher NAS-Versionswechsel 0.7 → 0.8
+Monitor und Spoolman besitzen getrennte Datenbanken. Jede wird konsistent gesichert; es gibt keine gemeinsame atomare Transaktion. Ein isolierter Restore und eine private Kopie sind keine kontinuierliche externe Sicherung. Manuelle Sonderstände beweisen keinen regulären Nachtzyklus.
 
-Am 30.10.2026 wurde das bestehende UGOS-Monitorprojekt mit dem geprüften
-Image 0.8.0-alpha.1 neu bereitgestellt. Das benannte Datenvolume, die
-Portbindung und die bestehenden Schutzmaßnahmen blieben erhalten.
-Vorher und nachher wurden vollständige Sicherungen erstellt und geprüft.
-
-Alle sieben Auftragskennungen sind unverändert vorhanden. Beide laufenden
-Aufträge wurden unter derselben Kennung fortgeführt, ohne fälschlichen
-Abschluss oder zusätzlich erzeugten Auftrag. Einrichtung und Zugangscode
-stimmen per SHA-256 mit dem Stand vor dem Update überein; die Anmeldung
-mit dem bisherigen Code und Live-Daten beider Drucker wurden geprüft.
-
-Das Verbindungsprotokoll zeigt eine Unterbrechung am 30.10.2026 von etwa
-21:38:41 bis 21:38:48 MEZ, je Drucker rund 6–7 Sekunden. In dieser Zeit
-fehlen Live-Daten. Der größte Abstand gespeicherter Messpunkte im
-geprüften Zeitfenster betrug unter 24 Sekunden. Laufende Drucke wurden
-nicht gesteuert. Der Mac-Monitor blieb ausgeschaltet.
-
-Der Sicherungsdienst dokumentiert nun ebenfalls Monitor-Image 0.8.
-Der neue vollständige Stand wurde isoliert wiederhergestellt (sieben
-Aufträge) und zusätzlich mit identischer Prüfsumme außerhalb des NAS
-gespeichert. Die Fälligkeitsprüfung erzeugte keinen zusätzlichen
-Tagesstand; die Prüfung eines realen 24-Stunden-Zyklus steht weiterhin aus.
-Ein tatsächliches Downgrade oder Austausch des produktiven Datenvolumes
-wurde nicht ausgeführt. Tailscale und NAS-Sicherheitseinstellungen wurden
-nicht verändert.
-
-## Benutzerkonto 0.9.0-alpha.1
-
-78 Python-Tests und 14 Leseschutztests bestanden lokal. Darunter: geschützte
-Ersteinrichtung, Umstieg mit Sperre des alten Codes, Unicode-Benutzernamen,
-Passwortbestätigung und Längenprüfung, scrypt/Salt/Dateirechte, Fehlerdrosselung,
-CSRF/Origin, Abmelden, Widerruf anderer Sitzungen nach Kontoänderung und
-vollständige Sicherung/Wiederherstellung einschließlich Konto. Beschädigte
-Kontodateien aktivieren keinen Code-Ausweichzugang.
-
-Die Browserprüfung erfolgte auf einem getrennten lokalen Testdienst mit
-ausgeschalteter Druckerkommunikation: Konto anlegen, falsche Bestätigung,
-Druckereinrichtung, Abmelden und erneutes Anmelden mit selbst gewählten
-Testdaten erfolgreich. Keine echten Benutzerpasswörter durch den Agenten gesetzt.
-Die NAS-Hauptinstanz und der getrennte Sicherungsdienst wurden danach auf
-0.9 aktualisiert. Alle sieben Aufträge und die Druckerzuordnung sind erhalten.
-Die Installation hat zunächst ein Besitzerkonto, keine Benutzerverwaltung mit
-mehreren Rollen. Die Rücksetzung erfolgt lokal, nicht per E-Mail.
-
-Der [CI-Lauf 41133000053](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41133000053)
-für Code-Commit `639a270353924ee51232174889d4519e199abbef` bestand mit
-allen sieben Jobs (Windows, macOS, Linux und Container). Das getestete amd64-
-Abbild wurde per Artefakt-Prüfsumme kontrolliert und auf UGOS eingesetzt.
-Der Nutzer hat das echte Konto selbst angelegt; die angemeldete Browseransicht
-zeigt beide Drucker mit Live-Daten. Die echte vollständige Sicherung enthält
-den Kontoprüfwert und wurde isoliert auf NAS und Mac wiederhergestellt.
-Die zusätzliche Mac-Kopie hat dieselbe Prüfsumme wie das NAS-Original.
-
-Verbindungsereignisse beim Update: 30.10.2026 ca. 22:48:14–22:48:21 MEZ,
-rund sechs Sekunden Unterbrechung je Drucker. Beide Drucke waren bereits vor
-dem Update abgeschlossen. Ihre gespeicherten Zustände/Endzeiten blieben
-unverändert. Keine Druckersteuerung und kein Neustart des Mac-Monitors.
-Der echte 24-Stunden-Sicherungszyklus bleibt bis zum Folgetag ungeprüft.
-
-## Druckerreihenfolge 0.10
-
-81 Python-Tests, 14 Leseschutztests und elf JavaScript-Prüffälle lokal erfolgreich.
-Neue Prüfungen: ausschließlich exakte Permutationen der eingerichteten Drucker
-zulassen; Reihenfolge in config.json, Snapshot und nach Neustart identisch;
-keine Druckerverbindung neu starten; Anmeldung, CSRF und Origin für Sortieren
-erforderlich. Browser-Fixture ohne Druckerkommunikation: Ziehen und Tastatur
-verschieben die Karten; die Reihenfolge bleibt nach Neuladen erhalten und die
-ausgewählte Druckeransicht wird während des Sortierens beibehalten.
-Der NAS-Monitor und der getrennte Sicherungsdienst wurden auf das geprüfte
-0.10-Image aktualisiert. Alle sieben Aufträge und der Kontoprüfwert sind
-unverändert. Die gespeicherte Reihenfolge ist erster Drucker vor zweitem
-Drucker; eine vollständige Sicherung wurde mit dieser Reihenfolge isoliert
-wiederhergestellt. Fälligkeitsprüfung erzeugt keinen doppelten Tagesstand.
-Die Verbindung war beim Versionswechsel rund fünf Sekunden unterbrochen.
-Nach erneuter Nutzeranmeldung am echten NAS geprüft: Karten per Ziehen in
-beide Richtungen verschoben, jeweils gespeichert und gewünschte Reihenfolge
-nach Neuladen bestätigt. Die ausgewählte Druckeransicht blieb beim Ziehen
-erhalten; beide Geräte waren verbunden. Tastatur zusätzlich auf Fixture geprüft.
-Eine Prüfung auf einem physischen Touchgerät steht noch aus.
-
-[GitHub-Prüflauf 41135356856](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41135356856) für Code-Commit `0e8d9552525edbf848ebe079e9a2e4414f0f9f10`: alle sieben Jobs erfolgreich.
-
-## HTTPS und Einrichtung 0.11
-
-HTTPS auf dem NAS mit bestehendem Tailscale Serve aktiviert. Zertifikat vom Mac ohne Ausnahme gültig. Startseite und Healthcheck 200, Status ohne Sitzung 401. Nutzer bestätigt Anmeldung, Betrieb und Mobilfunk-Gegenprobe: mit Tailscale erreichbar, ohne gesperrt. Konto/Einrichtung und sieben bestehende Aufträge nach kurzer Monitor-Neubereitstellung unverändert; vollständiges Folgearchiv isoliert wiederhergestellt. Beobachtungslücke rund zehn Sekunden. Keine Druckersteuerung oder Änderung von VPN-Zugriffsregeln.
-
-Neuer Einrichtungsdialog: einzelne Druckeradressfelder, Hinzufügen/Entfernen, Duplicate-Meldung, Grenze 16 und Rückkehr ohne Speichern in isolierter Browser-Fixture ohne Druckerkommunikation geprüft. Verbindungsübersicht unterscheidet gespeicherte Einrichtung und tatsächliche Verbindung. Lokale Python-Prüfungen: 81 bestanden. Alle sieben CI-Jobs des [Prüflaufs 41185025363](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41185025363) für Commit `397d83a8d1b9f4b93d2935337f62dc6286be6e65` erfolgreich. Monitor und Sicherungsdienst auf UGOS auf 0.11 aktualisiert. Sieben Aufträge, Konto und Einrichtung unverändert, Folgearchiv isoliert erfolgreich wiederhergestellt. Beobachtungslücke 6,27 Sekunden. Echte Browserprüfung über bestehende LAN-Sitzung: zwei Druckerzeilen verbunden; unverändertes Speichern und Abschlussanzeige erfolgreich. HTTPS liefert neue Oberfläche mit gültiger Zertifikatsprüfung aus. Keine eigene Sichtprüfung einer angemeldeten HTTPS-Sitzung oder eines physischen Handy-Layouts behauptet.
-
-## Kamera 0.12
-
-90 Python-Tests, 14 unveränderte MQTT-Leseschutztests und elf JavaScript-Prüffälle lokal erfolgreich. Zwei echte Stock-S1-Streams ausschließlich lesend in 1280×720 dekodiert; isolierte angemeldete Browser-Vorschau beider Kameras und Schließen bei Druckerwechsel geprüft. Decoder-Test mit künstlicher lokaler FLV-Quelle und tatsächlich blockierter HTTP-Weiterleitung bestanden. Anmeldung, feste eingerichtete IPs, Kapazitätsgrenze, veraltete Bilder und Beenden ungenutzter Leser geprüft. NAS-Container und Handyprüfung stehen noch aus. Keine Kamera-Aktivierungsbefehle.
-
-Alle sieben Jobs von [Prüflauf 41186287793](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41186287793) erfolgreich, einschließlich echter Decoder- und Weiterleitungsprüfung im NAS-Image. Monitor und Backup auf UGOS aktualisiert. Sieben Aufträge, Konto und Einrichtung unverändert; vollständige Folge-Sicherung in frischem /tmp-Ordner wiederhergestellt. Beobachtungslücke 6,20 Sekunden. HTTPS-Auslieferung und Kamerazugang ohne Anmeldung (401) geprüft. Angemeldete NAS-Sichtprüfung und mobile Kameraansicht noch offen.
-
-## Kamerabildwechsel 0.12.1
-
-Nutzer bestätigt die Kameraansicht auf dem Handy, meldet dabei periodisches Flackern. Ursache im Frontend: Löschen/Ausblenden des sichtbaren Bildes vor jedem Ersatz. Neue Bilder werden vor dem sichtbaren Wechsel dekodiert. Sechs gezielte JS-Regressionen decken verzögerte/fehlgeschlagene Decodierung, Fehler, Ablauf alter Bilder und Druckerwechsel ab. Insgesamt 17 JS-Prüffälle erfolgreich. Getrennte Browser-Vorschau mit echtem S1-Bild erfolgreich; keine MQTT-Sitzung in der Vorschau. Alle sieben Jobs von [Prüflauf 41187023196](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41187023196) erfolgreich. Monitor und Backup auf UGOS aktualisiert, sieben Aufträge/Konto/Einrichtung unverändert, Sicherung vollständig isoliert wiederhergestellt. Beobachtungslücke 5,53 Sekunden. HTTPS liefert bytegleich die geprüfte Kamera-Datei; ohne Sitzung weiterhin 401. Erneuter physischer Handytest der Korrektur noch offen.
-
-## Kameraübersicht 0.13
-
-92 Python-Tests, 14 unveränderte MQTT-Leseschutztests und 24 JavaScript-Prüffälle erfolgreich. Neu geprüft: vier gemeinsame Leser als Obergrenze; Freigabe und Ablauf pro Ansicht ohne Unterbrechen anderer Browser; Freigabe mit Anmeldung, CSRF und Origin. Sieben virtuelle Drucker in Browser-Fixture: Vierer-/Zweier-Ansicht und Seitenwechsel; zwei echte Stock-S1-Kameras gleichzeitig in getrennter Vorschau sichtbar, keine MQTT-Verbindungen in dieser Vorschau. Aktuelle Ansichtskennungen nutzen getRandomValues auch für gewöhnliches LAN-HTTP. Alle sieben Jobs von [Prüflauf 41188848065](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41188848065) für Commit 3802000372810d55c4ab925be0775d21d7bad0ed erfolgreich. Monitor und Sicherungsdienst auf UGOS aktualisiert; Konto/Einrichtung/sieben Aufträge unverändert, Vollsicherung isoliert wiederhergestellt. Beobachtungslücke 7,33 Sekunden. HTTPS liefert die neuen Skripte bytegleich; Status/Kamera ohne Sitzung weiterhin 401. Vier reale Kameras, eine größere reale Flotte und physische Handy-Matrix noch nicht geprüft. Nutzer bestätigt die vorangegangene einzelne Kameraansicht auf Mac, Handy im WLAN und Mobilfunk über Tailscale ohne weiteres Flackern.
-
-
-## Kameraerkennung 0.13.1
-
-Auf dem NAS war FFmpeg vorhanden und direkt funktionsfähig. Die bisherige Erkennung konnte einen einmaligen Fehler dauerhaft als „nicht verfügbar“ speichern. Negative Ergebnisse werden jetzt nach fünf Sekunden erneut geprüft. Der konkrete erste Auslöser wurde zuvor nicht protokolliert und ist deshalb nicht bewiesen. Auf Handy und Mac als Anzeige ist keine FFmpeg-Installation nötig.
-
-97 Python-, 14 MQTT-Leseschutz- und 24 JS-Prüffälle erfolgreich; fünf neue Regressionen prüfen Wiederanlauf nach Timeout, fehlendem Programm, Fehler und ungeeigneter Version einschließlich Erholung im selben laufenden HTTP-Dienst. Alle sieben Jobs von [Prüflauf 41190324154](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41190324154) für Commit 6e669d60b4556e9f404bb0ff7980e4d2a10d031d erfolgreich. CI prüft zusätzlich die Kamerabereitschaft des tatsächlich laufenden Monitors.
-
-Monitor und Sicherungsdienst auf UGOS aktualisiert. Der laufende NAS-Dienst meldet über HTTPS camera_available=true. Konto, Einrichtung und sieben Aufträge unverändert; vollständiges Folgearchiv isoliert wiederhergestellt, einschließlich Konto und SQLite-Prüfung. Beobachtungslücke 6,71 Sekunden. Regulärer Tagesstand noch nicht fällig; Nachkontrolle unverändert am 01.11.2026 um 08:00 Uhr. Nutzer bestätigt am 31.10.2026 funktionierende Kameraansicht von unterwegs über Tailscale. Keine Druckersteuerung.
-
-## Benachrichtigungen 0.14
-
-115 Python-Tests, 14 unveränderte MQTT-Leseschutztests und 34 JS-Prüffälle erfolgreich. Neue Prüfungen: bestätigte Enden statt Verbindungsverlust, Verzögerung und Wiederverbindung, Fehler-Entdoppelung, Geräteauswahl, Neustart, alte Ereignisse, Senderetries/Entfernung, Zielbegrenzung, Anmeldung/CSRF/Origin, echte Verschlüsselung mit anschließender Entschlüsselung ohne externen Versand. Vollsicherung stellt Schlüssel, Geräte und Warteschlange gemeinsam wieder her. Zehn JS-Fälle decken iOS-Hinweis, HTTPS, explizite Aktivierung, Test/Entfernen sowie sicheren Service Worker ohne Seiten-Cache ab. Browser-Fixture bei 390 Pixeln geprüft, ohne Druckerkommunikation oder externen Push. Alle sieben CI-Jobs für Commit 61e6cd11a79fb4a746046551308aa698726a023b erfolgreich: [Prüflauf 41195442596](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41195442596). Monitor und Backup auf UGOS auf 0.14 aktualisiert. Konto, Einrichtung und sieben Aufträge unverändert, Vollsicherung isoliert wiederhergestellt; 6,26 Sekunden Beobachtungslücke. Im produktiven Sicherungsstand noch keine angemeldeten Push-Geräte und kein Push-Schlüssel; deren gemeinsame Wiederherstellung zusätzlich synthetisch geprüft. HTTPS-Dateien bytegleich und Schutz ohne Anmeldung (401) geprüft. Tatsächlicher Handyempfang auf iPhone/Android noch offen; Nutzer muss selbst aktivieren.
-
-Nutzer bestätigt am 31.10.2026 den tatsächlichen Empfang einer Testmeldung auf dem iPhone nach eigener Einrichtung. Android und Benachrichtigungen aus realen Druckereignissen sind noch nicht bestätigt. Die zuletzt beschriebene NAS-Wiederherstellung lag zeitlich vor der ersten Geräteanmeldung.
-
-Nutzer bestätigt am 31.10.2026 ausdrücklich den Empfang der Testmeldung auf Android und iPhone. Android funktionierte nach Neustart und erneuter Einrichtung; Ursache der vorherigen Sperre nicht ermittelt. Zustellung aus realen Druckereignissen bleibt separat zu prüfen.
-
-## Betriebsstatus 0.15
-
-Sieben neue Python-Tests prüfen die Feldbegrenzung ohne private Daten, getrennte Temperaturfrische, ungültige Alterswerte, lesende Geräte-/Queue-Abfragen, inaktiven Dienst, Reihenfolge und Besitzerzugriff ohne Schreibroute. Acht JS-Fälle prüfen Darstellung, Export, Warnhinweise, Zwischenablage-Fallback sowie Verbindungsfehler und abgelaufene Sitzung. Angemeldete isolierte Browser-Fixture ohne Druckerkommunikation, 390-Pixel-Darstellung, erneute Prüfung und Kopieren erfolgreich. Alle sieben Jobs für Commit cd653a4be98bc3753ca233b22e4b7befec3cd114 erfolgreich: [Prüflauf 41207788473](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41207788473). Monitor und separater Sicherungsdienst auf UGOS auf 0.15 aktualisiert. HTTPS liefert das neue Skript bytegleich; Systemprüfung, Status und Geräteverwaltung ohne Sitzung weiterhin 401. Konto, Einrichtung und sieben Aufträge unverändert. Vollsicherung mit Prüfsummen und SQLite-Integrität isoliert wiederhergestellt; zwei reale Handy-Anmeldungen erhalten und wiederhergestellt, privater Push-Schlüssel vor/nach Update identisch sowie in Wiederherstellung bytegleich. Beobachtungslücke 7,05 Sekunden. Regulärer Tagesstand noch nicht fällig, kein künstlicher Tagesstand erzeugt. Tagesplan und Nachkontrolle am 01.11. um 08:00 Uhr unverändert. Nutzer bestätigt am 31.10.2026 den funktionierenden Betriebsstatus; eine eigene angemeldete produktive Sichtprüfung durch den Agenten wird nicht behauptet.
-
-## Druckerkarten 0.16
-
-Zwölf neue JS-Szenarien prüfen unabhängige Werte, Vorbereitungs-Cache, getrennte Druck-/Temperaturfrische, Drucker- und Monitorausfall, ungültige/Nullwerte, Pause/Abschluss sowie tatsächliche Mehrkarten-Darstellung, Auswahl und Sortierung. 122 Python-, 14 MQTT-Leseschutz- und 54 JS-Prüffälle erfolgreich. Angemeldete isolierte Browser-Fixture mit sieben künstlichen Druckern ohne Druckerkommunikation: Desktop-Ziehen und Alt+Pfeiltasten mit erhaltener Auswahl sowie 390px-Layout erfolgreich. Alle sieben Jobs für Commit 75ad547651a89b8e3dbf1b6663b27a450fceebc9 erfolgreich: [Prüflauf 41212154939](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41212154939).
-
-Monitor und separater Sicherungsdienst auf UGOS auf 0.16 aktualisiert. HTTPS liefert Skript und Stylesheet bytegleich; Healthcheck meldet Kamera verfügbar, Status/Systemprüfung/Geräteverwaltung ohne Sitzung weiterhin 401. Konto, Einrichtung und sieben Aufträge unverändert. Vollsicherung mit Prüfsummen und SQLite-Integrität in frischem /tmp-Verzeichnis isoliert wiederhergestellt; zwei reale Handy-Anmeldungen erhalten und wiederhergestellt, privater Push-Schlüssel vor/nach Update identisch sowie in Wiederherstellung bytegleich. Beobachtungslücke 11,53 Sekunden. Regulärer Tagesstand noch nicht fällig, kein künstlicher Tagesstand erzeugt. Tagesplan und Nachkontrolle am 01.11. um 08:00 Uhr unverändert. Eigene angemeldete produktive Sichtprüfung und Nutzerbestätigung der neuen Karten noch offen. Keine Druckersteuerung.
-
-## Spoolman 0.17 – lokaler Entwicklungsstand
-
-134 Python-, 14 MQTT-Leseschutz- und 62 JavaScript-Prüffälle erfolgreich: elf neue Adapter-/Zugriffsprüfungen, ein Backup-Restore-Test und acht UI-Szenarien. Angemeldete isolierte Browser-Fixture: Testbestand, Zuordnung, Erhalt nach Neuladen und Zurückweisung derselben Spule auf zweitem Drucker geprüft; mobile 390px-Ansicht ohne Überlauf geprüft. Kein realer Drucker-/Spoolman-Verkehr in dieser Fixture. Alle sieben CI-Jobs für Commit 888d6c8a86fc3763bf1e2e240b95f208e4f2ca0c erfolgreich: [Prüflauf 41215593305](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41215593305).
-
-Monitor und separater Sicherungsdienst auf UGOS auf 0.17 aktualisiert. HTTPS-Dateien bytegleich; Spulen-/Status-/System-/Geräte-APIs ohne Anmeldung weiterhin 401. Eigene angemeldete produktive Chrome-Prüfung: vorbereitete Spoolman-Adresse, echter Bestandsabruf mit Zeitstempel, null Spulen und vier Slots erfolgreich. Keine echten Spulen angelegt oder zugeordnet. Acht Auftragskennungen, abgeschlossene Altdaten, Konto und Druckereinrichtung erhalten. Der zuvor aktive Auftrag hat ein bestätigtes Abschlussereignis; Nutzer bestätigt dessen Push-Empfang auf einem Handy. Folge-Vollsicherung mit Prüfsummen und SQLite-Integrität isoliert wiederhergestellt: Spoolman-Konfiguration, zwei Handy-Anmeldungen und privater Push-Schlüssel erhalten. Aufzeichnungslücke 10,46 Sekunden. Regulärer Monitor-Tagesstand nicht fällig; Tagesplan und Nachkontrolle am 01.11. um 08:00 unverändert. Keine Druckersteuerung.
-
-Offizieller unveränderter Spoolman 0.27.0 auf UGOS mit eigenem Datenvolume: native Oberfläche und leere Bibliothek geprüft. Native Backup-Funktion erzeugte SQLite-Stand; frische isolierte Kopie mit integrity_check=ok geöffnet, null Spulen. Nächtliche Sicherung aktiviert, erster nächtlicher Zyklus noch nicht nachgewiesen. Keine externe Kopie dieses Spoolman-Stands. Keine automatische Verbrauchsbuchung oder NFC-Zuordnung.
-
-Nutzer bestätigt am 31.10.2026 während der Spoolman-Einrichtung den Handyempfang einer Meldung zum realen Druckabschluss. Plattform nicht angegeben; damit kein pauschaler Nachweis realer Ereignisse auf beiden Plattformen. Neue Spulen sollen gewogen und frisch erfasst werden, kein Import des bisherigen Bestands.
-
-## SKU-Erkennung 0.18
-
-141 Python-, 14 Leseschutz- und 66 JS-Prüffälle lokal erfolgreich. SKU-Feldbegrenzung, explizite Bestätigung, zwischenzeitlicher Slotwechsel, Wiedererkennung am anderen Slot nach Neustart, Duplikate, Offline-/Leer-/Altdaten, Bestandsausfall, Konflikte, Speicherfehler-Rollback sowie Sicherung/Wiederherstellung der Kennungsverknüpfungen geprüft. Keine echten Spulen angelegt. Browser-, CI- und NAS-Nachweise folgen getrennt; noch keine praktische ReSpool-Wiedererkennung behauptet.
-
-## 0.18 – CI und NAS-Nachweis
-
-Alle sieben Jobs für Commit 2895f384b850aa312a5d56163120070494879bf0 erfolgreich: [Prüflauf 41226007720](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41226007720). Angemeldete isolierte Browser-Fixture: eindeutige Kennung mit erfundener Spule verknüpft und Wiedererkennung angezeigt. Keine Verbindung zu einem Drucker in der Fixture.
-
-Monitor und separater Sicherungsdienst auf UGOS auf 0.18 aktualisiert. Acht Aufträge und alle abgeschlossenen Zustände unverändert; Konto, Druckereinrichtung, Spoolman-Konfiguration und privater Push-Schlüssel vor/nach Update identisch. Vollsicherung mit Prüfsummen isoliert unter /tmp wiederhergestellt, SQLite integrity_check=ok, acht Aufträge und zwei Push-Geräte erhalten, private Dateien bytegleich. Beide echten Drucker online, jeweils vier Slots und drei nichtleere SKU-Felder im neuen lokalen Verlauf nachgewiesen. HTTPS liefert neue Assets bytegleich, Spulen-/Status-/System-/Geräte-APIs ohne Sitzung weiterhin 401. Beobachtungslücke 7,65 Sekunden, kein aktiver Druck. Tagesplan unverändert; Sonderstand ist kein Nachweis des regulären Tageszyklus. Noch kein echter Spoolman-Bestand angelegt/verknüpft, kein praktischer ReSpool-Wechseltest. Produktive angemeldete Chrome-Prüfung nach Nutzeranmeldung erfolgreich: beide Druckeranzeigen und vier Slot-Zeilen, Bestandsabruf mit Zeitstempel und null Spulen, unbekannte Kennungen sowie gesperrte doppelte Herstellerkennung sichtbar. Keine echte Verknüpfung angelegt. Physisches Handy-Layout und Einzelspulen-/ReSpool-Wechseltest bleiben offen.
-
-## Direkter Spoolman-Zugang 0.18.1
-
-Gespeicherte HTTP(S)-Adresse als Link neben Einrichten, auch bei geschlossener Einrichtung. Getrennter Tab ohne Referrer/Opener, gefährliche Protokolle und eingebettete Zugangsdaten gesperrt. Angemeldete isolierte Browser-Vorschau zeigt den Link; 141 Python/14 Leseschutz/68 JS und alle sieben CI-Jobs erfolgreich: [41230880666](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41230880666), Code `a5a279a53ac061a50668d479daae3671b0c347e5`. Monitor und separater Sicherungsdienst auf NAS aktualisiert; HTTPS-Dateien bytegleich, geschützte APIs ohne Sitzung 401. Vollsicherung mit Prüfsummen isoliert wiederhergestellt, passendes Restore-Image, SQLite ok; neun Auftragskennungen und zwei Push-Geräte erhalten, ein Auftrag weiterhin aktiv. Private Konfigurations-/Kontodateien und Push-Schlüssel vor/nach Update identisch, Wiederherstellung bytegleich. Aufzeichnungslücke 7,44 Sekunden; keine Druckersteuerung. Regulärer Tageszyklus unverändert und damit nicht neu geprüft. Produktiver angemeldeter Linktest und physische Handybedienung bleiben offen.
-
-## Spulenzuordnung 0.18.2 – Entwicklung
-
-142 Python-, 14 MQTT-Leseschutz- und 73 JavaScript-Prüffälle lokal erfolgreich. Neuer Schutz verhindert feste Bindungen bereits per Kennung verknüpfter Spulen; das Lösen alter Konflikte bleibt offline möglich. Browserfixture mit ausgeschalteten echten Druckerverbindungen zeigt automatisch erkannte Spule direkt im Slot und sperrt zusätzliche feste Zuordnung. Veralteter Bestand, doppelte Kennung und bestehende Altbindung separat geprüft. Alle sieben CI-Jobs erfolgreich: [Prüflauf 41323501547](https://github.com/Alaskapclos/kobra-monitor/actions/runs/41323501547), Code 951f52b88b48cb2f65891e8882f59d87c66d6c9a.
-
-Monitor und separater netzwerkloser Sicherungsdienst auf UGOS auf 0.18.2-alpha.1 aktualisiert. HTTPS-Dateien bytegleich, Kamera verfügbar und geschützte APIs ohne Sitzung 401. Angemeldete produktive Prüfung bestätigt automatisch erkannte Spoolman-Spule direkt in Slot4 und gesperrte zusätzliche feste Bindung. Zwölf Auftragskennungen und alle zuvor abgeschlossenen Zustände erhalten; Konto, Druckereinrichtung, Spulenverknüpfungen und privater Push-Schlüssel unverändert. Vollsicherung mit Prüfsummen isoliert wiederhergestellt, SQLite integrity_check=ok, zwei Push-Geräte sowie private Dateien bytegleich wiederhergestellt. Beobachtungslücke 7,31 Sekunden; ein Druck lief während des Updates weiter. Keine Druckersteuerung. Desktop-Starter aktuell und ausführbar.
-
-Realer Einzelspulentest am 01.11.: vollständige selbst beschriebene ReSpool-SKU unverändert über Stock-LAN empfangen; erste Versetzung durch alte feste Bindung blockiert und nach Lösen erkannt; anschließender Rückwechsel ohne Zuordnungsänderung bestätigt. Kein allgemeiner Kompatibilitätsnachweis für sämtliche Originaltags/ACE-Modelle.
-
-## Native Spoolman-Sicherung mit realem Bestand – 01.11.2026
-
-Spoolman 0.27.0: nativer aktueller Sicherungsstand erstellt, vorheriger Stand erhalten. Isolierte Dateiwiederherstellung in frisches temporäres Verzeichnis; SQLite integrity_check=ok und foreign_key_check ohne Befund. Alle neun Tabellen und das Schema stimmen mit dem read-only geöffneten Livebestand überein; reale Spulen und gespeicherte Gewichte erhalten. Keine produktiven Daten ersetzt, keine Dienste neu gestartet, kein Zeitplan geändert, keine Druckersteuerung. Tatsächlich erfolgreicher Nachtzyklus bleibt offen. Eine zusätzliche private einmalige Mac-Kopie desselben Stands wurde anschließend bytegleich, mit SQLite-Integritätsprüfung und Fremdschlüsselprüfung bestätigt; reale Spulen und Bestandswerte erhalten. Keine fortlaufende externe Kopie konfiguriert. Dieser Nachweis betrifft Spoolmans eigenes Datenvolume; die Monitor-Vollsicherung allein sichert nur dessen Spulenverknüpfungen. Keine neue Softwareversion in diesem Dokumentationsschritt.
+[Freigabecheckliste](RELEASE.md) · [Paketübersicht](PLATFORM_SUPPORT.md) · [Sicherheit](../SECURITY.md).

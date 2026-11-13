@@ -31,6 +31,12 @@ class History:
         # Only live idle observations establish start coverage, never cached
         # samples from before a restart or a disconnected session.
         self.links={}; self.idle={}; self.idle_seen={}; self.last_sample={}
+        from report_archive import ReportArchive
+        from file_archive import FileArchive
+        self.files=FileArchive(self)
+        self.reports=ReportArchive(self)
+        self.report_materials=None
+        self.report_error=None
 
     def link(self,ip,connected):
         with self.lock:
@@ -47,6 +53,8 @@ class History:
                         (ip,job_id,self.clock(),kind,json.dumps(details,ensure_ascii=False)))
 
     def observe(self,ip,kind,payload,snapshot):
+        from reprint_identity import normalize,legacy_dispatch
+        payload=normalize(self,ip,kind,payload)
         if payload.get('code') not in (None,200):
             if kind in ('info','print') and payload.get('state') in ('pause','paused','error','fault'):
                 with self.lock:
@@ -58,6 +66,7 @@ class History:
             return
         data=payload.get('data')
         if not isinstance(data,dict):return
+        closed=[]
         with self.lock:
             current=self.db.execute("SELECT * FROM jobs WHERE ip=? AND ended_at IS NULL ORDER BY first_seen DESC LIMIT 1",(ip,)).fetchone()
             project=None;previous=False
@@ -82,6 +91,7 @@ class History:
                     if current and identity and current['identity'] not in ('','-1','0') and identity!=current['identity']:
                         self.db.execute('UPDATE jobs SET state=?,ended_at=? WHERE id=?',('unknown_end',self.clock(),current['id']))
                         self._event(ip,current['id'],'unobserved_end',{})
+                        closed.append(current['id'])
                         current=None
                     now=self.clock()
                     if current is None:
@@ -102,6 +112,10 @@ class History:
                             (identity or current['identity'],filename,state,now,project.get('progress',current['progress']),project.get('curr_layer',current['layer']),project.get('total_layers',current['total_layers']),project.get('print_time',current['elapsed_minutes']),job_id))
                     self.idle[ip]=False
                     current=self.db.execute('SELECT * FROM jobs WHERE id=?',(job_id,)).fetchone()
+                    legacy=legacy_dispatch(self.db,ip,filename,identity)
+                    if legacy and not self.db.execute('SELECT 1 FROM file_job_links WHERE job_id=?',(job_id,)).fetchone():
+                        try:self.files.link(job_id,legacy['sha256'],method='reprint',source_job=legacy['source_job'])
+                        except (ValueError,OSError):self.report_error='Archivbezug bitte im Auftrag prüfen.'
                 elif state in TERMINAL and current:
                     same=(identity==current['identity']) if identity and current['identity'] not in ('','-1','0') else Path(filename).name==Path(current['filename']).name
                     if same:
@@ -109,6 +123,7 @@ class History:
                         self.db.execute('UPDATE jobs SET state=?,last_seen=?,ended_at=?,progress=?,layer=?,total_layers=? WHERE id=?',
                             (result,self.clock(),self.clock(),project.get('progress',current['progress']),project.get('curr_layer',current['layer']),project.get('total_layers',current['total_layers']),current['id']))
                         self._event(ip,current['id'],result,{})
+                        closed.append(current['id'])
                         self.idle[ip]=True
                         self.idle_seen[ip]=self.clock()
             if snapshot.get('data') and self.clock()-self.last_sample.get(ip,0)>=15:
@@ -116,6 +131,18 @@ class History:
                 self.db.execute('INSERT INTO samples(ip,job_id,at,data) VALUES(?,?,?,?)',
                     (ip,current['id'] if current else None,self.clock(),json.dumps(snapshot,ensure_ascii=False)))
             self.db.commit()
+            for job_id in closed:
+                try:
+                    materials=self.report_materials(ip) if self.report_materials else None
+                    self.reports.freeze(job_id,materials=materials)
+                    self.report_error=None
+                except Exception:
+                    self.report_error='Berichtsarchivierung fehlgeschlagen. Im Auftragsbereich erneut versuchen.'
+
+    def has_active_jobs(self):
+        """Check the entire history, independently of the paginated UI list."""
+        with self.lock:
+            return self.db.execute('SELECT 1 FROM jobs WHERE ended_at IS NULL LIMIT 1').fetchone() is not None
 
     def jobs(self,ip=None):
         with self.lock:
@@ -134,7 +161,7 @@ class History:
         with self.lock:
             where=['ip=?'];params=[ip]
             if search:
-                where.append('instr(casefold(filename),casefold(?))>0');params.append(search)
+                where.append('(instr(casefold(filename),casefold(?))>0 OR id IN (SELECT job_id FROM job_annotations WHERE instr(casefold(fields),casefold(?))>0))');params.extend([search,search])
             if state=='active':where.append('ended_at IS NULL')
             elif state!='all':where.append('state=?');params.append(state)
             clause=' AND '.join(where)
@@ -147,7 +174,14 @@ class History:
                 coalesce(sum(state='cancelled'),0) AS cancelled,
                 coalesce(sum(ended_at IS NULL),0) AS active
                 FROM jobs WHERE ip=?''',(ip,)).fetchone())
-            return {'read_only':True,'ip':ip,'jobs':[dict(row) for row in rows],
+            entries=[]
+            for row in rows:
+                item=dict(row)
+                annotation=self.db.execute('SELECT fields FROM job_annotations WHERE job_id=?',(item['id'],)).fetchone()
+                item['annotation']=json.loads(annotation[0]) if annotation else {}
+                item['report_version']=self.db.execute('SELECT coalesce(max(version),0) FROM report_versions WHERE job_id=?',(item['id'],)).fetchone()[0]
+                entries.append(item)
+            return {'read_only':True,'ip':ip,'jobs':entries,
                     'total':total,'page':page,'pages':pages,'page_size':size,'summary':summary}
 
     def report(self,job_id):

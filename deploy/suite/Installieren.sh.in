@@ -1,0 +1,136 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-only
+# Generated development installer; no Python installation on the host required.
+set -eu
+IMAGE=@IMAGE@
+IMAGE_ID=@IMAGE_ID@
+IMAGE_SHA=@IMAGE_SHA@
+ARCHIVE=@ARCHIVE@
+PACKAGE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+ACTION=install
+DIRECTORY=
+ADDRESS=127.0.0.1
+PORT=17125
+YES=0
+NETWORK=isolated
+fail() { printf '\n%s\n' "$*" >&2; exit 1; }
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        install|start|status) ACTION=$1; shift ;;
+        --directory|--address|--port|--network)
+            option=$1; shift
+            [ "$#" -gt 0 ] || fail "Ein Wert für $option fehlt."
+            case "$option" in --directory) DIRECTORY=$1 ;; --address) ADDRESS=$1 ;; --port) PORT=$1 ;; --network) NETWORK=$1 ;; esac
+            shift ;;
+        --yes) YES=1; shift ;;
+        *) fail 'Unbekannte Option. Erlaubt: install, start, status, --directory, --address, --port, --network, --yes.' ;;
+    esac
+done
+printf '\nKobra Monitor – getrennte Linux-Testinstallation\n'
+printf 'Netzbetrieb: %s (isolated = ohne Druckerzugang; lan = Drucker erreichbar).\n' "$NETWORK"
+[ "$(uname -s)" = Linux ] || fail 'Dieses Paket ist für Linux/amd64. Native Windows-/Mac-Pakete folgen separat.'
+command -v docker >/dev/null 2>&1 || fail 'Docker Engine fehlt. Bitte zuerst das Container-System des Rechners einrichten.'
+case "${DOCKER_HOST:-}" in ''|unix://*) ;; *) fail 'Für diese Vorschau muss Docker lokal über seinen Unix-Socket erreichbar sein.' ;; esac
+if [ -n "${DOCKER_CONTEXT:-}" ] || [ -z "${DOCKER_HOST:-}" ]; then
+    CONTEXT_ENDPOINT=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true)
+    case "$CONTEXT_ENDPOINT" in unix://*) ;; *) fail 'Der aktive Docker-Kontext zeigt nicht auf ein lokales Container-System.' ;; esac
+fi
+case "$(docker info --format '{{.OSType}}/{{.Architecture}}' 2>/dev/null || true)" in
+    linux/amd64|linux/x86_64) ;; *) fail 'Docker ist nicht erreichbar oder der Rechner ist kein Linux/amd64-Ziel.' ;;
+esac
+docker compose version >/dev/null 2>&1 || fail 'Docker Compose v2 fehlt. Bitte das Compose-Plugin des Container-Systems einrichten.'
+if [ -z "$DIRECTORY" ]; then
+    [ "$YES" = 0 ] || fail '--directory ist für einen unbeaufsichtigten Lauf erforderlich.'
+    printf 'Neuer Installationsordner [%s/kobra-suite-test]: ' "$HOME"
+    IFS= read -r DIRECTORY || exit 1
+    DIRECTORY=${DIRECTORY:-"$HOME/kobra-suite-test"}
+fi
+case "$DIRECTORY" in /*) ;; *) DIRECTORY="$PWD/$DIRECTORY" ;; esac
+case "$DIRECTORY" in *','*|*'
+'*) fail 'Der Installationspfad darf kein Komma und keinen Zeilenumbruch enthalten.' ;; esac
+if [ "$YES" = 0 ] && [ "$ACTION" = install ]; then
+    printf 'Adresse für den Browserzugriff [127.0.0.1 = nur dieser Rechner]: '
+    IFS= read -r choice || exit 1
+    ADDRESS=${choice:-$ADDRESS}
+    printf 'Drucker im Heimnetz verbinden? [j/N]: '
+    IFS= read -r choice || exit 1
+    case "$choice" in j|J|ja|Ja) NETWORK=lan ;; *) NETWORK=isolated ;; esac
+    printf 'Freier Port [%s]: ' "$PORT"
+    IFS= read -r choice || exit 1
+    PORT=${choice:-$PORT}
+    printf '\nEs wird ein eigenes Testprojekt angelegt. Bestehende Installationen werden nicht übernommen.\n'
+    printf 'Für Spoolman wird einmalig das offizielle Image aus dem Internet geladen.\n'
+    if [ "$ADDRESS" != 127.0.0.1 ]; then
+        printf 'Die Monitor-Anmeldung wird über HTTP an der gewählten Heimnetz-Adresse erreichbar. Nur ein vertrautes Netz verwenden.\n'
+    fi
+    printf 'Jetzt installieren? [j/N]: '
+    IFS= read -r choice || exit 1
+    case "$choice" in j|J|ja|Ja) ;; *) printf 'Installation abgebrochen.\n'; exit 0 ;; esac
+fi
+if [ "$ACTION" = install ]; then
+    [ ! -e "$DIRECTORY" ] && [ ! -L "$DIRECTORY" ] || fail 'Dieser Ordner existiert bereits. Für eine vorhandene Installation bitte start oder status verwenden.'
+    [ -d "$(dirname -- "$DIRECTORY")" ] || fail 'Der übergeordnete Ordner fehlt.'
+else
+    [ -d "$DIRECTORY/project" ] && [ ! -L "$DIRECTORY" ] && [ ! -L "$DIRECTORY/project" ] || fail 'Die vorhandene Installation wurde hier nicht gefunden.'
+fi
+[ -f "$PACKAGE/$ARCHIVE" ] || fail 'Das zugehörige Programmabbild fehlt im Paketordner.'
+printf '\nProgrammpaket wird geprüft …\n'
+if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL=$(sha256sum "$PACKAGE/$ARCHIVE"); ACTUAL=${ACTUAL%% *}
+elif command -v shasum >/dev/null 2>&1; then
+    ACTUAL=$(shasum -a 256 "$PACKAGE/$ARCHIVE"); ACTUAL=${ACTUAL%% *}
+else
+    fail 'Die Prüfsummenfunktion sha256sum oder shasum fehlt.'
+fi
+[ "$ACTUAL" = "$IMAGE_SHA" ] || fail 'Die Prüfsumme stimmt nicht. Bitte das Paket erneut vollständig herunterladen.'
+CURRENT=$(docker image inspect --format '{{.Id}}' "$IMAGE" 2>/dev/null || true)
+if [ -z "$CURRENT" ]; then
+    [ "$ACTION" != status ] || fail 'Das Programmabbild fehlt; bitte die Installation mit start wieder aufnehmen.'
+    printf 'Monitor wird lokal eingelesen …\n'
+    docker image load --input "$PACKAGE/$ARCHIVE" >/dev/null
+elif [ "$CURRENT" != "$IMAGE_ID" ]; then
+    fail 'Ein anderes Programmabbild trägt bereits diese Versionskennung. Es wird nicht automatisch ersetzt.'
+fi
+[ "$(docker image inspect --format '{{.Id}}' "$IMAGE")" = "$IMAGE_ID" ] || fail 'Das eingelesene Programmabbild passt nicht zum Paket.'
+UID_NOW=$(id -u); GID_NOW=$(id -g)
+if [ "$ACTION" = install ]; then
+    docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+        --user "$UID_NOW:$GID_NOW" --tmpfs /tmp:mode=1777,size=64m \
+        "$IMAGE" python suite_installer.py check-parameters --image "$IMAGE" --address "$ADDRESS" --port "$PORT" --network "$NETWORK" \
+        || fail 'Die Vorprüfung der Einrichtung ist fehlgeschlagen. Details stehen oben; ein Installationsordner wurde noch nicht angelegt.'
+    mkdir -m 700 -- "$DIRECTORY"
+    DIRECTORY=$(CDPATH= cd -- "$DIRECTORY" && pwd -P)
+    docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+        --user "$UID_NOW:$GID_NOW" --tmpfs /tmp:mode=1777,size=64m \
+        --mount "type=bind,source=$DIRECTORY,target=/installation" \
+        "$IMAGE" python suite_installer.py prepare --directory /installation/project \
+        --image "$IMAGE" --address "$ADDRESS" --port "$PORT" --network "$NETWORK" || fail 'Die Einrichtung wurde nicht abgeschlossen. Der Ordner bleibt zur Prüfung erhalten.'
+else
+    DIRECTORY=$(CDPATH= cd -- "$DIRECTORY" && pwd -P)
+fi
+PROJECT="$DIRECTORY/project"
+NAME=$(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+    --user "$UID_NOW:$GID_NOW" --tmpfs /tmp:mode=1777,size=64m \
+    --mount "type=bind,source=$PROJECT,target=/installation,readonly" \
+    "$IMAGE" python suite_installer.py project-name --directory /installation --image "$IMAGE") \
+    || fail 'Die gespeicherte Installation konnte nicht verlässlich geprüft werden.'
+dc() { docker compose --project-directory "$PROJECT" --project-name "$NAME" --file "$PROJECT/compose.json" "$@"; }
+dc config --quiet || fail 'Das Container-System kann diese Konfiguration nicht verarbeiten.'
+if [ "$ACTION" = status ]; then
+    dc ps --all
+    exit 0
+fi
+printf 'Gemeinsame Dienste werden gestartet …\n'
+dc up --detach --wait --wait-timeout 180 --no-recreate \
+    || fail 'Der Start wurde nicht vollständig bestätigt. Daten und Konfiguration bleiben erhalten. Bitte status aufrufen.'
+printf '\nKobra Monitor ist bereit. Bitte diesen Link im Browser öffnen:\n'
+# Use the stored address and port on resume, rather than command-line defaults.
+ENDPOINT=$(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+    --user "$UID_NOW:$GID_NOW" --tmpfs /tmp:mode=1777,size=64m \
+    --mount "type=bind,source=$PROJECT,target=/installation,readonly" \
+    "$IMAGE" python suite_installer.py endpoint --directory /installation --image "$IMAGE")
+ADDRESS=${ENDPOINT%:*}
+PORT=${ENDPOINT##*:}
+dc exec -T monitor python suite_installer.py setup-link --address "$ADDRESS" --port "$PORT"
+printf '\nDen Einrichtungslink bitte vertraulich behandeln. Konto und Passwort legst du selbst im Browser an.\n'
+printf 'Erneut öffnen: dieses Skript mit start --directory und dem gleichen Installationsordner aufrufen.\n'

@@ -22,17 +22,17 @@ class FleetOrderTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(load_config(data),list(reversed(ips)))
                 for ip in ips:self.assertIs(fleet.monitors[ip],original[ip])
                 start.assert_not_awaited();stop.assert_not_awaited()
-            fleet.history.close()
+            fleet.reprints.close();fleet.history.close()
             runtime=Path(tmp)/'next';runtime.mkdir()
             restarted=Fleet(load_config(data),runtime,data)
             self.assertEqual([p['ip'] for p in restarted.snapshot()['printers']],list(reversed(ips)))
-            restarted.history.close()
+            restarted.reprints.close();restarted.history.close()
     async def test_only_exact_current_permutation_is_allowed(self):
         with tempfile.TemporaryDirectory() as tmp:
             data=Path(tmp)/'data';data.mkdir();fleet=Fleet(['192.168.1.10','192.168.1.11'],tmp,data)
             for ips in [[],None,['192.168.1.10'],['192.168.1.10','192.168.1.10'],['192.168.1.10','192.168.1.12'],[{},'192.168.1.11']]:
                 with self.assertRaises(ValueError):await fleet.reorder(ips)
-            self.assertFalse((data/'config.json').exists());fleet.history.close()
+            self.assertFalse((data/'config.json').exists());fleet.reprints.close();fleet.history.close()
 
 class OrderAccessTests(unittest.IsolatedAsyncioTestCase):
     async def test_order_requires_login_csrf_and_same_origin(self):

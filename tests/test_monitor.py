@@ -151,7 +151,7 @@ class ApplicationTests(unittest.IsolatedAsyncioTestCase):
     async def test_login_recovers_automatically_after_a_network_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             service=monitor.Monitor('192.168.1.101',tmp,tmp)
-            client=SimpleNamespace(_sock=object(),_running=True,query_info=Mock(),query_multicolor_box=Mock())
+            client=SimpleNamespace(_sock=object(),_running=True,publish=Mock(),query_info=Mock(),query_multicolor_box=Mock())
             attempts=[]
             async def connect():
                 attempts.append(True)
@@ -228,7 +228,7 @@ class FleetTests(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(all(x.client.read_only for x in (first,second)))
                 finally:
                     await asyncio.gather(first.disconnect(),second.disconnect())
-                    fleet.history.close()
+                    fleet.reprints.close();fleet.history.close()
 
     async def test_failing_printer_does_not_block_other_session_start(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -243,13 +243,13 @@ class FleetTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(first.task.done())
             self.assertIsInstance(first.task.exception(),OSError)
             await second.stop(None)
-            fleet.history.close()
+            fleet.reprints.close();fleet.history.close()
 
     async def test_reconnected_session_gets_time_to_refresh_old_telemetry(self):
         with tempfile.TemporaryDirectory() as tmp:
             service=monitor.Monitor('192.168.1.101',tmp,tmp)
             service.telemetry.seen['print']=time.monotonic()-120
-            client=SimpleNamespace(_sock=object(),_running=True,query_info=Mock(),query_multicolor_box=Mock())
+            client=SimpleNamespace(_sock=object(),_running=True,publish=Mock(),query_info=Mock(),query_multicolor_box=Mock())
             async def connect():
                 service.client=client
                 service.bridge=fake_bridge()

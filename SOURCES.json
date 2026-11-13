@@ -34,6 +34,21 @@
     "repository": "https://github.com/web-push-libs/encrypted-content-encoding",
     "version": "1.2.1",
     "license": "MIT",
-    "local_changes": "none"
+    "local_changes": "none",
+    "license_file": "licenses/http-ece-1.2.1-MIT.txt",
+    "license_repository_blob": "d6a83c0df8d8f56a8d49f0b666f2033edd26cf18",
+    "license_repository_url": "https://github.com/web-push-libs/encrypted-content-encoding/blob/main/LICENSE",
+    "source_archive": "https://files.pythonhosted.org/packages/7c/af/249d1576653b69c20b9ac30e284b63bd94af6a175d72d87813235caf2482/http_ece-1.2.1.tar.gz"
+  },
+  "spoolman": {
+    "repository": "https://github.com/Donkie/Spoolman",
+    "version": "0.27.0",
+    "commit": "bed3f14ee77a3a571d31b14215d54b0b88a7519c",
+    "license": "MIT for Spoolman itself; bundled web dependencies have separate licenses",
+    "release_asset": "https://github.com/Donkie/Spoolman/releases/download/v0.27.0/spoolman.zip",
+    "release_asset_sha256": "bcc961af4c20d7ad7f1740f5609cd3efd94c4556baafaeba5036122dd7e46704",
+    "source_archive": "https://codeload.github.com/Donkie/Spoolman/tar.gz/bed3f14ee77a3a571d31b14215d54b0b88a7519c",
+    "source_sha256": "ea46b65cf1d6418f70808ab42ae329383d7481e8a2748f3ced29f582586a6408",
+    "local_changes": "None to upstream Spoolman archive; Kobra Monitor configures and starts it separately."
   }
 }

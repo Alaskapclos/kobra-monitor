@@ -1,5 +1,12 @@
 name: Checks
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -10,37 +17,30 @@ jobs:
         python: ['3.11', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
       - run: python -m pip install -r requirements-lock.txt
       - run: python -m unittest discover -s tests -v
       - run: python vendor/kobra-bridge/test_read_only.py
-      - run: node --check static/monitor.js
-      - run: node --check static/setup.js
-      - run: node --check static/camera.js
-      - run: node --check static/notifications.js
-      - run: node --check static/diagnostics.js
-      - run: node tests/test_diagnostics.js
-      - run: node --check static/spools.js
-      - run: node tests/test_spools.js
-      - run: node --check static/service-worker.js
-      - run: node tests/test_notifications.js
-      - run: node tests/test_timeline_render.js
-      - run: node tests/test_archive_render.js
-      - run: node tests/test_printer_order.js
-      - run: node tests/test_printer_overview.js
-      - run: node tests/test_camera_render.js
-      - run: node tests/test_camera_grid.js
+      - name: Check all browser scripts and JavaScript tests
+        shell: python {0}
+        run: |
+          from pathlib import Path
+          import subprocess
+          for path in sorted(Path('static').glob('*.js')):
+              subprocess.run(['node', '--check', str(path)], check=True)
+          for path in sorted(Path('tests').glob('test_*.js')):
+              subprocess.run(['node', str(path)], check=True)
       - run: python scripts/release_check.py
   container:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: docker compose config --quiet
       - run: docker compose up --build -d --wait
       - run: curl --fail http://127.0.0.1:7125/health
@@ -59,14 +59,14 @@ jobs:
             --volumes-from "$monitor_container_id:ro" \
             --tmpfs /snapshots:uid=10001,gid=10001,mode=0700,size=64m \
             --tmpfs /tmp:mode=1777,size=64m \
-            kobra-monitor:0.18.2-alpha.1 sh -c '
-              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.18.2-alpha.1 &&
+            kobra-monitor:0.43.0-alpha.6 sh -c '
+              python backup.py create --data-dir /data --destination /snapshots --image kobra-monitor:0.43.0-alpha.6 &&
               python backup.py restore /snapshots/*.zip --target /tmp/restored &&
               python -c "from pathlib import Path; from configuration import load_config; assert load_config(\"/tmp/restored\")==[\"192.168.1.20\"]; assert Path(\"/data/access-token\").read_bytes()==Path(\"/tmp/restored/access-token\").read_bytes(); assert Path(\"/data/account.json\").read_bytes()==Path(\"/tmp/restored/account.json\").read_bytes(); print(\"Backup restore verified without printer connections.\")"
             '
       - name: Export tested NAS image
-        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.18.2-alpha.1
-      - uses: actions/upload-artifact@v4
+        run: docker image save -o kobra-monitor-linux-amd64.tar kobra-monitor:0.43.0-alpha.6
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: kobra-monitor-linux-amd64
           path: kobra-monitor-linux-amd64.tar

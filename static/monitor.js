@@ -25,46 +25,113 @@ let archivePage = 0;
 let archiveRequest = 0;
 let archiveDebounce = null;
 const printerButtons = new Map();
-const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',cancelled:'Abgebrochen'};
+const stateNames = {standby:'Bereit',printing:'Druckt',paused:'Pausiert',complete:'Abgeschlossen',error:'Störung',preheating:'Heizt auf',auto_leveling:'Vorbereitung',checking:'Vorbereitung',init:'Vorbereitung',preparing:'Vorbereitung',pausing:'Wird pausiert …',resuming:'Wird fortgesetzt …',stopping:'Wird abgebrochen …',cancelled:'Abgebrochen'};
 
-function renderSlots(data, seen, stale) {
-  const area = $('slots');
+let controlPanelIp=null,controlPanelOpen=false;
+function closeControlPanel(){
+  controlPanelOpen=false;
+  document.body.classList.remove('controls-open');
+  const button=$('control-panel-toggle');
+  button.setAttribute('aria-expanded','false');button.textContent='Achsen & Homing öffnen';
+  $('control-panel-note').textContent='Achsensteuerung geschlossen';
+  for(const dialog of document.querySelectorAll('dialog[open]')){
+    if(dialog.id==='motion-dialog'){
+      dialog.dispatchEvent(new Event('cancel'));if(dialog.open)dialog.close();
+    }
+  }
+}
+function updateControlPanel(printer){
+  const available=printer?.motion_control?.enabled===true&&printer.motion_control.supported===true;
+  if(!available||controlPanelIp!==printer?.ip||printer?.connection!=='online'||!window.kobraAuth?.authenticated)closeControlPanel();
+  controlPanelIp=printer?.ip;
+  $('control-panel-toggle').hidden=!available;
+  $('control-panel-toggle').disabled=printer?.connection!=='online'||!window.kobraAuth?.authenticated;
+}
+function renderSlots(data,seen,stale){
+  return renderSlotsInto($('slots'),data,seen,stale,selectedIp,false);
+}
+function renderSlotsInto(area,data,seen,stale,ip,compact=false){
+  const tag=compact?'span':'div',summaries=[];
   area.replaceChildren();
   if (!seen || !data || !Array.isArray(data.ace_slots) || !data.ace_slots.length) {
-    const empty = document.createElement('div'); empty.className = 'empty-state';
+    const empty = document.createElement(tag); empty.className = 'empty-state';
     empty.textContent = seen ? 'Keine ACE-Slots vom Drucker gemeldet.' : 'Warte auf Filamentdaten vom Drucker.';
     area.append(empty); return;
   }
   for (const slot of data.ace_slots) {
-    const active = slot.global_index === data.loaded_slot;
-    const card = document.createElement('div'); card.className = `slot${active?' active':''}${stale?' stale':''}`;
-    const top = document.createElement('div'); top.className = 'slot-top';
-    const label = document.createElement('span'); label.className = 'slot-number'; label.textContent = `SLOT ${Number(slot.global_index??slot.index)+1}`; top.append(label);
-    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent='Geladen'; top.append(tag); }
-    const spool = document.createElement('div'); spool.className='spool';
+    const index=slot.global_index??slot.index;
+    const empty=slot.edit_status===2,active=!empty&&index===data.loaded_slot;
+    const card = document.createElement(tag); card.className = `slot${active?' active':''}${stale?' stale':''}`;
+    const top = document.createElement(tag); top.className = 'slot-top';
+    const label = document.createElement('span'); label.className = 'slot-number'; label.textContent = `SLOT ${Number(index)+1}`; top.append(label);
+    if (active) { const tag = document.createElement('span'); tag.className='slot-badge'; tag.textContent=stale?'Zuletzt geladen':'Geladen'; top.append(tag); }
+    const spool = document.createElement(tag); spool.className='spool';
     const rgb = Array.isArray(slot.color) && slot.color.length>=3 && slot.color.slice(0,3).every(x=>number(x)&&x>=0&&x<=255) ? slot.color.slice(0,3) : [180,190,166];
     spool.style.borderColor = `rgb(${rgb.join(',')})`;
-    const material = document.createElement('div'); material.className='slot-material'; material.textContent = slot.type || 'Nicht zugeordnet';
-    const color = document.createElement('div'); color.className='slot-color'; color.textContent = '#'+rgb.map(x=>Math.round(x).toString(16).padStart(2,'0')).join('').toUpperCase();
-    const remaining = document.createElement('div'); remaining.className='slot-remaining';
-    const amount = document.createElement('strong'); const percent = number(slot.consumables_percent) ? Math.max(0,Math.min(100,slot.consumables_percent)) : null;
-    amount.textContent = percent===null?'—':Math.round(percent); const unit = document.createElement('span'); unit.textContent = percent===null?'keine Angabe':'% Restmenge'; remaining.append(amount,unit);
-    const track = document.createElement('div'); track.className='slot-bar'; const fill=document.createElement('div'); fill.style.width=`${percent??0}%`; track.append(fill);
-    card.append(top,spool,material,color,remaining,track); area.append(card);
+    const material = document.createElement(tag); material.className='slot-material'; material.textContent=empty?'Leer':slot.type||'Nicht zugeordnet';
+    const color = document.createElement(tag); color.className='slot-color'; color.textContent = '#'+rgb.map(x=>Math.round(x).toString(16).padStart(2,'0')).join('').toUpperCase();
+    const remaining = document.createElement(tag); remaining.className='slot-remaining';
+    const stock=!stale&&!empty?window.kobraSpools?.remaining?.(ip,slot):null;
+    const preferStock=window.kobraSpools?.source?.(ip)==='spoolman';
+    const fromPrinter=!stale&&!empty&&!preferStock&&number(slot.consumables_percent);
+    const amount = document.createElement('strong'); const percent = fromPrinter ? Math.max(0,Math.min(100,slot.consumables_percent)) : stock?.percent??null;
+    amount.textContent = percent===null?'—':Math.round(percent); const unit = document.createElement('span'); unit.textContent = percent===null?'keine Angabe':compact?'%':'% Restmenge'; remaining.append(amount,unit);
+    const track = document.createElement(tag); track.className='slot-bar'; const fill=document.createElement(tag); fill.style.width=`${percent??0}%`; track.append(fill);
+    card.append(top,spool,material,color,remaining,track);
+    if(compact){card.className+=' compact-slot';color.hidden=true;}
+    if(!fromPrinter&&stock){
+      const note=document.createElement('span');note.className='slot-stock-source';
+      note.textContent=`Spoolman #${stock.id} · ${Math.round(stock.grams)} g`+(compact?'':' Rest')+(stock.percent===null?' · Ausgangsgewicht prüfen':'');
+      card.append(note);
+    }else if(preferStock&&!stale&&!empty){
+      const note=document.createElement('span');note.className='slot-stock-source';note.textContent=compact?'Bestand unbekannt':'Spoolman-Bestand nicht aktuell oder keine eindeutige Zuordnung.';card.append(note);
+    }
+    const summary=`Slot ${Number(index)+1}, ${material.textContent}${active?stale?", zuletzt geladen":", geladen":""}, ${percent===null?"Restmenge unbekannt":Math.round(percent)+" Prozent Rest"}${!fromPrinter&&stock?", Spoolman #"+stock.id+", "+Math.round(stock.grams)+" Gramm":""}${stale?", veraltet":""}`;
+    card.setAttribute("aria-label",summary);summaries.push(summary);
+    area.append(card);
+  }
+  return summaries;
+}
+
+function renderDeviceStatus(snapshot, extraAge, connection) {
+  const readings=snapshot.device_status||{}, limit=number(snapshot.stale_after_s)?snapshot.stale_after_s:90;
+  const modes={1:'Silent',2:'Standard',3:'Sport'};
+  for(const key of ['fan_speed','aux_fan_speed','box_fan_level','light_on','speed_mode']) {
+    const target=$('device-'+key), stamp=$('device-'+key+'-age');if(!target||!stamp)continue;
+    const reading=readings[key], valid=reading&&number(reading.age_s)&&reading.age_s>=0&&
+      (key==='light_on'?typeof reading.value==='boolean':number(reading.value));
+    const track=$('device-'+key+'-track'), fill=$('device-'+key+'-bar');
+    if(track){track.hidden=true;if(fill)fill.style.width='0%';}
+    const light=key==='light_on'?$('device-light-icon'):null;if(light)light.dataset.state='unknown';
+    if(!valid){target.textContent='Nicht gemeldet';stamp.textContent='';target.classList.toggle('device-reading-stale',false);continue;}
+    const age=reading.age_s+extraAge, old=connection!=='online'||age>limit||reading.current_session===false;
+    const v=reading.value;
+    target.textContent=key==='light_on'?(v?'An':'Aus'):key==='speed_mode'?(modes[v]||`Unbekannter Modus (${v})`):key==='box_fan_level'?`Stufe ${v} / 100`:`${v} %`;
+    stamp.textContent=(old?'Veraltet · ':'')+ageText(age);target.classList.toggle('device-reading-stale',old);
+    if(light)light.dataset.state=old?'stale':v?'on':'off';
+    if(track&&fill&&!old&&v>=0&&v<=100){fill.style.width=`${v}%`;track.hidden=false;}
   }
 }
 
 function renderPrinter(snapshot) {
   const extraAge = Math.max(0,(Date.now()-lastFetchAt)/1000);
   const ages = snapshot.section_age_s || {};
-  const sectionAge = name => number(ages[name]) ? ages[name]+extraAge : null;
+  const limit=number(snapshot.stale_after_s)&&snapshot.stale_after_s>=0?snapshot.stale_after_s:90;
+  const sectionAge = name => number(ages[name])&&ages[name]>=0 ? ages[name]+extraAge : null;
   const seen = name => number(sectionAge(name));
-  const stale = name => !seen(name) || sectionAge(name)>snapshot.stale_after_s;
+  const stale = name => connection!=='online' || !seen(name) || sectionAge(name)>limit;
   const data = snapshot.data || {};
   const age = number(snapshot.age_s)?snapshot.age_s+extraAge:null;
   let connection = snapshot.connection;
-  if (connection==='online' && number(age) && age>snapshot.stale_after_s) connection='stale';
+  if (connection==='online' && number(age) && age>limit) connection='stale';
   if (requestFailed || extraAge>10) connection='offline';
+  renderDeviceStatus(snapshot,extraAge,connection);
+  window.kobraLightControls?.render(snapshot,extraAge,connection);
+  window.kobraFanControls?.render(snapshot,extraAge,connection);
+  window.kobraSpeedControls?.render(snapshot,extraAge,connection);
+  window.kobraTemperatureControls?.render(snapshot,extraAge,connection);
+  window.kobraPrintControls?.render(snapshot,extraAge,connection);
+  window.kobraMotionControls?.render(snapshot,extraAge,connection);
   const names = {online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Daten veraltet'};
   const pill=$('connection-pill'); pill.className=`connection-pill ${connection}`; pill.querySelector('span').textContent=names[connection]||'Verbinden';
   $('printer-name').textContent=data.printer_name||data.model_name||'Anycubic Kobra S1';
@@ -73,24 +140,25 @@ function renderPrinter(snapshot) {
   banner.hidden=connection==='online';
   banner.textContent=requestFailed||extraAge>10 ? 'Der lokale Monitor ist nicht erreichbar. Letzte bekannte Werte werden angezeigt. Starte den Monitor bei Bedarf erneut.' : connection==='stale' ? 'Die Verbindung liefert keine frischen Daten. Angezeigte Werte sind veraltet; die Verbindung wird automatisch erneuert.' : snapshot.message || 'Verbindung zum Drucker wird aufgebaut. Messwerte erscheinen, sobald sie eintreffen.';
   const knownPrint=seen('print');
-  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init'].includes(data.print_state);
-  $('print-state').textContent=knownPrint?(stateNames[data.print_state]||'Status unbekannt'):'Wird verbunden…';
-  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')||connection==='offline'?'Letzter bekannter Druckerstatus.':active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
-  $('remaining').textContent=active?duration(data.remain_time):'—';
-  $('layer').textContent=active&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
-  const progress=active&&number(data.progress)?Math.max(0,Math.min(1,data.progress)):null;
+  const active=knownPrint && ['printing','paused','preheating','auto_leveling','checking','init','preparing','pausing','resuming','stopping'].includes(data.print_state);
+  const advancing=!stale('print')&&['printing','paused'].includes(data.print_state);
+  $('print-state').textContent=!knownPrint?'Wird verbunden…':stale('print')?'Status veraltet':stateNames[data.print_state]||'Status unbekannt';
+  $('print-subtitle').textContent=!knownPrint?'Warte auf den ersten Druckerstatus.':stale('print')?`Letzter bekannter Druckerstatus: ${stateNames[data.print_state]||'unbekannt'}.`:active?'Druckdaten direkt aus deinem lokalen Netzwerk.':data.print_state==='error'?'Der Drucker meldet eine Störung.':data.print_state==='standby'?'Kein aktiver Druck. Dein Drucker ist im Leerlauf.':'Letzter gemeldeter Druckerstatus.';
+  $('remaining').textContent=advancing?duration(data.remain_time):'—';
+  $('layer').textContent=advancing&&number(data.curr_layer)&&number(data.total_layers)?`${data.curr_layer} / ${data.total_layers}`:'—';
+  const progress=advancing&&number(data.progress)&&data.progress>=0&&data.progress<=1?data.progress:null;
   $('progress-value').textContent=progress===null?'—':`${Math.round(progress*100)}%`;
-  $('progress-caption').textContent=active?'Fortschritt':knownPrint?'Kein aktiver Druck':'Kein Messwert';
+  $('progress-caption').textContent=stale('print')?'Keine aktuellen Druckdaten':advancing?'Fortschritt':['pausing','resuming','stopping'].includes(data.print_state)?'Rückmeldung wird abgewartet':active?'Vorbereitung':knownPrint?'Kein aktiver Druck':'Kein Messwert';
   $('progress-circle').setAttribute('stroke-dashoffset',String(414.69*(1-(progress??0))));
   const previous=snapshot.last_project;
-  $('file-label').textContent=active?'AKTUELLE DRUCKDATEI':previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
+  $('file-label').textContent=active?(stale('print')?'ZULETZT GEMELDETE DRUCKDATEI':'AKTUELLE DRUCKDATEI'):previous?(previous.state==='finished'?'ZULETZT ABGESCHLOSSEN':'LETZTER DRUCK'):'DRUCKDATEI';
   $('filename').textContent=active?fileName(data.filename):previous?fileName(previous.filename):'Kein aktiver Druckauftrag.';
   $('print-freshness').textContent=seen('print')?`${stale('print')?'Veraltet · ':''}${ageText(sectionAge('print'))}`:'Warte auf Druckerstatus';
   for (const [prefix,max] of [['nozzle',320],['bed',120]]) {
     const current=seen('temperature')?data[`${prefix}_temp`]:null;
     const target=seen('temperature')?data[`${prefix}_target`]:null;
     $(prefix+'-temp').textContent=value(current); $(prefix+'-target').textContent=value(target);
-    $(prefix+'-mode').textContent=!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
+    $(prefix+'-mode').textContent=!seen('temperature')?'—':stale('temperature')?'Letzter bekannter Wert':!number(current)||!number(target)?'—':target===0?'Heizung aus':current<target-3?'Heizt auf':'Sollwert aktiv';
     $(prefix+'-bar').style.width=`${number(current)?Math.max(0,Math.min(100,current/max*100)):0}%`;
   }
   $('temp-freshness').textContent=seen('temperature')?`${stale('temperature')?'Veraltet · ':''}${ageText(sectionAge('temperature'))}`:'Warte auf Temperaturen';
@@ -99,11 +167,12 @@ function renderPrinter(snapshot) {
   $('ace-present').textContent=!aceSeen?'Warte auf ACE':data.ace_units?.length?`${data.ace_units.length} ACE · ${data.ace_slots?.length??0} Slots`:'Keine ACE gemeldet';
   $('ace-freshness').textContent=aceSeen?`${stale('ace')?'Veraltet · ':''}${ageText(sectionAge('ace'))}`:'—';
   renderSlots(data,aceSeen,stale('ace'));
-  const climate=data.ace_drying||{};
-  $('ace-temp').textContent=aceSeen?value(climate.current_temp,' °C'):'—';
-  $('ace-humidity').textContent=aceSeen?value(climate.humidity,' %'):'—';
-  $('drying-status').textContent=!aceSeen?'—':climate.status===1?'Trocknung aktiv':'Trocknung aus';
-  $('drying-remaining').textContent=aceSeen&&climate.status===1?duration(number(climate.remain_time)?climate.remain_time*60:null):'—';
+  const climate=snapshot.ace_climate?.[0]||{};
+  const climateFresh=key=>number(climate[key])&&connection==='online'&&climate.current?.[key]===true&&number(climate.ages?.[key])&&climate.ages[key]+extraAge<=60;
+  $('ace-temp').textContent=climateFresh('current_temp')?value(climate.current_temp,' °C'):'—';
+  $('ace-humidity').textContent=climateFresh('humidity')?value(climate.humidity,' %'):'—';
+  $('drying-status').textContent=!climateFresh('status')||![0,1].includes(climate.status)?'Nicht gemeldet':climate.status===1?'Trocknung aktiv':'Trocknung aus';
+  $('drying-remaining').textContent=climateFresh('status')&&climate.status===1&&climateFresh('remain_time')?duration(climate.remain_time*60):'—';
   document.querySelector('.drying-card').classList.toggle('is-stale',stale('ace'));
   $('last-update').textContent=ageText(age);
   $('firmware').textContent=seen('printer')?data.firmware_version||'—':'—';
@@ -187,6 +256,23 @@ function printerOverview(printer,extraAge=0,unavailable=false){
   return {connection,state,detail,progress,remaining,nozzle,bed,note,
     attention:connection!=='online'||!printFresh||!temperatureFresh};
 }
+function renderPickerAce(button,printer,extraAge=0,unavailable=false){
+  let area=button.querySelector('.picker-ace');
+  if(!area){area=document.createElement('span');area.className='picker-ace';button.append(area);}
+  area.replaceChildren();
+  const age=printer.section_age_s?.ace,seen=number(age)&&age>=0;
+  const limit=number(printer.stale_after_s)?Math.min(60,printer.stale_after_s):60;
+  const stale=!seen||printer.connection!=='online'||unavailable||extraAge>10||age+extraAge>limit;
+  const data=printer.data||{},slots=Array.isArray(data.ace_slots)?data.ace_slots:[];
+  const heading=document.createElement('span');heading.className='picker-ace-heading';
+  const title=document.createElement('strong');title.textContent='ACE'+(slots.length?' · '+slots.length+' Slots':'');
+  const stamp=document.createElement('span');stamp.textContent=!seen?'Keine aktuellen Daten':stale?'Veraltet':ageText(age+extraAge);
+  heading.append(title,stamp);area.append(heading);
+  const grid=document.createElement('span');grid.className='picker-ace-slots';
+  const summaries=renderSlotsInto(grid,data,seen,stale,printer.ip,true)||[];
+  area.append(grid);area.classList.toggle('picker-ace-stale',stale);
+  return summaries.length?'ACE: '+summaries.join('; ')+'.':'ACE: '+(!seen?'Keine aktuellen Daten.':'Keine Slots gemeldet.');
+}
 function createPickerOverview(button){
   const overview=document.createElement('span');overview.className='picker-overview';
   const track=document.createElement('span'),fill=document.createElement('span');track.className='picker-progress-track';fill.className='picker-progress-fill';track.setAttribute('aria-hidden','true');track.append(fill);
@@ -206,12 +292,30 @@ function renderPickerOverview(button,view){
 }
 
 function render(snapshot) {
+  const dryingEnabled=snapshot.controls?.drying===true;
+  const archiveEnabled=snapshot.controls?.archive_repeat===true;
+  const lightEnabled=snapshot.controls?.chamber_light===true;
+  const fanEnabled=snapshot.controls?.fans===true;
+  const motionEnabled=snapshot.controls?.motion===true;
+  const printEnabled=snapshot.controls?.print_job===true;
+  const temperatureEnabled=snapshot.controls?.temperature===true;
+  const speedEnabled=snapshot.controls?.speed_mode===true;
+  if($('installation-mode'))$('installation-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Druckersteuerung freigegeben':temperatureEnabled?'Druckersteuerung freigegeben':speedEnabled?'Druckersteuerung freigegeben':fanEnabled?'Licht-/Lüftersteuerung freigegeben':lightEnabled?'Lichtsteuerung freigegeben':archiveEnabled?'Archiv-Druckstart freigegeben':dryingEnabled?'ACE-Trocknung freigegeben':'Drucker nur lesen';
+  if($('footer-mode'))$('footer-mode').textContent=motionEnabled?'Manuelle Druckersteuerung freigegeben':printEnabled?'Status und Druckersteuerung':temperatureEnabled?'Status und Druckersteuerung':speedEnabled?'Status und Druckersteuerung':fanEnabled?'Status, Licht und Lüfter':lightEnabled?'Status und Kammerlicht':archiveEnabled?'Status und Archiv-Druckstart':dryingEnabled?'Status und ACE-Trocknung':'Status ohne Eingriff';
+  if($('sidebar-mode'))$('sidebar-mode').textContent=motionEnabled?'Manuelle Fahrten und weitere Druckersteuerungen einstellbar.':printEnabled?'Druckaktionen, Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':temperatureEnabled?'Licht, Lüfter, Speed Mode und Solltemperaturen einstellbar.':speedEnabled?'Licht, Lüfter und Speed Mode einstellbar.':fanEnabled?'Licht und Lüfter gezielt einstellbar.':lightEnabled?'Kammerlicht direkt schaltbar.':archiveEnabled?'Geprüfte Archivdrucke nach Bestätigung wiederholen.':dryingEnabled?'ACE-Trocknung nach Bestätigung einstellbar.':'Ausschließlich lesend.';
   if(!orderSaving&&pendingOrder&&snapshot.ips?.length===pendingOrder.length&&snapshot.ips.every((ip,i)=>ip===pendingOrder[i]))pendingOrder=null;
   window.kobraAuth?.setPrinters(snapshot.ips||[],(snapshot.printers||[]).map(p=>({...p,connection:requestFailed?'offline':p.connection})));
   const source=Array.isArray(snapshot.printers)?snapshot.printers:[snapshot];
   const order=pendingOrder||snapshot.ips||source.map(p=>p.ip);
   const printers=[...source].sort((a,b)=>order.indexOf(a.ip)-order.indexOf(b.ip));
   if (!printers.some(p=>p.ip===selectedIp)) selectedIp=printers[0]?.ip;
+  // Resolve stock against this response for every printer before rendering any card.
+  const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
+  const spoolPrinters=printers.map(p=>({...p,
+    connection:requestFailed||extraAge>10?'offline':p.connection,
+    section_age_s:Object.fromEntries(Object.entries(p.section_age_s||{}).map(([key,age])=>[key,number(age)?age+extraAge:age]))}));
+  window.kobraSpools?.setPrinters(spoolPrinters,selectedIp);
+  window.kobraReprints?.refreshStock?.();
   const area=$('printer-switcher');
   const navCount=document.querySelector('.nav-count');
   if(navCount)navCount.textContent=String(printers.length);
@@ -230,34 +334,38 @@ function render(snapshot) {
       info.append(state,detail);button.append(grip,identity,info);createPickerOverview(button);
       bindPrinterDrag(button,printer.ip);
       button.addEventListener('click',()=>{if(Date.now()<suppressPickerClickUntil)return;selectedIp=printer.ip;if(lastResponse)render(lastResponse);});
-      printerButtons.set(printer.ip,button);area.append(button);
+      const tile=document.createElement('article');tile.className='printer-tile';tile.append(button);button._tile=tile;
+      printerButtons.set(printer.ip,button);area.append(tile);
     }
     const extraAge=Math.max(0,(Date.now()-lastFetchAt)/1000);
     const view=printerOverview(printer,extraAge,requestFailed);
     const labels={online:'Verbunden',connecting:'Verbinden',offline:'Offline',stale:'Veraltet'};
     const name=printer.data?.printer_name||printer.data?.model_name||'Drucker';
     button.classList.toggle('selected',printer.ip===selectedIp);
+    button._tile?.classList.toggle('selected',printer.ip===selectedIp);
     button.setAttribute('aria-pressed',String(printer.ip===selectedIp));
     button.querySelector('.picker-name').textContent=name;
     button.querySelector('.picker-ip').textContent=printer.ip;
     const status=button.querySelector('.picker-state');status.className=`picker-state ${view.connection}`;status.textContent=labels[view.connection]||'Verbinden';
     button.querySelector('.picker-detail').textContent=view.detail;
     renderPickerOverview(button,view);
-    button.setAttribute('aria-label',`${name}, ${labels[view.connection]||'Verbinden'}, ${view.detail}, Restzeit circa ${view.remaining}, Düse ${view.nozzle}, Druckbett ${view.bed}. Details anzeigen.`);
+    const aceSummary=renderPickerAce(button,printer,extraAge,requestFailed);
+    window.kobraAceControls?.renderTile(button._tile||button,printer,extraAge,requestFailed);
+    button.setAttribute('aria-label',`${name}, ${labels[view.connection]||'Verbinden'}, ${view.detail}, Restzeit circa ${view.remaining}, Düse ${view.nozzle}, Druckbett ${view.bed}. ${aceSummary} Details anzeigen.`);
   }
   for(const [ip,button] of printerButtons) {
-    if(!printers.some(p=>p.ip===ip)){button.remove();printerButtons.delete(ip);}
+    if(!printers.some(p=>p.ip===ip)){(button._tile||button).remove();printerButtons.delete(ip);}
   }
   if(!draggedPrinter){
     const focused=document.activeElement;
-    printers.forEach((printer,index)=>{const button=printerButtons.get(printer.ip);if(area.children[index]!==button)area.insertBefore(button,area.children[index]||null);});
+    printers.forEach((printer,index)=>{const button=printerButtons.get(printer.ip);const tile=button._tile||button;if(area.children[index]!==tile)area.insertBefore(tile,area.children[index]||null);});
     if([...printerButtons.values()].includes(focused)&&document.activeElement!==focused)focused.focus({preventScroll:true});
   }
   area.setAttribute('aria-busy',String(orderSaving));
   $('printer-order-status').hidden=printers.length<2;
   const chosen=printers.find(p=>p.ip===selectedIp);
+  updateControlPanel(chosen?{...chosen,connection:requestFailed||Date.now()-lastFetchAt>10000?'offline':chosen.connection}:null);
   if(chosen)renderPrinter(chosen);
-  window.kobraSpools?.setPrinters(printers,chosen?.ip);
   window.kobraCamera?.setPrinters?.(printers);
   window.kobraCamera?.setPrinter(chosen?.ip,snapshot.camera_available,snapshot.camera_message);
   if(timelineJob && timelineIp!==selectedIp) closeTimeline();
@@ -271,9 +379,10 @@ function render(snapshot) {
 }
 
 function renderHistory(jobs,ip) {
+  window.kobraOrders?.setScope(ip);
   const container=$('history-content');if(!container)return;
   const selected=jobs.filter(job=>job.ip===ip);
-  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at})=>({id,filename,state,progress,observed_start,first_seen,ended_at}))]);
+  const signature=JSON.stringify([ip,selected.map(({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version})=>({id,filename,state,progress,observed_start,first_seen,ended_at,annotation,report_version}))]);
   if(signature===historySignature)return;
   historySignature=signature;
   container.replaceChildren();
@@ -298,13 +407,14 @@ function renderHistory(jobs,ip) {
     if(!job.ended_at&&number(job.progress))state.textContent+=` · ${Math.round(job.progress)} %`;
     const actions=document.createElement('div');actions.className='history-actions';
     const report=document.createElement('a');report.className='report-link';
-    report.textContent='Bericht laden';report.href='/api/report?job='+encodeURIComponent(job.id);
+    report.textContent='Aufzeichnung als Text';report.href='/api/report?job='+encodeURIComponent(job.id);
     report.setAttribute('download','');
-    report.setAttribute('aria-label','Bericht laden: '+fileName(job.filename));
+    report.setAttribute('aria-label','Aufzeichnung als Text: '+fileName(job.filename));
     const view=document.createElement('button');view.type='button';view.className='timeline-button';
     view.textContent='Verlauf ansehen';view.dataset.job=job.id;
     view.setAttribute('aria-controls','timeline-card');view.setAttribute('aria-expanded',String(timelineJob===job.id));
     view.addEventListener('click',()=>openTimeline(job));
+    window.kobraOrders?.decorate(job,file,actions);
     actions.append(state,view,report);
     row.append(file,dates,actions);container.append(row);
   }
@@ -318,8 +428,9 @@ async function refresh() {
     if(response.status===401){window.kobraAuth?.login();return;}
     if (!response.ok) throw new Error('Keine Statusdaten');
     const result=await response.json();
-    if (result.read_only!==true) throw new Error('Read-only-Modus nicht bestätigt');
+    if (result.read_only!==true && !(result.read_only===false&&(result.controls?.chamber_light===true||result.controls?.fans===true||result.controls?.speed_mode===true||result.controls?.temperature===true||result.controls?.print_job===true||result.controls?.motion===true||result.controls?.archive_repeat===true||result.controls?.drying===true))) throw new Error('Unbekannter Betriebsmodus');
     lastResponse=result;lastFetchAt=Date.now();requestFailed=false;render(result);
+    if(result.report_archive_error)$('reports-message').textContent=result.report_archive_error;
   } catch (_) {
     requestFailed=true;
     if (lastResponse) render(lastResponse);
@@ -503,3 +614,20 @@ $('history-filter').addEventListener('change',filterArchive);
 $('history-prev').addEventListener('click',()=>{archivePage=Math.max(0,archivePage-1);refreshArchive();});
 $('history-next').addEventListener('click',()=>{archivePage++;refreshArchive();});
 setInterval(()=>{if(!requestFailed && !document.hidden)refreshArchive();},10000);
+
+window.addEventListener('kobra-report-changed',()=>{historySignature=null;refreshArchive();});
+
+window.addEventListener('kobra-control-changed',refresh);
+
+$('control-panel-toggle').addEventListener('click',()=>{
+  if($('control-panel-toggle').disabled)return;
+  if(controlPanelOpen){closeControlPanel();return;}
+  controlPanelOpen=true;document.body.classList.add('controls-open');
+  $('control-panel-toggle').setAttribute('aria-expanded','true');
+  $('control-panel-toggle').textContent='Achsen & Homing schließen';
+  $('control-panel-note').textContent='Achsensteuerung geöffnet · Anwesenheit und Bestätigungen bleiben erforderlich';
+  $('control-panel-toggle').scrollIntoView?.({block:'start'});
+});
+window.addEventListener('hashchange',closeControlPanel);
+window.addEventListener('kobra-authenticated',closeControlPanel);
+window.addEventListener('kobra-spools-changed',()=>{if(lastResponse)render(lastResponse);});

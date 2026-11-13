@@ -111,6 +111,6 @@ class SetupFleetTests(unittest.IsolatedAsyncioTestCase):
                 await fleet.configure(['192.168.1.10','192.168.1.11'])
                 self.assertIs(fleet.monitors['192.168.1.10'],first)
                 self.assertEqual(load_config(Path(tmp)/'data'),['192.168.1.10','192.168.1.11'])
-            fleet.history.close()
+            fleet.reprints.close();fleet.history.close()
 
 if __name__=='__main__':unittest.main()

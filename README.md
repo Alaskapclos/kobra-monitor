@@ -1,186 +1,154 @@
 # Kobra Monitor
 
-Eine lokale, ausschließlich lesende Übersicht für den **Anycubic Kobra S1 mit
-Stock-Firmware und LAN-Modus**. Status, Temperaturen, ACE-Filamente, Druckhistorie,
-Berichte und Temperaturkurven bleiben bei dir. Keine Anycubic-Cloud-Anmeldung.
+**Drucker beobachten, Spulen verwalten und bewährte Drucke wiederholen – in einer gemeinsamen Oberfläche.**
 
-**Stand: 0.18.1-alpha.1.** Der Monitor ersetzt zunächst die Überwachungsfunktionen
-der Cloud. Druckstart, Upload, Pause, Stop, Heizung, Bewegung und
-Filamentsteuerung sind nicht enthalten. Ein vollständiger Kobra-S1-Druck und
-zwei parallele Druckerverbindungen wurden auf macOS beobachtet. Auch auf einem
-UGREEN DXP4800GT mit UGOS läuft der amd64-Container mit zwei Druckern;
-Einrichtung und aktive Verlaufseinträge blieben beim Containerneustart erhalten.
+Kobra Monitor verbindet sich im Heimnetz mit **Anycubic Kobra S1 mit unveränderter Firmware und aktiviertem LAN-Modus**. Du öffnest ihn im Browser auf Computer, Tablet oder Handy. Ein Anycubic-Cloudkonto ist dafür nicht nötig.
 
-![Einrichtungsassistent mit Beispieladressen](docs/images/setup.jpg)
+Neue Modelle werden weiterhin in OrcaSlicer oder Anycubic Slicer Next geslicet und zum Drucker geschickt. Der Monitor übernimmt Übersicht, Historie, Berichte, Spulenverwaltung und ausdrücklich freigegebene Steuerungen. Erfolgreich abgeschlossene Drucke lassen sich mit einem passenden archivierten Original später direkt aus dem Monitor erneut starten.
 
-## Auf einem Rechner starten
+**Entwicklungsstand: 0.43.0-alpha.6 – Vorabversion.** Die zuletzt vom Besitzer erprobten Desktop-Pakete tragen Version **0.42.0-alpha.1**, das getestete Docker-Paket **0.43.0-alpha.1**. Diese Pakete werden durch die Dokumentationsüberarbeitung nicht nachträglich verändert. Ein neuer Download gilt erst nach seinem eigenen Bau- und Prüfnachweis als geprüft. [Prüfstand](docs/VALIDATION.md) · [Paketübersicht](docs/PLATFORM_SUPPORT.md) · [Freigabestand](docs/RELEASE.md)
 
-Voraussetzung: Python **3.11 oder neuer**; zur Erstinstallation Internetzugriff auf
-PyPI. Der Python-Installer für Windows sollte den Python Launcher mit installieren.
+## Was kann der Monitor?
 
-1. Projekt herunterladen und vollständig entpacken.
-2. Den passenden Starter öffnen:
-   - macOS: `Start-Kobra-Monitor.command`
-   - Windows: `Start-Kobra-Monitor.cmd`
-   - Linux: `sh Start-Kobra-Monitor.sh`
-3. Der Browser öffnet die lokale Oberfläche und meldet diesen Browser automatisch an.
-4. Im Assistenten pro Drucker eine IP-Adresse eingeben. Weitere Geräte mit **Drucker hinzufügen** ergänzen und **Speichern und verbinden** wählen. Der Assistent zeigt den Verbindungsstand pro Gerät.
-5. Unter **Einrichten** lassen sich die Adressen später ändern.
+- **Übersicht:** eigener Status, Fortschritt, Restzeit, Temperaturen, Lüfter, Licht und Speed Mode je Drucker. Veraltete Werte werden gekennzeichnet.
+- **Kameras:** Einzelansicht mit Vergrößerung oder mehrere Drucker nebeneinander; am Handy untereinander. Es wird kein Video aufgezeichnet.
+- **ACE und Spulen:** Slotbelegung, Material und verfügbare Restmengen, Temperatur, Luftfeuchte und Trocknungszustand. Die originale Spoolman-Verwaltung ist in die Oberfläche eingebettet.
+- **Druckaufträge:** Historie, Temperaturverlauf, Kundenauftragsnummern, manuelle Qualitätsabnahme und feste Berichtsversionen als PDF, JSON, Markdown oder ZIP.
+- **Dateiarchiv:** Originaldateien mit Bild-, 3D- oder Druckbahn-Vorschau, soweit die Datei geeignete Daten enthält. Erfolgreiche Aufträge mit geprüftem Original können erneut gedruckt werden.
+- **Optionale Steuerung:** Licht, Lüfter, Speed Mode, Solltemperaturen, Pause/Fortsetzen/Abbruch, Achsen/Homing/Motoren-Aus und ACE-Trocknung. Neue Installationen beginnen lesend; Funktionen werden je Drucker bewusst freigegeben.
+- **Betrieb:** lokales Besitzerkonto, Diagnose, Sicherung und optionale Push-Meldungen. Fernzugriff über eigenes VPN und HTTPS.
 
-Die Adresse findest du am Drucker oder im Router. Aktiviere LAN-Modus. Es findet
-kein Netzwerkscan statt. Maximal 16 Adressen können eingerichtet werden;
-praktisch getestet wurden zwei Drucker.
+## Welches Paket brauche ich?
 
-Das Terminalfenster geöffnet lassen; **Ctrl+C** beendet nur den Monitor. Der
-Rechner muss für die Überwachung eingeschaltet und wach bleiben. Browser schließen
-beendet den Dienst nicht. Bei einer erneuten Installation im selben Ordner bleiben
-Druckhistorie und Einrichtung erhalten. Die Starter aktualisieren ihre Bibliotheken,
-wenn sich die festgelegten Versionen ändern.
+Die vorgesehenen Downloads stehen nach ihrer Freigabe unter [GitHub Releases](https://github.com/Alaskapclos/kobra-monitor/releases). Lade das **fertige Paket für dein Gerät**, wenn du eine Anwendung installieren möchtest. GitHubs Schaltfläche **Code → Download ZIP** enthält Quellcode und ersetzt keinen vollständigen Installer.
 
-macOS kann beim ersten Start einer heruntergeladenen `.command`-Datei eine
-Freigabe verlangen. Die Datei über die Systemeinstellungen bzw. das Kontextmenü
-nach Prüfung freigeben; das Paket ist nicht signiert oder notarisiert.
+| Dein Gerät | Passende Fassung | Aktueller Teststand |
+| --- | --- | --- |
+| Windows-PC mit Intel- oder AMD-Prozessor | Windows **x64** | 0.42 gebaut; Funktion vom Besitzer bestätigt, unter Windows 10 x64 getestet |
+| Windows-Gerät mit ARM-Prozessor, auch Windows ARM in Parallels | Windows **ARM64** | 0.42 nativ gebaut; Funktion einschließlich dauerhafter Steuerungsfreigaben vom Besitzer bestätigt |
+| Mac mit Intel-Prozessor | macOS **Intel / x86_64** | 0.42 gebaut; Besitzer bestätigt Funktion auf dem Intel-iMac |
+| Mac mit M1 oder neuerem Apple-Chip | macOS **Apple Silicon / ARM64** | 0.42 nativ gebaut; Funktion vom Besitzer bestätigt |
+| Linux-Rechner, Server oder NAS mit Intel-/AMD-Prozessor | Linux **AMD64 mit Docker Compose** | 0.43-Testpaket einschließlich Neuinstallation, Neustart und Wiederherstellung auf der Linux-Bau-VM geprüft |
+| Raspberry Pi oder anderer ARM-Linux-Rechner | Linux **ARM64** | Geplant; noch kein geprüftes Installationspaket. Raspberry-Pi-Tests sind zurückgestellt |
 
-## Auf Server oder NAS installieren
+**AMD64 bedeutet hier 64-Bit-Intel/AMD, nicht ARM64.** Das Linux-AMD64-Paket läuft nicht auf einem Raspberry Pi. Ein Windows-ARM-Paket ist ebenfalls kein Linux-/Pi-Paket.
 
-Für UGREEN DXP4800GT mit UGOS gibt es eine [eigene Anleitung](docs/UGREEN_UGOS.md).
+Windows und Mac bringen Python, Spoolman und die Kameralaufzeit mit; Docker Desktop und eine eigene Python-Installation sind dafür nicht nötig. Die bisherigen Mac-Testpakete sind ad hoc signiert, aber noch nicht mit Apple Developer ID signiert oder notarisiert. Die Windows-Testpakete haben noch keine Herausgebersignatur. Die öffentliche Binärfreigabe und vollständigen Liefernachweise bleiben ein eigener Schritt. [Details zur Plattformprüfung](docs/PLATFORM_SUPPORT.md)
 
-Für einen dauerhaft eingeschalteten Linux-Server oder ein NAS mit Docker/Compose
-ist das eigene [Docker-Paket](docs/INSTALLATION.md) vorgesehen. NAS ohne
-Container-Unterstützung sind kein zugesagtes Installationsziel.
+Der neue native Paketkandidat 0.43.0-alpha.6 übernimmt die bereinigten Bibliotheken und bietet die getrennte Datenübernahme auch aus 0.42 an. Bau und Gesamtprüfung werden für jede konkrete Lieferdatei gesondert nachgewiesen; die bisherigen Besitzerabnahmen gelten weiter ausschließlich für die oben genannten alten Pakete.
+
+## Windows: installieren und starten
+
+1. Passendes x64- oder ARM64-Paket vollständig in einen lokalen Ordner entpacken.
+2. Im enthaltenen Programmordner zuerst **Pruefen.cmd** öffnen. Die Prüfung sendet keine Druckerbefehle.
+3. **Installieren.cmd** starten und die angezeigten Programm- und Datenordner prüfen. Falls erforderlich, wird Microsofts C++-Laufzeit nach Prüfung der Herausgebersignatur angeboten.
+4. Den angelegten Starter öffnen. Im Browser dein eigenes Konto einrichten und die Drucker hinzufügen.
+5. Zum vollständigen Beenden den mitgelieferten Beenden-Starter verwenden. Nur den Browser zu schließen beendet den Monitor nicht.
+
+Das Windows-Paket ist eine lokale Anwendung mit Browseroberfläche. Vorhandene NAS-Daten werden nicht automatisch übernommen. [Windows-Anleitung](docs/WINDOWS_TEST_INSTALLER.md)
+
+## Mac: installieren und starten
+
+1. Das Paket für **Intel** oder **Apple Silicon** vollständig entpacken.
+2. **Kobra Monitor Test.app** öffnen. Der Installationsdialog zeigt den eigenen Programm- und Datenbereich; andere Installationen werden nicht ungefragt ersetzt.
+3. Falls macOS eine Freigabe verlangt, die Meldung und **Systemeinstellungen → Datenschutz & Sicherheit** prüfen. Die App entfernt keine Sicherheitsattribute.
+4. Im Browser das eigene Konto einrichten und Drucker hinzufügen. Einen lokalen Netzwerkzugriff, nach dem macOS fragt, bewusst erlauben.
+5. Zum vollständigen Beenden die Beenden-Funktion der App verwenden; der Browser allein beendet die Dienste nicht.
+
+Die Kamera benötigt auf dem Anzeige-Handy keine zusätzliche Installation. FFmpeg ist in der Mac-Test-App enthalten. [Mac-Anleitung](docs/MACOS_TEST_INSTALLER.md)
+
+## Linux, Server und NAS: Docker
+
+Das gemeinsame Projekt betreibt **Monitor, Spoolman und Sicherung in getrennten Containern**. Ein einmaliger Einrichtungsschritt bereitet ausschließlich neue Datenvolumes vor. Für dich gibt es eine gemeinsame Oberfläche.
+
+Voraussetzung: vorhandenes Docker Engine und Docker Compose v2 auf einem passenden Linux-AMD64-System. Die Testfassung benötigt eine bedienbare lokale Compose-Kommandozeile; ein einfacher Importassistent für beliebige NAS-Oberflächen ist noch nicht fertig.
+
+Nach vollständigem Entpacken des fertigen Linux-Pakets:
 
 ```sh
-docker compose up -d --build
+sh ./Installieren.sh
 ```
 
-Standardmäßig ist die Oberfläche nur auf dem Server selbst erreichbar. Historie,
-Druckerzuordnung und dein lokales Benutzerkonto liegen im Volume `monitor-data`.
-Beim ersten Start legst du Benutzername und Passwort selbst fest. Auf dem Rechner
-führt der Starter direkt dorthin. Auf einem NAS öffnest du einmalig den privaten
-Einrichtungslink; danach meldest du dich auf allen Geräten mit deinem Konto an.
-[Schritte für Einrichtung und Kontowiederherstellung](docs/INSTALLATION.md#benutzerkonto).
+Der Assistent fragt nach einem **neuen Installationsordner**, Browseradresse, Port und Druckerzugang. Standard ist `127.0.0.1:17125` und ein isoliertes Testnetz. Soll der Monitor echte Drucker erreichen, den **LAN-Zugang ausdrücklich wählen**. Nur der Monitor erhält dafür eine zusätzliche Netzwerkverbindung; Spoolman bleibt intern und der Sicherungsdienst ohne Netzwerk.
 
-Der amd64-Container wurde in der CI gebaut und auf UGREEN DXP4800GT mit UGOS
-praktisch geprüft. Weitere NAS-Modelle und ARM64 stehen noch aus.
+Für den Browserzugriff von einem anderen Gerät die private IPv4-Adresse des Linux-/NAS-Rechners wählen. Die Testfassung verwendet HTTP im vertrauten Heimnetz; HTTPS/VPN werden gesondert eingerichtet. Spoolman wird beim ersten Start als exakt festgelegtes offizielles Image geladen; dafür ist einmalig Internet nötig. Das Paket ist daher noch kein vollständiges Offlinepaket.
 
-## Daten sichern
+Bestehende produktive NAS-Projekte und ihre Volumes werden nicht automatisch übernommen oder ersetzt. [Docker-Testinstallation](docs/LINUX_TEST_INSTALLER.md) · [Gemeinsame Suite](docs/SUITE_TEST.md) · [UGREEN/UGOS](docs/UGREEN_UGOS.md)
 
-Ein separater Sicherungsdienst kann auf dem NAS täglich sieben vollständige
-Datenstände aufbewahren. Die laufende Überwachung bleibt dabei unverändert.
-[Sicherung, Zugangsdaten und Wiederherstellung](docs/BACKUPS.md).
+## Erste Einrichtung im Browser
 
-## Von unterwegs zugreifen
+1. **Konto anlegen:** den vertraulichen Einrichtungslink öffnen und Benutzername sowie eigenes Passwort wählen. Keine Zugangsdaten in Issues oder Screenshots veröffentlichen.
+2. **Drucker hinzufügen:** LAN-Modus am S1 einschalten und seine lokale IP-Adresse unter **Einrichten** speichern. Der Rechner mit dem Monitor muss den Drucker erreichen können.
+3. **Spulen erfassen:** unter **Spulen → Spulen verwalten** Hersteller, Filamente und Spulen in Spoolman pflegen. Danach die passenden Spulen unter **ACE & Zuordnung** zuweisen.
+4. **Kamera öffnen:** in der Übersicht den gewünschten Drucker wählen und **Kamera anzeigen** anklicken. Die Kamera muss bereits ihren lokalen Stream bereitstellen; der Monitor aktiviert sie nicht selbst.
+5. **Steuerung freigeben:** nur bei Bedarf unter **Einrichten → Steuerung freigeben → Freigaben bearbeiten** die gewünschten Funktionen je Drucker wählen und bestätigen. In den nativen Paketen und der LAN-Docker-Suite gelten Änderungen erst nach vollständigem Neustart des Monitors beziehungsweise Monitor-Containers. Bis dahin gelten auch bei einem Entzug die bisherigen Freigaben.
 
-Der Monitor läuft bei den Druckern zu Hause. Handy oder Laptop greifen über das
-vorhandene VPN auf ihn zu. Es gibt keinen vorgeschriebenen VPN-Anbieter.
+Licht schaltet direkt. Andere Steuerungen haben ihre passenden Bestätigungen. **Manuelle Achsenfahrten und Homing nur direkt vor dem Drucker verwenden**, mit freiem Fahrweg und ausreichendem Abstand zwischen Düse und Druckbett. Die Kamera ersetzt diese Anwesenheit nicht. [Bedienung](docs/BEDIENUNG.md) · [Steuerungsfreigaben](docs/NATIVE_CONTROLS.md) · [Bewegung](docs/MOTION_CONTROL.md)
 
-- **Tailscale:** Tailscale auf dem Monitor-Host und dem Mobilgerät; Tailscale Serve
-  stellt `http://127.0.0.1:7125` privat im Tailnet als HTTPS bereit.
-- **Klassisches VPN:** WireGuard, OpenVPN oder Router-VPN verbinden ins Heimnetz.
-  Der Monitor bzw. sein HTTPS-Proxy wird gezielt an eine erreichbare private
-  Serveradresse gebunden.
+## Originaldateien ins Archiv übernehmen
 
-[Anleitung und Grenzen des Fernzugriffs](docs/REMOTE_ACCESS.md).
-Kein Portforwarding aus dem öffentlichen Internet auf den Monitor.
+Der Monitor lädt Druckdateien nicht automatisch vom Drucker zurück. Für eine zusätzliche Archivkopie gibt es einen **separat einzurichtenden Helfer auf dem Slicer-Computer**. Praktisch geprüft ist bisher der macOS-Sendecache von Anycubic Slicer Next. Ein ausdrücklich gewählter Exportordner ist ebenfalls vorgesehen; eine universelle automatische Orca-/Windows-Cacheübernahme ist nicht zugesagt. Die Helfereinrichtung benötigt einen dauerhaft verfügbaren Python-Interpreter; sie ist ein optionaler zusätzlicher Schritt zur nativen Monitor-App. [Helfer einrichten und Eingang prüfen](docs/FILE_ARCHIVE.md).
 
-## Drucker anordnen
+Erst ein bestätigter Archiveingang mit passender Zuordnung ist ein verfügbares Original. Ein Dateiname in der Historie oder ein Druckbericht allein genügt nicht.
 
-Ziehe eine Druckerkarte auf die gewünschte Position. Auf Touchgeräten nutzt du
-den Punktgriff links. Alternativ die Karte mit Tab fokussieren und mit
-Alt + Pfeiltasten verschieben. Die Reihenfolge wird auf dem Monitor gespeichert
-und gilt auf allen Geräten. Die Auswahl und laufende Druckerverbindungen bleiben
-beim Umsortieren erhalten. Dies ändert keine Druckereinstellung.
+## Einen erfolgreichen Druck wiederholen
 
-## Was du siehst
+Unter **Druckaufträge** einen erfolgreichen Auftrag mit zugeordnetem Archivoriginal öffnen und **Druck wiederholen** wählen. Zielgerät und Materialslots prüfen, danach das Original übertragen. Erst eine zweite bewusste Bestätigung startet den Druck. Druckbett, Material und eingebaute Düse müssen passen; die ursprünglichen Slicer-Einstellungen bleiben erhalten.
 
-- Unabhängige Status- und Verbindungsanzeige pro Drucker; veraltete Werte sind markiert.
-- Druckdatei, Fortschritt, Layer, verbleibende Zeit und Ist-/Solltemperaturen.
-- ACE-Slots, Material, Farben und gemeldete Restmengen.
-- Kameraansicht des ausgewählten Druckers auf Wunsch, ungefähr zwei Bilder pro Sekunde.
-- Dauerhafte, nach Dateiname und Status durchsuchbare Druckhistorie.
-- Herunterladbare Markdown-Berichte und Temperaturkurven mit Zustandsereignissen.
+Die erprobte Konfiguration ist ein Stock-Kobra-S1 mit einem direkt angeschlossenen Vier-Slot-ACE und einer Druckplatte. Ein erfolgreicher Archivwiederholungsdruck ist vom Besitzer bestätigt; weitere Geräte-/Dateikonfigurationen sind damit nicht pauschal abgenommen. Bei unklarem Ausgang gibt es keinen automatischen erneuten Start. [Ablauf und Grenzen](docs/REPRINT.md)
 
-Restprozente, Feuchtigkeit und Firmware-Zeitangaben sind nicht unabhängig
-validiert. Nullwerte bedeuten nicht zuverlässig leere Spulen oder echte 0 % Feuchte.
-Ein bestätigter Druckabschluss ist kein visueller Qualitätsnachweis des Bauteils.
-Verbindungsverlust bedeutet niemals automatisch Druckende.
+## Daten sichern und aktualisieren
 
-## Kamera ansehen
+Programmdateien und persönliche Daten sind getrennt. **Monitor und Spoolman haben eigene Datenbanken; eine reine Monitor-Sicherung ersetzt keine Spoolman-Sicherung.** Die Komplettpakete besitzen einen gemeinsamen Sicherungsweg mit getrennt geprüften Datenbanken. Eine zusätzliche Kopie außerhalb des Geräts bleibt sinnvoll.
 
-Wähle einen Drucker und öffne **Kamera anzeigen**. Die Bilder kommen über dieselbe
-angemeldete Oberfläche, auch über HTTPS und VPN. Es gibt keine Kamera-Aufzeichnung.
-Mit **Ansicht schließen**, beim Druckerwechsel oder beim Verlassen des Tabs endet
-die Ansicht; ungenutzte Leserverbindungen werden nach kurzer Nachlaufzeit beendet.
+Vor einem Update die Sicherung prüfen und das bisherige Paket behalten. Für die nativen 0.42-Testpakete ist eine bestätigte Übernahme bekannter, vollständig gestoppter lokaler Testprofile vorgesehen: prüfen, sichern, getrennt wiederherstellen und in einen neuen Datenordner kopieren. Die alte Installation bleibt erhalten. Bereits separat übernommene Profile werden nicht automatisch als jeweils neuester Stand gesucht; **Quellordner und Version im Dialog kontrollieren**. Die beigelegten profilbezogenen Starter nur für den dazu passenden bisherigen Datenordner verwenden.
 
-Das NAS-Paket enthält FFmpeg. Bei nativer Installation muss aktuelles FFmpeg im
-Suchpfad liegen. Der Monitor liest nur den bereits verfügbaren lokalen Kamerastream.
-Er aktiviert oder deaktiviert die Kamera am Drucker nicht. Ist der Stream dort
-nicht verfügbar, erscheint eine verständliche Meldung. [Einzelheiten und Grenzen](docs/CAMERA.md).
+Es gibt **noch keinen allgemeinen automatischen Update- oder Wiederherstellungsassistenten**. Das Docker-Skript `start` nimmt dieselbe Installation wieder auf und ist kein Versionsupdate. Bei Docker die Datenvolumes erhalten; `docker compose down -v` würde sie löschen. Eine alte Programmversion niemals ungeprüft mit bereits migrierten Daten starten.
 
-## Zugang und Daten
+[Datensicherung](docs/BACKUPS.md) · [Native Datenübernahme](docs/NATIVE_UPGRADE.md) · [Updates und Rückweg](docs/UPDATE_RECOVERY.md)
 
-Du legst ein lokales Besitzerkonto mit Benutzername und Passwort an. Das Passwort
-wird mit scrypt und einem zufälligen Salt als Prüfwert gespeichert. Passwortmanager
-werden unterstützt. Unter **Konto** kannst du Zugangsdaten ändern; **Abmelden**
-beendet deine Browsersitzung. Der alte Zugangscode ist nach der Umstellung gesperrt.
-Sitzungen laufen nach zwölf Stunden ab und werden beim Dienstneustart ungültig.
-Es gibt derzeit ein gemeinsames Konto pro Installation, keine getrennten Rollen.
+## Handy und Fernzugriff
 
-Datenordner: `.state/` im Projekt, im Container `/data`. Für andere Orte:
-`--data-dir /pfad` oder `KOBRA_DATA_DIR`. Einzelheiten, Sicherung und Update:
-[Installation](docs/INSTALLATION.md). Die `.state`-Dateien gehören nicht ins Repository.
+Im Heimnetz dieselbe Monitor-Installation im Handy-Browser öffnen. Von unterwegs zuerst das eigene VPN, beispielsweise Tailscale, verbinden und die private HTTPS-Adresse verwenden. Der Monitor-Rechner muss eingeschaltet bleiben. Eine öffentliche Router-Portfreigabe ist nicht vorgesehen.
 
-**Wichtige Grenze:** Die übernommene TLS-Serverprüfung zum Drucker ist deaktiviert.
-Die Verbindung ist verschlüsselt, die Identität des Brokers aber nicht verifiziert.
-Nur in einem vertrauenswürdigen Druckernetz betreiben. [Sicherheitsbeschreibung](SECURITY.md).
+Optionale Push-Meldungen benötigen HTTPS und eine eigene Browserfreigabe auf jedem Gerät. Auf iPhone/iPad die Oberfläche als Home-Bildschirm-App verwenden. [Fernzugriff](docs/REMOTE_ACCESS.md) · [Benachrichtigungen](docs/NOTIFICATIONS.md)
 
-## Entwicklung und Tests
+## Bekannte Grenzen
+
+- Bestätigtes Druckende ist keine automatische Qualitätsprüfung des Bauteils. Verbindungsverlust bedeutet kein Druckende; frühe Restzeiten während Vorbereitung können unbrauchbar sein.
+- ACE-Prozente stammen vom Drucker, Grammwerte aus dem Spoolman-Buchbestand. **Kein automatischer Verbrauch und keine gemessene Materialbilanz.** Ein Materialvorrat-Hinweis ist eine Schätzung.
+- Gemeinsame Hersteller-SKU identifiziert nicht eine einzelne Spule. Nur nachweislich individuelle Kennungen automatisch wiedererkennen; sonst Slots bewusst manuell zuordnen. Kein integriertes NFC-Schreiben und kein automatischer ReSpool-Bibliotheksabgleich.
+- Ein lokales Besitzerkonto je Installation; keine getrennten Benutzerrollen. Drucker-TLS verschlüsselt die Verbindung, überprüft aber die Brokeridentität nicht. Nur im vertrauenswürdigen Druckernetz betreiben.
+- Nicht alle Firmware-, ACE-, Betriebssystem- und NAS-Kombinationen sind geprüft. Raspberry Pi/ARM-Linux, allgemeine Auto-Updates und öffentliche Installer-Signierung sind noch offen.
+
+[Prüfstand und reale Abnahmen](docs/VALIDATION.md) · [Sicherheitsbeschreibung](SECURITY.md) · [Projektplan](ROADMAP.md)
+
+## Für Entwickler
+
+Der Quellstart ist ein eigener Weg und benötigt Python sowie FFmpeg. Er startet zunächst den Monitor; Spoolman wird separat angebunden. Die nativen Komplettpakete oben ersparen diese Einrichtung.
 
 ```sh
 python -m venv .venv
-# macOS/Linux:
 .venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python monitor.py --open
+```
+
+Unter Windows liegt Python unter `.venv\Scripts\python.exe`. Quellprüfungen:
+
+```sh
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python vendor/kobra-bridge/test_read_only.py
-node --check static/monitor.js
-node --check static/setup.js
-node tests/test_timeline_render.js
-node tests/test_archive_render.js
 python scripts/release_check.py
 ```
 
-Unter Windows liegt Python unter `.venv\Scripts\python.exe`. Die CI prüft
-Python 3.11 und 3.14 auf macOS, Linux und Windows. Alle sechs Plattformläufe
-und der Container-Test bestanden am 30.10.2026. Die CI arbeitet ohne reale
-Drucker; Hardware- und Fernzugriffstests sind gesondert ausgewiesen.
-[Testmatrix und belegter CI-Lauf](docs/VALIDATION.md).
+Zusätzlich alle `tests/test_*.js` mit Node ausführen. Der eingefrorene Docker-Stand 0.43.0-alpha.1 bestand unter Python 3.11 und 3.14 jeweils 547 Python-Tests, jeweils 14 Bridge-Grenzprüfungen und alle 27 JavaScript-Testdateien. Die Dokumentationsfassung 0.43.0-alpha.2 benötigt ihren eigenen abschließenden Quell-/Paketnachweis. Historische CI-Erfolge ersetzen keinen aktuellen Build; ein Test ohne reale Drucker ist keine Hardwareabnahme.
 
-## Herkunft und Lizenz
+## Lizenz und Herkunft
 
-Gesamtprojekt: **GPL-3.0-only**. Die ursprünglichen Lizenzen und Hinweise der
-mitgelieferten Bibliotheken bleiben erhalten. Verwendet werden:
+**GPL-3.0-only** für Kobra Monitor. Die ursprünglichen Lizenzen und Copyright-Hinweise mitgelieferter Fremdsoftware bleiben erhalten. Grundlage sind unter anderem `cluzl/kobra-bridge` (GPL-3.0) und `rvanderp3/kobra-connect` (Apache-2.0); Spoolman bleibt ein eigenständiger MIT-lizenzierter Dienst. Die Lizenzen aller Abhängigkeiten sind zusätzlich zu beachten.
 
-- `cluzl/kobra-bridge`, Basis `25c36815f5e2cab394fc83c73fca447367253fca`, GPL-3.0;
-  lokale Lesebeschränkung und getrennte Zertifikatspfade.
-- `rvanderp3/kobra-connect`, Basis `3edba24606d7122c4a68accd09af937ba4fdbd08`, Apache-2.0;
-  nur Kernmodule und Handshake, mit einer TLS-Parameterkorrektur.
+[LICENSE](LICENSE) · [NOTICE](NOTICE.md) · [Quellenverzeichnis](SOURCES.json) · [Fremdcode-Anpassungen](docs/UPSTREAM.md) · [Freigabecheckliste](docs/RELEASE.md) · [Lizenzen für die Auslieferung](docs/DISTRIBUTION_LICENSES.md)
 
-[NOTICE](NOTICE.md), [SOURCES.json](SOURCES.json), [Änderungen an Fremdcode](docs/UPSTREAM.md).
-Keine Slicer-Zertifikate oder privaten Schlüssel werden ausgeliefert. Anycubic
-und Tailscale sind Marken ihrer jeweiligen Rechteinhaber; dies ist ein unabhängiges Projekt.
+Das Projekt ist unabhängig von Anycubic und den genannten Slicer-/App-Anbietern. Zugangsdaten, Sicherungen, persönliche Druckarchive und Laufzeitdaten gehören weder ins Repository noch in öffentliche Supportberichte.
 
-### Kameraübersicht
-
-Unter Kamera die Ansicht **Kameraübersicht** wählen, zwei oder vier Bilder pro Seite einstellen und **Kameras anzeigen** öffnen. Bei mehr Druckern mit Zurück/Weiter blättern. Auf dem Handy stehen die Bilder untereinander. Nur die sichtbare Seite wird geladen; maximal vier verschiedene Kameras gleichzeitig auf dem Monitorserver, auch über mehrere Browser hinweg. Gleiche Kameras teilen sich einen Decoder.
-
-Optionale Meldungen auf iPhone, Android und unterstützten Desktop-Browsern: [Einrichtung und Grenzen](docs/NOTIFICATIONS.md). Erst nach Aktivierung je Gerät; verschlüsselte Zustellung über den Browser-Push-Dienst.
-
-## Betriebsstatus und Hilfe
-
-Unter **Betriebsstatus → Öffnen** prüfst du Verbindungsfrische, Kameraaufbereitung, Verlauf und Benachrichtigungsdienst. Hinweise auf diesem Gerät erklären unter anderem gesperrte Benachrichtigungen. **Prüfbericht kopieren** enthält begrenzte technische Ergebnisse ohne IP-Adressen, Namen, Zugangsdaten oder Push-Schlüssel. [Einzelheiten](docs/DIAGNOSTICS.md).
-
-## Mehrere Drucker vergleichen
-
-Jede Druckerkarte zeigt Druckstatus, Fortschritt, geschätzte Restzeit sowie Düse und Druckbett. Eine Karte auswählen öffnet die vertrauten Details darunter. Karten bleiben per Ziehen oder Tastatur sortierbar. Fortschritt und Restzeit erscheinen nur bei aktuellen Druck-/Pausendaten; während der Vorbereitung werden möglicherweise zwischengespeicherte Werte ausgeblendet. Veraltete Druckdaten und Temperaturen werden getrennt behandelt. Bei Verbindungsverlust werden die Livewerte in der Karte ausgeblendet.
-
-Der größere Projektplan steht in [ROADMAP.md](ROADMAP.md). Einrichtung der optionalen Spulenverwaltung: [Spoolman-Anbindung](docs/SPOOLMAN.md). Noch keine automatische Verbrauchsbuchung oder NFC-Zuordnung.
+Die frühere Windows-ARM-Funktionsbestätigung ist ein Besitzerbericht. Ein späterer Profilvergleich zeigte getrennte Datenstände aus 0.41 und 0.42; die damals tatsächlich geöffnete Version wurde nicht unabhängig protokolliert. Die Datenübernahme des neuen Pakets wird deshalb separat geprüft.

@@ -17,6 +17,7 @@ READ_ONLY_GET_PATHS = frozenset({
 READ_ONLY_QUERIES = frozenset({
     ("info", "query"), ("status", "query"), ("print", "query"),
     ("tempature", "query"), ("multiColorBox", "getInfo"),
+    ("light", "query"), ("fan", "query"),
 })
 
 

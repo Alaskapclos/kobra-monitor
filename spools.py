@@ -30,7 +30,7 @@ def local_url(value):
         return ''
     try:
         u = urlsplit(value)
-        if u.scheme not in ('http', 'https') or u.username or u.password or u.query or u.fragment or u.path:
+        if u.scheme not in ('http', 'https') or u.username or u.password or u.query or u.fragment or u.path not in ('', '/spoolman'):
             raise ValueError()
         if not u.hostname or not 1 <= (u.port or (443 if u.scheme == 'https' else 80)) <= 65535:
             raise ValueError()
@@ -40,7 +40,7 @@ def local_url(value):
                 raise ValueError()
         return value
     except ValueError:
-        raise ValueError('Lokale Adresse ohne Pfad oder Zugangsdaten verwenden, z. B. http://192.168.1.20:7912. Im gemeinsamen Docker-Netz ist http://spoolman:8000 möglich.') from None
+        raise ValueError('Lokale Adresse ohne Zugangsdaten verwenden; als Pfad ist /spoolman möglich, z. B. http://192.168.1.20:7912. Im gemeinsamen Docker-Netz ist http://spoolman:8000 möglich.') from None
 
 
 def weight(value):
@@ -66,7 +66,7 @@ def normalize(items):
         def text(v): return v[:100] if isinstance(v, str) else ''
         result.append({'id': item['id'], 'name': text(filament.get('name')), 'material': text(filament.get('material')),
                        'vendor': text(vendor.get('name')) if isinstance(vendor, dict) else '',
-                       'remaining_weight': weight(item.get('remaining_weight')), 'location': text(item.get('location'))})
+                       'remaining_weight': weight(item.get('remaining_weight')), 'initial_weight': weight(item.get('initial_weight')), 'location': text(item.get('location'))})
     return result
 
 
@@ -78,6 +78,7 @@ class Spools:
         self.url = ''
         self.mappings = {}
         self.sku_links = {}
+        self.amount_sources = {}
         self.items = None
         self.checked = None
         self.error = ''
@@ -86,6 +87,36 @@ class Spools:
             self.url = local_url(data['url'])
             self.mappings = self.validate_mappings(data.get('mappings', {}))
             self.sku_links = self.validate_sku_links(data.get('sku_links', {}))
+            self.amount_sources = self.validate_amount_sources(data.get('amount_sources', {}))
+
+    def backend_headers(self):
+        from suite.native_backend import internal_headers
+        return internal_headers(self.url)
+
+    @staticmethod
+    def validate_amount_sources(values):
+        if not isinstance(values,dict) or len(values)>64:
+            raise ValueError('Ungültige Restmengenquellen.')
+        for ip,source in values.items():
+            try:
+                address=ipaddress.ip_address(ip)
+                if address.version!=4 or not any(address in net for net in NETWORKS) or source not in ('ace','spoolman'):
+                    raise ValueError()
+            except (ValueError,TypeError):
+                raise ValueError('Ungültige Restmengenquelle.') from None
+        return dict(values)
+
+    async def set_amount_source(self,ip,source,configured_ips):
+        async with self.lock:
+            if ip not in configured_ips:
+                raise ValueError('Bitte einen eingerichteten Drucker wählen.')
+            candidate=self.validate_amount_sources({**self.amount_sources,ip:source})
+            old=self.amount_sources;self.amount_sources=candidate
+            try:self.save()
+            except OSError:
+                self.amount_sources=old
+                raise ValueError('Die Restmengenquelle konnte nicht gespeichert werden.') from None
+            return self.state()
 
     @staticmethod
     def validate_sku_links(links):
@@ -197,14 +228,14 @@ class Spools:
         fd, name = tempfile.mkstemp(prefix='.spoolman-', dir=self.path.parent)
         try:
             with os.fdopen(fd, 'w') as out:
-                json.dump({'url': self.url, 'mappings': self.mappings, 'sku_links': self.sku_links}, out)
+                json.dump({'url': self.url, 'mappings': self.mappings, 'sku_links': self.sku_links, 'amount_sources': self.amount_sources}, out)
             os.replace(name, self.path)
         finally:
             Path(name).unlink(missing_ok=True)
 
     def state(self):
         return {'url': self.url, 'configured': bool(self.url), 'spools': self.items or [],
-                'mappings': self.mappings, 'sku_links': self.sku_links, 'checked_at': self.checked, 'error': self.error,
+                'mappings': self.mappings, 'sku_links': self.sku_links, 'amount_sources': self.amount_sources, 'checked_at': self.checked, 'error': self.error,
                 'inventory_current': self.checked is not None and self.clock() - self.checked <= 60 and not self.error,
                 'limit_reached': self.items is not None and len(self.items) >= LIMIT, 'read_only': True}
 
@@ -216,7 +247,7 @@ class Spools:
             try:
                 async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8), trust_env=False,
                                                  cookie_jar=aiohttp.DummyCookieJar()) as client:
-                    async with client.get(self.url + '/api/v1/spool', params={'limit': LIMIT, 'allow_archived': 'false'}, allow_redirects=False) as response:
+                    async with client.get(self.url + '/api/v1/spool', params={'limit': LIMIT, 'allow_archived': 'false'}, headers=self.backend_headers(), allow_redirects=False) as response:
                         if response.status != 200:
                             raise ValueError('Spoolman hat die Abfrage nicht angenommen.')
                         chunks = bytearray()

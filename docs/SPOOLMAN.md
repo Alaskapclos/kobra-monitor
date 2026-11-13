@@ -1,6 +1,6 @@
 # Spoolman-Anbindung – erster Ausbau
 
-Spoolman bleibt die zentrale Datenquelle. Projekt: https://github.com/Donkie/Spoolman, MIT-Lizenz. API: https://donkie.github.io/Spoolman/. Für die neue getrennte Installation ist Version 0.27.0 vorgesehen; keine unveränderliche `latest`-Annahme. Quellenstand am 31.10.2026 geprüft.
+Spoolman bleibt die zentrale Datenquelle. Projekt: https://github.com/Donkie/Spoolman, MIT-Lizenz. API: https://donkie.github.io/Spoolman/. Die getrennte Installation wurde mit Version0.27.0 eingerichtet; keine unveränderliche `latest`-Annahme. Quellenstand am 31.10.2026 geprüft.
 
 Im Monitor unter **Spulenverwaltung → Einrichten** die lokale Basisadresse ohne `/api` eintragen und **Speichern & prüfen** wählen. Die Adresse muss vom Monitor-Rechner/NAS aus erreichbar sein, nicht vom Handy. Unterstützt werden lokale IPv4-Adressen sowie der feste Docker-Dienstname `spoolman` im gemeinsamen Netz. Kein API-Schlüssel/Passwort in der URL. HTTPS wird normal geprüft; keine Zertifikatsausnahme.
 
@@ -14,7 +14,7 @@ Der Monitor ändert weder Spoolman-Spulen noch Druckereinstellungen. Spulen anle
 
 Spoolman als getrennten Dienst mit eigenem persistentem Volume installieren. Die offizielle Anwendung hat eine eigene Oberfläche; deren direkter Zugang braucht ein privates Netz/eine geeignete Zugangssicherung. Keine öffentliche Portweiterleitung einrichten. Monitor-HTTPS schützt ausschließlich die Monitor-Oberfläche, nicht automatisch einen separat veröffentlichten Spoolman-Port.
 
-`spoolman.json` im Monitor-Datenvolume enthält Endpunkt, Slot-Verknüpfungen und bestätigte SKU-Verknüpfungen und wird privat in der Monitor-Vollsicherung wiederhergestellt. Das ersetzt **keine Sicherung der eigenen Spoolman-Datenbank**. Die getrennte NAS-Installation nutzt Spoolmans vorhandene nächtliche SQLite-Sicherung. Ein manueller Anfangsstand und anschließend ein nativer Sicherungsstand mit echtem Bestand wurden isoliert mit SQLite-Integritätsprüfung geöffnet. Beim echten Bestand wurden alle neun Tabellen, das Schema und die Datenbeziehungen gegen den nur lesend geöffneten Livebestand geprüft. Der erste nächtliche Zyklus bleibt separat zu prüfen; Sicherungen im Spoolman-Datenvolume ersetzen keine Kopie außerhalb des NAS. NFC-/RFID-Unterstützung in Spoolman 0.27 ist vorhanden; Kompatibilität mit ReSpool/Anycubic muss separat praktisch geprüft werden.
+`spoolman.json` im Monitor-Datenvolume enthält Endpunkt, Slot-Verknüpfungen und bestätigte SKU-Verknüpfungen und wird privat in der Monitor-Vollsicherung wiederhergestellt. Das ersetzt **keine Sicherung der eigenen Spoolman-Datenbank**. Die getrennte NAS-Installation nutzt Spoolmans vorhandene nächtliche SQLite-Sicherung. Ein manueller Anfangsstand und anschließend ein nativer Sicherungsstand mit echtem Bestand wurden isoliert mit SQLite-Integritätsprüfung geöffnet. Beim echten Bestand wurden alle neun Tabellen, das Schema und die Datenbeziehungen gegen den nur lesend geöffneten Livebestand geprüft. Der erste nächtliche Zyklus bleibt separat zu prüfen; Sicherungen im Spoolman-Datenvolume ersetzen keine Kopie außerhalb des NAS. NFC-/RFID-Unterstützung in Spoolman0.27 ist vorhanden. Eine individuelle ReSpool-Kennung mit tatsächlichem Slot-Rückwechsel wurde am S1 geprüft; daraus folgt kein Nachweis für beliebige Originaltags, ACE-Modelle oder Tagformate.
 
 ## Spulenkennung ab 0.18
 

@@ -2,13 +2,41 @@
 'use strict';
 window.kobraSpools=(()=>{
   const $=id=>document.getElementById(id);
-  let state=null,printers=[],selected=null,busy=false,signature='',shownFresh=null,loaded=false;
+  let state=null,printers=[],selected=null,busy=false,signature='',shownFresh=null,loaded=false,lastReadAttempt=0;
+  function source(ip){return state?.amount_sources?.[ip]==='spoolman'?'spoolman':'ace';}
+  function drawSource(){
+    const picker=$('spools-amount-source');if(!picker)return;
+    picker.value=source(selected);picker.disabled=busy||!state?.configured||!selected;
+  }
+  function remaining(ip,slot){
+    const printer=printers.find(p=>p.ip===ip),index=slot.global_index??slot.index;
+    const age=printer?.section_age_s?.ace,now=Date.now()/1000;
+    if(!state?.inventory_current||state.error||typeof state.checked_at!=='number'||!Number.isFinite(state.checked_at)||now<state.checked_at||now-state.checked_at>60||
+      printer?.connection!=='online'||typeof age!=='number'||!Number.isFinite(age)||age<0||age>60||slot.edit_status===2)return null;
+    const detection=state.detections?.find(d=>d.ip===ip&&d.slot===index);
+    if(detection&&['conflict','stale','empty','inventory_unavailable'].includes(detection.status))return null;
+    const linked=slot.sku&&(state.sku_links||{})[slot.sku];
+    if(detection?.status==='duplicate'&&linked)return null;
+    const id=detection?.status==='recognized'&&detection.sku===slot.sku?detection.spool_id:
+      linked?null:state.mappings?.[ip]?.[String(index)];
+    if(detection?.status!=='recognized'&&Object.values(state.mappings||{}).flatMap(slots=>Object.values(slots)).filter(value=>value===id).length!==1)return null;
+    const spool=state.spools.find(s=>s.id===id);
+    if(!spool||typeof spool.remaining_weight!=='number'||!Number.isFinite(spool.remaining_weight)||spool.remaining_weight<0)return null;
+    const initial=spool.initial_weight,grams=spool.remaining_weight;
+    const percent=typeof initial==='number'&&Number.isFinite(initial)&&initial>0&&grams<=initial?100*(grams/initial):null;
+    return {id,grams,percent};
+  }
+  function remainingForSelection(ip,slot){
+    const actual=(printers.find(p=>p.ip===ip)?.data?.ace_slots||[]).find(s=>(s.global_index??s.index)===(slot.global_index??slot.index));
+    if(!actual||['sku','type','status','edit_status','color'].some(k=>JSON.stringify(actual[k])!==JSON.stringify(slot[k])))return null;
+    return remaining(ip,actual);
+  }
   function caption(spool){
     const weight=typeof spool.remaining_weight==='number'&&Number.isFinite(spool.remaining_weight)?Math.round(spool.remaining_weight)+' g Rest in Spoolman':'Restgewicht unbekannt';
     return '#'+spool.id+' · '+[spool.vendor,spool.name,spool.material].filter(Boolean).join(' · ')+' · '+weight;
   }
   function draw(){
-    const target=$('spools-assignments');target.replaceChildren();if(!state)return;
+    drawSource();const target=$('spools-assignments');target.replaceChildren();if(!state)return;
     $('spools-refresh').disabled=busy||!state.configured;
     const visit=$('spools-visit');visit.hidden=true;visit.removeAttribute('href');
     try{const url=new URL(state.url);if(state.configured&&['http:','https:'].includes(url.protocol)&&!url.username&&!url.password){visit.href=url.href;visit.hidden=false;}}catch{}
@@ -78,23 +106,25 @@ window.kobraSpools=(()=>{
     }
   }
   async function request(body){
-    if(busy)return;busy=true;$('spools-connect').disabled=true;$('spools-refresh').disabled=true;$('spools-message').textContent='Wird geprüft …';draw();
+    if(busy)return;lastReadAttempt=Date.now()/1000;busy=true;$('spools-connect').disabled=true;$('spools-refresh').disabled=true;$('spools-message').textContent='Wird geprüft …';draw();
     try{
       state=await window.kobraAuth.spoolRequest(body);$('spools-url').value=state.url;
       $('spools-message').textContent=state.error||(state.configured?(state.limit_reached?'Bis zu 1000 Spulen geladen; der Bestand kann größer sein.':state.spools.length+' Spulen im Bestand. Keine automatische Verbrauchsbuchung.'):'Noch nicht verbunden. Trage deine Spoolman-Adresse ein.');
-    }catch(error){$('spools-message').textContent=error.message||'Bitte erneut versuchen.';}
-    finally{busy=false;$('spools-connect').disabled=false;draw();}
+    }catch(error){if(state)state={...state,inventory_current:false,error:error.message||'Bestand nicht aktuell.'};$('spools-message').textContent=error.message||'Bitte erneut versuchen.';}
+    finally{busy=false;$('spools-connect').disabled=false;draw();window.dispatchEvent?.(new Event('kobra-spools-changed'));}
   }
   $('spools-open').addEventListener('click',()=>{const open=$('spools-content').hidden;$('spools-content').hidden=!open;$('spools-open').setAttribute('aria-expanded',String(open));$('spools-open').textContent=open?'Schließen':'Einrichten';if(open)request();});
   $('spools-form').addEventListener('submit',event=>{event.preventDefault();request({action:'configure',url:$('spools-url').value});});
   $('spools-refresh').addEventListener('click',()=>request({action:'refresh'}));
   function setPrinters(values,ip){
-    printers=values;selected=ip;
+    printers=values;selected=ip;drawSource();
     // Called only after the authenticated status response. Load the saved link once.
-    if(!loaded){loaded=true;request();}
+    if(!loaded){loaded=true;request({action:'refresh'});}
+    else if(state?.configured&&!busy&&!document.hidden&&Date.now()/1000-lastReadAttempt>=30)request({action:'refresh'});
     const fresh=!!(state?.inventory_current&&state.checked_at!==null&&Date.now()/1000-state.checked_at<=60);
     const next=JSON.stringify([ip,fresh,values.map(p=>[p.ip,p.connection,typeof p.section_age_s?.ace==='number'&&p.section_age_s.ace<=60,(p.data?.ace_slots||[]).map(s=>[s.global_index??s.index,s.sku,s.edit_status])])]);
     if(next!==signature||fresh!==shownFresh){signature=next;if(!$('spools-content').hidden){draw();if(state&&!busy)request();}}
   }
-  return {setPrinters,caption};
+  $('spools-amount-source')?.addEventListener('change',()=>request({action:'amount_source',ip:selected,source:$('spools-amount-source').value}));
+  return {setPrinters,caption,remaining,remainingForSelection,source};
 })();

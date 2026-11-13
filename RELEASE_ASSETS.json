@@ -1,0 +1,69 @@
+{
+  "format": "kobra-release-inventory-v1",
+  "prepared_on": "2026-11-09",
+  "repository": "Alaskapclos/kobra-monitor",
+  "public_release_approved": false,
+  "source_candidate_version": "0.43.0-alpha.4",
+  "artifacts": [
+    {
+      "platform": "macos-x86_64",
+      "version": "0.42.0-alpha.1",
+      "filename": "Kobra-Monitor-0.42.0-alpha.1-macos-x86_64-test.zip",
+      "sha256": "30e2571ce63ed9ae6b477708cc81983682b0c84666ed33a2a50f24b725aa6f94",
+      "source_sha256": "0577bf925771773ccb29883a9fcb6ee4a857c98ccc03e39767e8956eb4c07ac1",
+      "bundle_id": "c77810b6fc43d4407720a655d7735cd7b8e742bd9d81fbd7e67038368a275a62",
+      "owner_reported_working": true,
+      "public_delivery_allowed": false,
+      "reason": "Technical private test package. Historical diagnostic target remains in source payload; license/source delivery and publisher signing incomplete. Some native targets also contain personal build paths."
+    },
+    {
+      "platform": "macos-arm64",
+      "version": "0.42.0-alpha.1",
+      "filename": "Kobra-Monitor-0.42.0-alpha.1-macos-arm64-test.zip",
+      "sha256": "d3ed1385d2c7d9b78ad948d4887b110b77ba10ddc440eca6ceeaeb76b7125bb2",
+      "source_sha256": "0577bf925771773ccb29883a9fcb6ee4a857c98ccc03e39767e8956eb4c07ac1",
+      "bundle_id": "95e61191f72c242f707bc34a10b0f5c305168d2d584dcf97b8587aa57c76044d",
+      "owner_reported_working": true,
+      "public_delivery_allowed": false,
+      "reason": "Technical private test package. Historical diagnostic target remains in source payload; license/source delivery and publisher signing incomplete. Some native targets also contain personal build paths."
+    },
+    {
+      "platform": "windows-x86_64",
+      "version": "0.42.0-alpha.1",
+      "filename": "Kobra-Monitor-0.42.0-alpha.1-windows-x86_64-test.zip",
+      "sha256": "8b21604d71aa0bd0dc22fff0a15dc09bec524b1f9f309b35c6782c865a16e9b1",
+      "source_sha256": "0577bf925771773ccb29883a9fcb6ee4a857c98ccc03e39767e8956eb4c07ac1",
+      "bundle_id": "87bbdfe73e9ce440f2792c6e4420087cfca4ec3af36a12c3fde0e9a04a7a9c65",
+      "owner_reported_working": true,
+      "public_delivery_allowed": false,
+      "reason": "Technical private test package. Historical diagnostic target remains in source payload; license/source delivery and publisher signing incomplete. Some native targets also contain personal build paths."
+    },
+    {
+      "platform": "windows-arm64",
+      "version": "0.42.0-alpha.1",
+      "filename": "Kobra-Monitor-0.42.0-alpha.1-windows-arm64-test.zip",
+      "sha256": "e64758daf9693c16d4e2916c8ee8499713d1681479d6a21c5d1864c21e6ec907",
+      "source_sha256": "0577bf925771773ccb29883a9fcb6ee4a857c98ccc03e39767e8956eb4c07ac1",
+      "bundle_id": "f872e7d41bae44075ee65343a1b4d849460c537202a34cf48af381e563dde618",
+      "owner_reported_working": true,
+      "public_delivery_allowed": false,
+      "reason": "Technical private test package. Historical diagnostic target remains in source payload; license/source delivery and publisher signing incomplete. Some native targets also contain personal build paths."
+    },
+    {
+      "platform": "linux-amd64",
+      "version": "0.43.0-alpha.1",
+      "filename": "Kobra-Monitor-0.43.0-alpha.1-linux-amd64-test.zip",
+      "sha256": "b31a00476e1e056679c44d79bf30d542a54d621f4c7067953994a2f39cf4e127",
+      "source_sha256": "295e6d895826071fe6b016cff7d9b3bbca1dd749b2e523bea4038264c4c4ed9f",
+      "image_id": "sha256:98f60ca164d05839f01fd5de6e112958e360680790c8e9251aa63c200a40a07f",
+      "public_delivery_allowed": false,
+      "reason": "Private test package. Complete matching third-party source delivery and publisher authenticity review outstanding."
+    }
+  ],
+  "excluded_platforms": [
+    "linux-arm64",
+    "linux-arm-v7",
+    "windows-x86"
+  ],
+  "limits": "Owner reports are not independent complete device matrix tests. These historical ZIPs are not silently promoted to public installers."
+}

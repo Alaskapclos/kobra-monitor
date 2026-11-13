@@ -17,7 +17,7 @@ import zipfile
 FORMAT = 'kobra-monitor-installation-v1'
 ARCHIVE = re.compile(r'kobra-backup-\d{8}T\d{6}Z-[a-f0-9]{8}\.zip\Z')
 MAX_BYTES = 4 * 1024 ** 3
-EXCLUDED = {'backups', '.backups', '__pycache__'}
+EXCLUDED = {'backups', '.backups', '__pycache__', '.archive-incoming'}
 
 
 def digest(path):
@@ -28,11 +28,12 @@ def digest(path):
     return h.hexdigest()
 
 
-def validate_data(directory):
+def validate_data(directory, *, require_config=True):
     from configuration import load_config
     from accounts import read_account
     from spools import Spools
-    if not (directory / 'config.json').is_file() or not load_config(directory):
+    if ((directory / 'config.json').exists() and not load_config(directory)) or (
+            require_config and not (directory / 'config.json').is_file()):
         raise ValueError('Die Druckereinrichtung fehlt oder ist ungültig.')
     token = (directory / 'access-token').read_text().strip()
     if len(token) < 24:
@@ -43,6 +44,8 @@ def validate_data(directory):
     try:
         if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('Die Verlaufsdatenbank ist beschädigt.')
+        from file_archive import verify_catalog
+        verify_catalog(db, directory)
         for table in ('jobs', 'events', 'samples'):
             db.execute('SELECT 1 FROM ' + table + ' LIMIT 1').fetchall()
         devices=db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='push_devices'").fetchone()
@@ -77,6 +80,15 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
         token_before = (source / 'access-token').read_bytes()
         account_path = source / 'account.json'
         account_before = account_path.read_bytes() if account_path.exists() else None
+        # Snapshot references first; immutable originals are committed before catalog rows.
+        db = sqlite3.connect((source / 'history.sqlite3').as_uri() + '?mode=ro', uri=True, timeout=15)
+        snapshot = sqlite3.connect(data / 'history.sqlite3')
+        try:
+            db.backup(snapshot)
+            snapshot.execute('PRAGMA journal_mode=DELETE')
+        finally:
+            snapshot.close()
+            db.close()
         for path in source.rglob('*'):
             relative = path.relative_to(source)
             if path.name.startswith(('.push-', '.spoolman-')) or any(part in EXCLUDED for part in relative.parts):
@@ -93,14 +105,6 @@ def create(data_dir, destination, image, deployment=None, clock=time.time):
             target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             shutil.copyfile(path, target)
             target.chmod(0o600)
-        db = sqlite3.connect((source / 'history.sqlite3').as_uri() + '?mode=ro', uri=True, timeout=15)
-        snapshot = sqlite3.connect(data / 'history.sqlite3')
-        try:
-            db.backup(snapshot)
-            snapshot.execute('PRAGMA journal_mode=DELETE')
-        finally:
-            snapshot.close()
-            db.close()
         if before != (source / 'config.json').read_bytes() or token_before != (source / 'access-token').read_bytes():
             raise ValueError('Die Einrichtung wurde während der Sicherung geändert. Bitte wiederholen.')
         if (data / 'config.json').read_bytes() != before or (data / 'access-token').read_bytes() != token_before:
