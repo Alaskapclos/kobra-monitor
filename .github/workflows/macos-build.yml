@@ -1,0 +1,57 @@
+name: macOS launcher builds
+
+on:
+  push:
+    branches: [ci/macos-build]
+  pull_request:
+    paths:
+      - '.github/workflows/macos-build.yml'
+      - 'deploy/native/macos_launcher.c'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  launcher:
+    name: Launcher (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: x86_64
+          - runner: macos-15
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    env:
+      KOBRA_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build and verify the native launcher
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$KOBRA_ARCH"
+          mkdir -p build/macos-ci
+          launcher=build/macos-ci/KobraMonitorTest
+          xcrun --sdk macosx clang -arch "$KOBRA_ARCH" \
+            -mmacosx-version-min=13.0 -O2 -x objective-c -fobjc-arc \
+            -framework Cocoa deploy/native/macos_launcher.c -o "$launcher"
+          test "$(lipo -archs "$launcher")" = "$KOBRA_ARCH"
+          codesign --force --sign - --timestamp=none "$launcher"
+          codesign --verify --strict "$launcher"
+          cp LICENSE build/macos-ci/
+          tar -czf "kobra-macos-launcher-$KOBRA_ARCH.tar.gz" -C build/macos-ci KobraMonitorTest LICENSE
+          shasum -a 256 "kobra-macos-launcher-$KOBRA_ARCH.tar.gz" > SHA256SUMS.txt
+          shasum -a 256 -c SHA256SUMS.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kobra-macos-launcher-${{ matrix.arch }}
+          path: |
+            kobra-macos-launcher-*.tar.gz
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
