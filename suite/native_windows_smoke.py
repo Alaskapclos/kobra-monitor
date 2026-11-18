@@ -29,8 +29,8 @@ def check(bundle):
     }
     for role, code in scripts.items():
         process = subprocess.run([str(bundle/'runtime'/role/'python.exe'), '-I', '-B', '-X', 'utf8', '-c',
-                                  'import platform; assert platform.machine().lower() in ' +
-                                  repr(('arm64', 'aarch64') if target.architecture == 'arm64' else ('amd64', 'x86_64')) + '; ' + code],
+                                  'import sysconfig; assert sysconfig.get_platform() == ' +
+                                  repr('win-arm64' if target.architecture == 'arm64' else 'win-amd64') + '; ' + code],
                                  capture_output=True, timeout=90)
         result['checks'][role+'_runtime'] = {'ok': process.returncode == 0}
         if process.returncode:
@@ -43,7 +43,7 @@ def check(bundle):
     camera_test = bundle/'ffmpeg/test/Kamera-Test.py'
     if camera_test.is_file():
         process = subprocess.run([sys.executable, '-I', '-B', str(camera_test),
-                                  str(bundle/'ffmpeg/bin/ffmpeg.exe')], capture_output=True, timeout=65)
+                                  str(bundle/'ffmpeg/bin/ffmpeg.exe')], capture_output=True, timeout=30)
         result['checks']['ffmpeg_synthetic_image'] = {'ok': process.returncode == 0}
     else:
         process = subprocess.run([str(bundle/'ffmpeg/bin/ffmpeg.exe'), '-nostdin', '-hide_banner', '-loglevel', 'error',

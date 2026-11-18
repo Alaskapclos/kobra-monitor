@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 import re
 import platform as host_platform
+import sys
+import sysconfig
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,13 @@ def wheel_matches(tag, target):
 
 def runtime_architecture():
     """Architecture of the running interpreter, including an Intel translated process."""
+    if sys.platform == 'win32':
+        # Windows may report the ARM64 host even for an emulated x64 process.
+        # CPython's Windows build platform identifies the interpreter itself.
+        architecture = {'win-amd64': 'x86_64', 'win-arm64': 'arm64'}.get(sysconfig.get_platform())
+        if architecture is None:
+            raise ValueError('Die laufende Windows-Python-Architektur wird nicht unterstützt.')
+        return architecture
     machine = host_platform.machine().lower()
     aliases = {'x86_64': 'x86_64', 'amd64': 'x86_64', 'arm64': 'arm64', 'aarch64': 'arm64'}
     if machine not in aliases:

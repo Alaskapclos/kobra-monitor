@@ -178,7 +178,7 @@ def main():
     if os.name != 'nt':
         raise SystemExit('Native Windows test package only.')
     bundle = Path(args.bundle).resolve()
-    data = Path(args.data) if args.data else Path(os.environ['LOCALAPPDATA']) / 'KobraMonitor-Test/Daten-Setup-Abnahme-alpha.6'
+    data = Path(args.data) if args.data else Path(os.environ['LOCALAPPDATA']) / 'KobraMonitor-Test/Daten-Setup-Abnahme-alpha.7'
     try:
         manifest = load_manifest(bundle, verify=args.mode in ('install', 'start', 'worker'))
         if args.mode != 'worker':

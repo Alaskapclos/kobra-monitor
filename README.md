@@ -6,7 +6,7 @@ Kobra Monitor verbindet sich im Heimnetz mit **Anycubic Kobra S1 mit unveränder
 
 Neue Modelle werden weiterhin in OrcaSlicer oder Anycubic Slicer Next geslicet und zum Drucker geschickt. Der Monitor übernimmt Übersicht, Historie, Berichte, Spulenverwaltung und ausdrücklich freigegebene Steuerungen. Erfolgreich abgeschlossene Drucke lassen sich mit einem passenden archivierten Original später direkt aus dem Monitor erneut starten.
 
-**Entwicklungsstand: 0.43.0-alpha.6 – Vorabversion.** Die zuletzt vom Besitzer erprobten Desktop-Pakete tragen Version **0.42.0-alpha.1**, das getestete Docker-Paket **0.43.0-alpha.1**. Diese Pakete werden durch die Dokumentationsüberarbeitung nicht nachträglich verändert. Ein neuer Download gilt erst nach seinem eigenen Bau- und Prüfnachweis als geprüft. [Prüfstand](docs/VALIDATION.md) · [Paketübersicht](docs/PLATFORM_SUPPORT.md) · [Freigabestand](docs/RELEASE.md)
+**Entwicklungsstand: 0.43.0-alpha.7 – Vorabversion.** Die zuletzt vom Besitzer erprobten Desktop-Pakete tragen Version **0.42.0-alpha.1**, das getestete Docker-Paket **0.43.0-alpha.1**. Diese Pakete werden durch die Dokumentationsüberarbeitung nicht nachträglich verändert. Ein neuer Download gilt erst nach seinem eigenen Bau- und Prüfnachweis als geprüft. [Prüfstand](docs/VALIDATION.md) · [Paketübersicht](docs/PLATFORM_SUPPORT.md) · [Freigabestand](docs/RELEASE.md)
 
 ## Was kann der Monitor?
 
@@ -35,7 +35,7 @@ Die vorgesehenen Downloads stehen nach ihrer Freigabe unter [GitHub Releases](ht
 
 Windows und Mac bringen Python, Spoolman und die Kameralaufzeit mit; Docker Desktop und eine eigene Python-Installation sind dafür nicht nötig. Die bisherigen Mac-Testpakete sind ad hoc signiert, aber noch nicht mit Apple Developer ID signiert oder notarisiert. Die Windows-Testpakete haben noch keine Herausgebersignatur. Die öffentliche Binärfreigabe und vollständigen Liefernachweise bleiben ein eigener Schritt. [Details zur Plattformprüfung](docs/PLATFORM_SUPPORT.md)
 
-Der neue native Paketkandidat 0.43.0-alpha.6 übernimmt die bereinigten Bibliotheken und bietet die getrennte Datenübernahme auch aus 0.42 an. Bau und Gesamtprüfung werden für jede konkrete Lieferdatei gesondert nachgewiesen; die bisherigen Besitzerabnahmen gelten weiter ausschließlich für die oben genannten alten Pakete.
+Der neue native Paketkandidat 0.43.0-alpha.7 übernimmt die bereinigten Bibliotheken und bietet die getrennte Datenübernahme auch aus 0.42 an. Bau und Gesamtprüfung werden für jede konkrete Lieferdatei gesondert nachgewiesen; die bisherigen Besitzerabnahmen gelten weiter ausschließlich für die oben genannten alten Pakete.
 
 ## Windows: installieren und starten
 
